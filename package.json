@@ -1,0 +1,26 @@
+{
+  "name": "lamgamma",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack",
+    "start": "http-server -c-1 ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "monaco-editor": "^0.52.2",
+    "typescript": "^5.7.3"
+  },
+  "devDependencies": {
+    "css-loader": "^7.1.2",
+    "http-server": "^14.1.1",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.2",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1"
+  }
+}
