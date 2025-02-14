@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import './App.css'
-import Parser from 'web-tree-sitter'
+import './App.css';
+import { useEffect, useRef, useState } from 'react';
+import Parser from 'web-tree-sitter';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 const App: React.FC = () => {
@@ -25,6 +25,7 @@ const App: React.FC = () => {
         value: '',
         language: 'plaintext',
         theme: 'vs-dark',
+        automaticLayout: true,
       });
 
       editorInstance.current.onDidChangeModelContent(() => {
@@ -39,16 +40,14 @@ const App: React.FC = () => {
       editorInstance.current?.dispose();
     };
   }, [editorContainer.current]);
-  return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      {/* 左側: Monaco Editor */}
-      <div ref={editorContainer} style={{ width: '50%' }}></div>
-      {/* 右側: 解析結果表示 */}
-      <div style={{ width: '50%', padding: '1rem', backgroundColor: '#f5f5f5', overflowY: 'auto' }}>
-        <pre>{parseResult}</pre>
-      </div>
+
+  return (<div id="appcontainer">
+    <div ref={editorContainer} className="editor-container"></div>
+    <div className="result-container">
+      <pre>{parseResult}</pre>
     </div>
+  </div>
   );
 };
 
-export default App
+export default App;
