@@ -1,0 +1,35 @@
+{
+  "grammars": [
+    {
+      "name": "lamgamma_parser",
+      "camelcase": "LamgammaParser",
+      "scope": "source.lamgamma_parser",
+      "file-types": [
+        ".lamgamma_parser"
+      ],
+      "injection-regex": "^lamgamma_parser$"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "parser for lamgamma",
+    "authors": [
+      {
+        "name": "Yuito Murase",
+        "email": "yuito@acupof.coffee"
+      }
+    ],
+    "links": {
+      "repository": "https://github.com/zeptometer/lamgamma"
+    }
+  },
+  "bindings": {
+    "c": true,
+    "go": true,
+    "node": true,
+    "python": true,
+    "rust": true,
+    "swift": true
+  }
+}
