@@ -11,62 +11,39 @@ module.exports = grammar({
   name: "lamgamma_parser",
 
   rules: {
-    source_file: $ => repeat($._statement),
+    source_file: $ => $._expression,
 
-    _statement: $ => choice(
-      $.variable_declaration,
-      $.function_declaration,
-      $.expression_statement
+    _expression: $ => choice(
+      $._simple_expression,
+      $.lambda,
+      $.application
     ),
 
-    variable_declaration: $ => seq(
-      'let',
+    // Expressions that can be used as an argument as-is
+    _simple_expression: $ => choice(
+      seq('(', $._expression, ')'),
       $.identifier,
-      '=',
-      $.expression,
-      ';'
     ),
 
-    function_declaration: $ => seq(
-      'function',
-      $.identifier,
-      '(',
-      optional($.parameters),
-      ')',
-      '{',
-      repeat($._statement),
-      '}'
-    ),
+    lambda: $ => seq('fn', $.parameters, '->', $._expression),
 
-    expression_statement: $ => seq(
-      $.expression,
-      ';'
-    ),
-
-    expression: $ => choice(
-      $.identifier,
-      $.number,
-      $.function_call
-    ),
-
-    function_call: $ => seq(
-      $.identifier,
-      '(',
-      optional($.arguments),
-      ')'
-    ),
+    application: $ => 
+      prec.left(1, seq(
+      $._expression,
+      $._simple_expression
+    )),
 
     parameters: $ => seq(
       $.identifier,
-      repeat(seq(',', $.identifier))
+      repeat($.identifier)
     ),
 
     arguments: $ => seq(
-      $.expression,
-      repeat(seq(',', $.expression))
+      $._expression,
+      repeat(seq(',', $._expression))
     ),
 
-    identifier: $ => /[a-zA-Z_][a-zA-Z0-9_]*/,
+    identifier: $ => /[a-z_][a-zA-Z0-9_]*/,
 
     number: $ => /\d+/
   }

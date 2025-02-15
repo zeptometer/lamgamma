@@ -1,0 +1,27 @@
+==================
+Applitaion
+==================
+
+x y
+
+---
+
+(source_file
+  (application
+    (identifier)
+    (identifier)))
+
+==================
+Applitaion is left associative
+==================
+
+x y z
+
+---
+
+(source_file
+  (application
+    (application
+      (identifier)
+      (identifier))
+    (identifier)))

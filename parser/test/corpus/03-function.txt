@@ -1,0 +1,63 @@
+==================
+Function
+==================
+
+fn x -> x
+
+---
+
+(source_file
+  (lambda
+    (parameters
+      (identifier))
+    (identifier)))
+
+==================
+Function as an argument
+==================
+
+x (fn y -> y)
+
+---
+
+(source_file
+  (application
+    (identifier)
+    (lambda
+      (parameters
+        (identifier))
+      (identifier))))
+
+==================
+Function without paren cannot be an argument
+==================
+
+x fn y -> y
+
+---
+
+(source_file
+  (application
+    (application
+      (application
+        (identifier)
+        (identifier))
+      (identifier))
+    (ERROR)
+    (identifier)))
+
+==================
+Function as a function
+==================
+
+(fn x -> x) y
+
+---
+
+(source_file
+  (application
+    (lambda
+      (parameters
+        (identifier))
+      (identifier))
+    (identifier)))
