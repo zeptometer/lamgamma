@@ -10,6 +10,8 @@
 module.exports = grammar({
   name: "lamgamma_parser",
 
+  word: $ => $.identifier,
+
   rules: {
     source_file: $ => $._expression,
 
@@ -33,17 +35,9 @@ module.exports = grammar({
       $._simple_expression
     )),
 
-    parameters: $ => seq(
-      $.identifier,
-      repeat($.identifier)
-    ),
+    parameters: $ => repeat1($.identifier),
 
-    arguments: $ => seq(
-      $._expression,
-      repeat(seq(',', $._expression))
-    ),
-
-    identifier: $ => /[a-z_][a-zA-Z0-9_]*/,
+    identifier: $ => /[a-eg-z_][a-zA-Z0-9_]*/,
 
     number: $ => /\d+/
   }
