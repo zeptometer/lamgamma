@@ -1,7 +1,8 @@
 import { expect, it, beforeAll, describe } from 'vitest'
 import Parser from 'web-tree-sitter';
 
-import { parseTree } from './treeParser';
+import { parseNode } from './treeParser';
+import { ok, err } from 'neverthrow';
 
 let parser: Parser;
 
@@ -9,18 +10,18 @@ beforeAll(
   async () => {
     await Parser.init();
     const parser1 = new Parser();
-    const Lang = await Parser.Language.load('public/tree-sitter-lamgamma_parser.wasm');
-    parser1.setLanguage(Lang);
+    const lamgamma = await Parser.Language.load('public/tree-sitter-lamgamma_parser.wasm');
+    parser1.setLanguage(lamgamma);
     parser = parser1;
   }
 )
 
-describe('Tree Parser', () => {
+describe('Tree Parser, success cases', () => {
   it('parse variable', () => {
     const input = 'x';
     const expectedOutput = { kind: 'variable', name: 'x' };
-    expect(parseTree((parser?.parse(input)).rootNode))
-      .toEqual(expectedOutput);
+    expect(parseNode((parser?.parse(input)).rootNode))
+      .toEqual(ok(expectedOutput));
   });
 
   it('parse abstraction', () => {
@@ -30,8 +31,8 @@ describe('Tree Parser', () => {
       params: [{ kind: 'variable', name: 'x' }],
       body: { kind: 'variable', name: 'x' }
     };
-    expect(parseTree((parser?.parse(input)).rootNode))
-      .toEqual(expectedOutput);
+    expect(parseNode((parser?.parse(input)).rootNode))
+      .toEqual(ok(expectedOutput));
   });
 
   it('parse application', () => {
@@ -41,15 +42,15 @@ describe('Tree Parser', () => {
       func: { kind: 'variable', name: 'x' },
       arg: { kind: 'variable', name: 'y' }
     };
-    expect(parseTree((parser?.parse(input)).rootNode))
-      .toEqual(expectedOutput);
+    expect(parseNode((parser?.parse(input)).rootNode))
+      .toEqual(ok(expectedOutput));
   });
 
   it('parse paren', () => {
     const input = '(x)';
     const expectedOutput = { kind: 'variable', name: 'x' };
-    expect(parseTree((parser?.parse(input)).rootNode))
-      .toEqual(expectedOutput);
+    expect(parseNode((parser?.parse(input)).rootNode))
+      .toEqual(ok(expectedOutput));
   });
 
   it('compound expression', () => {
@@ -63,7 +64,42 @@ describe('Tree Parser', () => {
       },
       arg: { kind: 'variable', name: 'y' }
     };
-    expect(parseTree((parser?.parse(input)).rootNode))
-      .toEqual(expectedOutput)
+    expect(parseNode((parser?.parse(input)).rootNode))
+      .toEqual(ok(expectedOutput))
   })
-})
+});
+
+describe('Tree Parser, failing cases', () => {
+  it('missing body in function', () => {
+    const input = 'fn x ->';
+    const r = parseNode((parser?.parse(input)).rootNode);
+    expect(r.isErr()).toBeTruthy();
+
+    const e = r._unsafeUnwrapErr();
+    expect(e.message).toBe('Missing node: identifier');
+    expect(e.node.startPosition).toEqual({row:0, column: 7});
+    expect(e.node.endPosition).toEqual({row:0, column: 7});
+  });
+
+  it('missing parameter in function', () => {
+    const input = 'fn -> x';
+    const r = parseNode((parser?.parse(input)).rootNode);
+    expect(r.isErr()).toBeTruthy();
+
+    const e = r._unsafeUnwrapErr();
+    expect(e.message).toBe('Missing node: identifier');
+    expect(e.node.startPosition).toEqual({row:0, column: 2});
+    expect(e.node.endPosition).toEqual({row:0, column: 2});
+  });
+
+  it('function needs to be parenthesized', () => {
+    const input = 'x fn x -> x';
+    const r = parseNode((parser?.parse(input)).rootNode);
+    expect(r.isErr()).toBeTruthy();
+
+    const e = r._unsafeUnwrapErr();
+    expect(e.message).toBe('Syntax error');
+    expect(e.node.startPosition).toEqual({row:0, column: 7});
+    expect(e.node.endPosition).toEqual({row:0, column: 9});
+  });
+});

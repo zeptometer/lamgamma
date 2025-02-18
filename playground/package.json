@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "monaco-editor": "^0.52.2",
+    "neverthrow": "^8.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "web-tree-sitter": "^0.24.5"

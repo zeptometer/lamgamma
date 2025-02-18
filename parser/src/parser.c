@@ -147,43 +147,36 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
   eof = lexer->eof(lexer);
   switch (state) {
     case 0:
-      if (eof) ADVANCE(3);
-      if (lookahead == '(') ADVANCE(4);
-      if (lookahead == ')') ADVANCE(5);
+      if (eof) ADVANCE(2);
+      if (lookahead == '(') ADVANCE(3);
+      if (lookahead == ')') ADVANCE(4);
       if (lookahead == '-') ADVANCE(1);
-      if (lookahead == 'f') ADVANCE(2);
       if (('\t' <= lookahead && lookahead <= '\r') ||
           lookahead == ' ') SKIP(0);
       if (lookahead == '_' ||
-          ('a' <= lookahead && lookahead <= 'z')) ADVANCE(8);
+          ('a' <= lookahead && lookahead <= 'z')) ADVANCE(6);
       END_STATE();
     case 1:
-      if (lookahead == '>') ADVANCE(7);
+      if (lookahead == '>') ADVANCE(5);
       END_STATE();
     case 2:
-      if (lookahead == 'n') ADVANCE(6);
-      END_STATE();
-    case 3:
       ACCEPT_TOKEN(ts_builtin_sym_end);
       END_STATE();
-    case 4:
+    case 3:
       ACCEPT_TOKEN(anon_sym_LPAREN);
       END_STATE();
-    case 5:
+    case 4:
       ACCEPT_TOKEN(anon_sym_RPAREN);
       END_STATE();
-    case 6:
-      ACCEPT_TOKEN(anon_sym_fn);
-      END_STATE();
-    case 7:
+    case 5:
       ACCEPT_TOKEN(anon_sym_DASH_GT);
       END_STATE();
-    case 8:
+    case 6:
       ACCEPT_TOKEN(sym_identifier);
       if (('0' <= lookahead && lookahead <= '9') ||
           ('A' <= lookahead && lookahead <= 'Z') ||
           lookahead == '_' ||
-          ('a' <= lookahead && lookahead <= 'z')) ADVANCE(8);
+          ('a' <= lookahead && lookahead <= 'z')) ADVANCE(6);
       END_STATE();
     default:
       return false;
@@ -195,7 +188,15 @@ static bool ts_lex_keywords(TSLexer *lexer, TSStateId state) {
   eof = lexer->eof(lexer);
   switch (state) {
     case 0:
-      ACCEPT_TOKEN(ts_builtin_sym_end);
+      if (lookahead == 'f') ADVANCE(1);
+      if (('\t' <= lookahead && lookahead <= '\r') ||
+          lookahead == ' ') SKIP(0);
+      END_STATE();
+    case 1:
+      if (lookahead == 'n') ADVANCE(2);
+      END_STATE();
+    case 2:
+      ACCEPT_TOKEN(anon_sym_fn);
       END_STATE();
     default:
       return false;
@@ -344,11 +345,11 @@ static const uint32_t ts_small_parse_table_map[] = {
 static const TSParseActionEntry ts_parse_actions[] = {
   [0] = {.entry = {.count = 0, .reusable = false}},
   [1] = {.entry = {.count = 1, .reusable = false}}, RECOVER(),
-  [3] = {.entry = {.count = 1, .reusable = true}}, SHIFT(5),
+  [3] = {.entry = {.count = 1, .reusable = false}}, SHIFT(5),
   [5] = {.entry = {.count = 1, .reusable = true}}, SHIFT(2),
-  [7] = {.entry = {.count = 1, .reusable = true}}, SHIFT(9),
-  [9] = {.entry = {.count = 1, .reusable = true}}, SHIFT(6),
-  [11] = {.entry = {.count = 1, .reusable = true}}, SHIFT(4),
+  [7] = {.entry = {.count = 1, .reusable = false}}, SHIFT(9),
+  [9] = {.entry = {.count = 1, .reusable = false}}, SHIFT(6),
+  [11] = {.entry = {.count = 1, .reusable = false}}, SHIFT(4),
   [13] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_lambda, 4, 0, 0),
   [15] = {.entry = {.count = 1, .reusable = true}}, SHIFT(7),
   [17] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_source_file, 1, 0, 0),

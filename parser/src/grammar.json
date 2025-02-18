@@ -97,7 +97,7 @@
     },
     "identifier": {
       "type": "PATTERN",
-      "value": "[a-eg-z_][a-zA-Z0-9_]*"
+      "value": "[a-z_][a-zA-Z0-9_]*"
     },
     "number": {
       "type": "PATTERN",

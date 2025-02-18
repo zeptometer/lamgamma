@@ -37,7 +37,7 @@ module.exports = grammar({
 
     parameters: $ => repeat1($.identifier),
 
-    identifier: $ => /[a-eg-z_][a-zA-Z0-9_]*/,
+    identifier: $ => /[a-z_][a-zA-Z0-9_]*/,
 
     number: $ => /\d+/
   }

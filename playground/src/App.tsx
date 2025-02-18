@@ -2,7 +2,7 @@ import './App.css';
 import { useEffect, useRef, useState } from 'react';
 import Parser from 'web-tree-sitter';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import { parseTree } from './interpreter/treeParser';
+import { parseNode } from './interpreter/treeParser';
 
 const App: React.FC = () => {
   const editorContainer = useRef<HTMLDivElement>(null);
@@ -32,9 +32,13 @@ const App: React.FC = () => {
       editorInstance.current.onDidChangeModelContent(() => {
         const code = editorInstance.current?.getValue() || '';
         if (!treeSitterParser) { return; }
+
         const tree = treeSitterParser.parse(code);
-        const ast = parseTree(tree.rootNode);
-        setParseResult(ast ? JSON.stringify(ast, null, 2) : 'parse error');
+        const msg = parseNode(tree.rootNode).match(
+          ast => JSON.stringify(ast, null, 2),
+          err => `(${err.node.startPosition.row},${err.node.startPosition.column})-(${err.node.endPosition.row},${err.node.endPosition.column}): ${err.message}`
+        )
+        setParseResult(msg);
       });
     }
 
