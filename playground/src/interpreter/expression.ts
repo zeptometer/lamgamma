@@ -7,7 +7,7 @@ export type Variable = {
 
 export type Lambda = {
     kind: "lambda";
-    params: Variable[];
+    param: Variable;
     body: Expression;
 }
 

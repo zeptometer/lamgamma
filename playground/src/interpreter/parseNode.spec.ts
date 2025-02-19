@@ -28,8 +28,23 @@ describe('Tree Parser, success cases', () => {
     const input = 'fn x -> x';
     const expectedOutput = {
       kind: 'lambda',
-      params: [{ kind: 'variable', name: 'x' }],
+      param: { kind: 'variable', name: 'x' },
       body: { kind: 'variable', name: 'x' }
+    };
+    expect(parseNode((parser?.parse(input)).rootNode))
+      .toEqual(ok(expectedOutput));
+  });
+
+  it('parse abstraction with multiple params', () => {
+    const input = 'fn x y -> x';
+    const expectedOutput = {
+      kind: 'lambda',
+      param: { kind: 'variable', name: 'x' },
+      body: {
+        kind: 'lambda',
+        param: { kind: 'variable', name: 'y' },
+        body: { kind: 'variable', name: 'x' }
+      }
     };
     expect(parseNode((parser?.parse(input)).rootNode))
       .toEqual(ok(expectedOutput));
@@ -59,7 +74,7 @@ describe('Tree Parser, success cases', () => {
       kind: 'application',
       func: {
         kind: 'lambda',
-        params: [{ kind: 'variable', name: 'x' }],
+        param: { kind: 'variable', name: 'x' },
         body: { kind: 'variable', name: 'x' }
       },
       arg: { kind: 'variable', name: 'y' }
@@ -77,8 +92,8 @@ describe('Tree Parser, failing cases', () => {
 
     const e = r._unsafeUnwrapErr();
     expect(e.message).toBe('Missing node: identifier');
-    expect(e.node.startPosition).toEqual({row:0, column: 7});
-    expect(e.node.endPosition).toEqual({row:0, column: 7});
+    expect(e.node.startPosition).toEqual({ row: 0, column: 7 });
+    expect(e.node.endPosition).toEqual({ row: 0, column: 7 });
   });
 
   it('missing parameter in function', () => {
@@ -88,8 +103,8 @@ describe('Tree Parser, failing cases', () => {
 
     const e = r._unsafeUnwrapErr();
     expect(e.message).toBe('Missing node: identifier');
-    expect(e.node.startPosition).toEqual({row:0, column: 2});
-    expect(e.node.endPosition).toEqual({row:0, column: 2});
+    expect(e.node.startPosition).toEqual({ row: 0, column: 2 });
+    expect(e.node.endPosition).toEqual({ row: 0, column: 2 });
   });
 
   it('function needs to be parenthesized', () => {
@@ -99,7 +114,7 @@ describe('Tree Parser, failing cases', () => {
 
     const e = r._unsafeUnwrapErr();
     expect(e.message).toBe('Syntax error');
-    expect(e.node.startPosition).toEqual({row:0, column: 7});
-    expect(e.node.endPosition).toEqual({row:0, column: 9});
+    expect(e.node.startPosition).toEqual({ row: 0, column: 7 });
+    expect(e.node.endPosition).toEqual({ row: 0, column: 9 });
   });
 });

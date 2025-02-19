@@ -36,11 +36,21 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
         }
 
         return Result.combine([parseParams(paramsNode), parseNode(bodyNode)]).andThen(
-            ([params, body]) => ok({
-                kind: "lambda" as const,
-                params: params,
-                body: body
-            })
+            ([params, body]) => {
+                const curry = (params: Variable[], body: Expression): Expression => {
+                    if (params.length === 0) {
+                        return body;
+                    } else {
+                        return {
+                            kind: "lambda",
+                            param: params[0],
+                            body: curry(params.slice(1), body)
+                        }
+                    }
+                }
+
+                return ok(curry(params, body))
+            }
         );
 
     } else if (node.type === "application") {

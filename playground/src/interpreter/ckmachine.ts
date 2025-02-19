@@ -1,5 +1,5 @@
 import { Expression } from "./expression"
-import { CKState, Cont, Env } from "./ckstate";
+import { CKState, Value, Cont, Env } from "./ckstate";
 import { Result, ok, err } from "neverthrow";
 
 const executeStep = (state: CKState): Result<CKState, Error> => {
@@ -57,7 +57,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                         expr: closure.lambda.body,
                         cont: {
                             kind: "frame",
-                            var: closure.lambda.params[0],
+                            var: closure.lambda.param,
                             val: value,
                             rest: Cont.expandEnv(closure.env, rest)
                         }
@@ -87,19 +87,20 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
     }
 }
 
-const execute = (state: CKState): Result<CKState, Error> => {
+const execute = (state: CKState): Result<Value, Error> => {
     let nextState = state;
     while (true) {
         if (nextState.kind === "applyCont" && nextState.cont.kind === "halt") {
-            break;
+            return ok(nextState.value);
         }
+
         const nextStateResult = executeStep(nextState);
+
         if (nextStateResult.isErr()) {
             return err(nextStateResult.error);
         }
         nextState = nextStateResult.value;
     }
-    return ok(nextState);
 }
 
 const initState = (expr: Expression): CKState => {
