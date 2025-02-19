@@ -1,8 +1,8 @@
 import { expect, it, beforeAll, describe } from 'vitest'
 import Parser from 'web-tree-sitter';
 
-import { parseNode } from './treeParser';
-import { ok, err } from 'neverthrow';
+import { parseNode } from './parseNode';
+import { ok } from 'neverthrow';
 
 let parser: Parser;
 

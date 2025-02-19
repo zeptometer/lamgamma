@@ -49,7 +49,7 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
         if (funcNode == null || argNode == null) {
             return err(new SyntaxError(
                 "Expected unreachable: func or arg is missing in application",
-            node));
+                node));
         }
 
         return Result.combine([parseNode(funcNode), parseNode(argNode)]).andThen(
