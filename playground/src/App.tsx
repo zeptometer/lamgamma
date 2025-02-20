@@ -1,14 +1,14 @@
-import './App.css';
-import { useEffect, useRef, useState } from 'react';
+import '@fontsource/monaspace-neon';
+import { useEffect, useState } from 'react';
 import Parser from 'web-tree-sitter';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import Editor, { OnChange } from '@monaco-editor/react';
+import styled from 'styled-components'
+
 import { parseNode } from './interpreter/parseNode';
 
 const App: React.FC = () => {
-  const editorContainer = useRef<HTMLDivElement>(null);
   const [treeSitterParser, setTreeSitterParser] = useState<Parser | null>(null);
   const [parseResult, setParseResult] = useState('parse result is shown here');
-  const editorInstance = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -20,39 +20,50 @@ const App: React.FC = () => {
     })();
   }, []);
 
-  useEffect(() => {
-    if (editorContainer.current) {
-      editorInstance.current = monaco.editor.create(editorContainer.current, {
-        value: '',
-        language: 'plaintext',
-        theme: 'vs-dark',
-        automaticLayout: true,
-      });
+  const onEditorChange: OnChange = (code, _) => {
+    if (!treeSitterParser || !code) { return; }
 
-      editorInstance.current.onDidChangeModelContent(() => {
-        const code = editorInstance.current?.getValue() || '';
-        if (!treeSitterParser) { return; }
+    const tree = treeSitterParser.parse(code);
+    const msg = parseNode(tree.rootNode).match(
+      ast => JSON.stringify(ast, null, 2),
+      err => `(${err.node.startPosition.row},${err.node.startPosition.column})-(${err.node.endPosition.row},${err.node.endPosition.column}): ${err.message}`
+    )
+    setParseResult(msg);
+  }
 
-        const tree = treeSitterParser.parse(code);
-        const msg = parseNode(tree.rootNode).match(
-          ast => JSON.stringify(ast, null, 2),
-          err => `(${err.node.startPosition.row},${err.node.startPosition.column})-(${err.node.endPosition.row},${err.node.endPosition.column}): ${err.message}`
-        )
-        setParseResult(msg);
-      });
-    }
+  const PlayGroundContainer = styled.div`
+    display: flex;
+  `
 
-    return () => {
-      editorInstance.current?.dispose();
-    };
-  }, [editorContainer.current]);
+  const EditorContainer = styled.div`
+    flex: 1;
+  `
 
-  return (<div id="appcontainer">
-    <div ref={editorContainer} className="editor-container"></div>
-    <div className="result-container">
+  const ResultContainer = styled.div`
+    flex: 1;
+    font-size: 20px;
+    padding: 10px;
+  `
+
+  return (<PlayGroundContainer>
+    <EditorContainer>
+      <Editor
+        height="100vh"
+        width="100%"
+        defaultLanguage="plaintext"
+        defaultValue="(fn x -> x)"
+        theme="vs-dark"
+        onChange={onEditorChange}
+        options={{
+          fontSize: 20,
+          fontFamily: "Monaspace Neon"
+        }}
+      />
+    </EditorContainer>
+    <ResultContainer>
       <pre>{parseResult}</pre>
-    </div>
-  </div>
+    </ResultContainer>
+  </PlayGroundContainer>
   );
 };
 
