@@ -3,6 +3,7 @@ import { parseNode } from './parseNode';
 import { describe, it, expect, beforeAll } from "vitest";
 import { CKMachine } from './ckmachine';
 import { ok, err } from 'neverthrow';
+import { List } from 'immutable';
 
 let { initState, executeStep, execute } = CKMachine;
 let parser: Parser;
@@ -28,55 +29,185 @@ describe("CKMachine", () => {
 
         expect(actual1).toEqual(ok({
             kind: "applyCont",
-            value: {
+            val: {
                 kind: "closure",
                 lambda: {
                     kind: "lambda",
                     param: { kind: "variable", name: "x" },
                     body: { kind: "variable", name: "x" },
                 },
-                env: [],
+                env: List.of(),
             },
-            cont: { kind: "halt" },
+            cont: List.of(),
         }));
 
         const actual2 = executeStep(actual1._unsafeUnwrap());
 
-        expect(actual2).toEqual(err(new Error("Evaluation has halted")));
+        expect(actual2).toEqual(err(new Error("Empty continuation")));
     });
 
     it("case 2", () => {
         const subject = initState(parse("(fn x -> x) (fn y -> y)"));
 
-        const actual = execute(subject);
+        const actual1 = executeStep(subject);
 
-        expect(actual).toEqual(ok(
-            {
+        expect(actual1).toEqual(ok({
+            kind: "eval",
+            expr: {
+                kind: "lambda",
+                param: { kind: "variable", name: "x" },
+                body: { kind: "variable", name: "x" },
+            },
+            cont: List.of({
+                kind: "appL",
+                arg: {
+                    kind: "lambda",
+                    param: { kind: "variable", name: "y" },
+                    body: { kind: "variable", name: "y" },
+                }
+            }),
+        }));
+
+        const actual2 = executeStep(actual1._unsafeUnwrap());
+
+        expect(actual2).toEqual(ok({
+            kind: "applyCont",
+            val: {
+                kind: "closure",
+                lambda: {
+                    kind: "lambda",
+                    param: { kind: "variable", name: "x" },
+                    body: { kind: "variable", name: "x" },
+                },
+                env: List.of()
+            },
+            cont: List.of({
+                kind: "appL",
+                arg: {
+                    kind: "lambda",
+                    param: { kind: "variable", name: "y" },
+                    body: { kind: "variable", name: "y" },
+                }
+            }),
+        }));
+
+        const actual3 = executeStep(actual2._unsafeUnwrap());
+
+        expect(actual3).toEqual(ok({
+            kind: "eval",
+            expr: {
+                kind: "lambda",
+                param: { kind: "variable", name: "y" },
+                body: { kind: "variable", name: "y" },
+            },
+            cont: List.of({
+                kind: "appR",
+                closure: {
+                    kind: "closure",
+                    lambda: {
+                        kind: "lambda",
+                        param: { kind: "variable", name: "x" },
+                        body: { kind: "variable", name: "x" },
+                    },
+                    env: List.of()
+                }
+            })
+        }));
+
+        const actual4 = executeStep(actual3._unsafeUnwrap());
+
+        expect(actual4).toEqual(ok({
+            kind: "applyCont",
+            val: {
                 kind: "closure",
                 lambda: {
                     kind: "lambda",
                     param: { kind: "variable", name: "y" },
                     body: { kind: "variable", name: "y" },
                 },
-                env: [{
-                    var: { kind: "variable", name: "x" },
-                    val: {
-                        kind: "closure",
-                        lambda: {
-                            kind: "lambda",
-                            param: { kind: "variable", name: "y" },
-                            body: { kind: "variable", name: "y" }
-                        },
-                        env: []
-                    }
-                }],
-            }));
+                env: List.of()
+            },
+            cont: List.of({
+                kind: "appR",
+                closure: {
+                    kind: "closure",
+                    lambda: {
+                        kind: "lambda",
+                        param: { kind: "variable", name: "x" },
+                        body: { kind: "variable", name: "x" },
+                    },
+                    env: List.of()
+                }
+            })
+        }));
+
+        const actual5 = executeStep(actual4._unsafeUnwrap());
+
+        expect(actual5).toEqual(ok({
+            kind: "eval",
+            expr: { kind: "variable", name: "x" },
+            cont: List.of({
+                kind: "frame",
+                var: { kind: "variable", name: "x" },
+                val: {
+                    kind: "closure",
+                    lambda: {
+                        kind: "lambda",
+                        param: { kind: "variable", name: "y" },
+                        body: { kind: "variable", name: "y" },
+                    },
+                    env: List.of()
+                }
+            })
+        }));
+
+        const actual6 = executeStep(actual5._unsafeUnwrap());
+
+        expect(actual6).toEqual(ok({
+            kind: "applyCont",
+            val: {
+                kind: "closure",
+                lambda: {
+                    kind: "lambda",
+                    param: { kind: "variable", name: "y" },
+                    body: { kind: "variable", name: "y" },
+                },
+                env: List.of()
+            },
+            cont: List.of({
+                kind: "frame",
+                var: { kind: "variable", name: "x" },
+                val: {
+                    kind: "closure",
+                    lambda: {
+                        kind: "lambda",
+                        param: { kind: "variable", name: "y" },
+                        body: { kind: "variable", name: "y" },
+                    },
+                    env: List.of()
+                }
+            })}));
+    });
+
+    it("case 3", () => {
+        const subject = initState(parse("(fn x -> (fn x -> x)) (fn y -> y) (fn z -> z)"));
+
+        const actual1 = execute(subject);
+
+        expect(actual1.isOk()).toBeTruthy();
+        const v = actual1._unsafeUnwrap();
+        expect(v.kind).toEqual("closure");
+        expect(v.lambda).toEqual({
+            kind: "lambda",
+            param: { kind: "variable", name: "y" },
+            body: { kind: "variable", name: "y" }
+        });
     });
 
     it("SKK = I", () => {
         const subject = initState(parse(`
-            (fn x y z -> x z (y z)) (fn x y -> x) (fn x y -> x)
-            (fn p -> p)
+            (fn x y z -> x z (y z)) (fn p q -> p) (fn a b -> a)
+            (fn c -> c)
         `));
 
         const result = execute(subject);
@@ -86,8 +217,8 @@ describe("CKMachine", () => {
         expect(v.kind).toEqual("closure");
         expect(v.lambda).toEqual({
             kind: "lambda",
-            param: { kind: "variable", name: "p" },
-            body: { kind: "variable", name: "p" }
+            param: { kind: "variable", name: "c" },
+            body: { kind: "variable", name: "c" }
         });
     });
 });

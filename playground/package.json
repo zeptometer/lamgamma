@@ -12,6 +12,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "immutable": "^5.0.3",
     "monaco-editor": "^0.52.2",
     "neverthrow": "^8.1.1",
     "react": "^19.0.0",

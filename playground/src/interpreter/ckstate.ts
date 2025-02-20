@@ -1,72 +1,43 @@
+import { List } from "immutable";
 import { Variable, Lambda, Expression } from "./expression";
 
-export type Env = { var: Variable; val: Value }[];
-
-export const Env = {
-    empty: (): Env => [],
-    extend: (env: Env, v: Variable, val: Value): Env => {
-        return [{ var: v, val: val }, ...env];
-    }
-}
-
-export type Value = Closure;;
+export type Value = Closure;
 
 export type Closure = {
     kind: "closure";
     lambda: Lambda;
-    env: Env;
+    env: List<EnvFrame>;
 };
 
-export type Cont = AppLCont | AppRCont | FrameCont | HaltCont;
+export type Frame = AppLFrame | AppRFrame | EnvFrame;
+export type Cont = List<Frame>;
 
-export type AppLCont = {
+export type AppLFrame = {
     kind: "appL";
     arg: Expression;
-    rest: Cont;
 };
 
-export type AppRCont = {
+export type AppRFrame = {
     kind: "appR";
     closure: Closure;
-    rest: Cont;
 };
 
-export type FrameCont = {
+export type EnvFrame = {
     kind: "frame";
     var: Variable;
     val: Value;
-    rest: Cont;
 };
 
 export const Cont = {
     lookup: (cont: Cont, v: Variable): Value | null => {
-        switch (cont.kind) {
-            case "frame":
-                if (cont.var.name === v.name) {
-                    return cont.val;
-                } else {
-                    return Cont.lookup(cont.rest, v);
-                }
-            case "halt":
-                return null;
-            case "appL":
-            case "appR":
-                return Cont.lookup(cont.rest, v);
-            default:
-                throw new Error(`Unknown type: ${(cont as { kind: "__invalid__" }).kind}`);
+        const frame = cont.find((frame) => {
+            return frame.kind === "frame" && frame.var.name === v.name;
+        });
+        if (frame === null) {
+            return null;
         }
-    },
-    expandEnv: (env: Env, cont: Cont): Cont => {
-        var cont1 = cont;
-        for (var i = env.length - 1; i >= 0; i--) {
-            cont1 = { kind: "frame", var: env[i].var, val: env[i].val, rest: cont1 };
-        }
-        return cont1;
+        return (frame as EnvFrame).val;
     }
-}
-
-export type HaltCont = {
-    kind: "halt";
 }
 
 export type CKState = EvalState | ApplyContState;
@@ -79,6 +50,6 @@ export type EvalState = {
 
 export type ApplyContState = {
     kind: "applyCont";
-    value: Value;
+    val: Value;
     cont: Cont;
 };

@@ -1,6 +1,7 @@
 import { Expression } from "./expression"
-import { CKState, Value, Cont, Env } from "./ckstate";
+import { CKState, Value, Cont, Frame } from "./ckstate";
 import { Result, ok, err } from "neverthrow";
+import { List } from "immutable";
 
 const executeStep = (state: CKState): Result<CKState, Error> => {
     switch (state.kind) {
@@ -8,13 +9,13 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
             const { expr, cont } = state;
             switch (expr.kind) {
                 case "variable": {
-                    const value = Cont.lookup(cont, expr);
-                    if (value === null) {
+                    const val = Cont.lookup(cont, expr);
+                    if (val === null) {
                         return err(new Error(`Unbound variable: ${expr.name}`));
                     }
                     return ok({
                         kind: "applyCont",
-                        value: value,
+                        val: val,
                         cont: cont
                     })
                 }
@@ -22,7 +23,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                 case "lambda": {
                     return ok({
                         kind: "applyCont",
-                        value: { kind: "closure", lambda: expr, env: Env.empty() },
+                        val: { kind: "closure", lambda: expr, env: List.of() },
                         cont: cont
                     });
                 }
@@ -31,7 +32,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     return ok({
                         kind: "eval",
                         expr: expr.func,
-                        cont: { kind: "appL", arg: expr.arg, rest: cont }
+                        cont: cont.unshift({ kind: "appL", arg: expr.arg })
                     });
                 }
 
@@ -40,46 +41,42 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
             }
         }
         case "applyCont": {
-            const { value, cont } = state;
-            switch (cont.kind) {
+            const { val, cont } = state;
+            if (cont.isEmpty()) {
+                return err(new Error("Empty continuation"));
+            }
+
+            const frame = cont.first() as Frame;
+            const rest = cont.shift();
+
+            switch (frame.kind) {
                 case "appL": {
                     return ok({
                         kind: "eval",
-                        expr: cont.arg,
-                        cont: { kind: "appR", closure: value, rest: cont.rest }
+                        expr: frame.arg,
+                        cont: rest.unshift({ kind: "appR", closure: val })
                     });
                 }
 
                 case "appR": {
-                    const { closure, rest } = cont;
+                    const { closure: { lambda: { body, param }, env } } = frame;
                     return ok({
                         kind: "eval",
-                        expr: closure.lambda.body,
-                        cont: {
-                            kind: "frame",
-                            var: closure.lambda.param,
-                            val: value,
-                            rest: Cont.expandEnv(closure.env, rest)
-                        }
+                        expr: body,
+                        cont: env
+                            .push({ kind: "frame", var: param, val: val })
+                            .concat(rest)
                     });
                 }
 
                 case "frame": {
-                    const { var: x, val, rest } = cont;
-                    const { lambda, env } = value;
-                    return ok({
-                        kind: "applyCont",
-                        value: { kind: "closure", lambda: lambda, env: Env.extend(env, x, val) },
-                        cont: rest
-                    });
-                }
-
-                case "halt": {
-                    return err(new Error("Evaluation has halted"));
+                    const { lambda, env } = val;
+                    const clos = { kind: "closure" as const, lambda: lambda, env: env.push(frame) };
+                    return ok({ kind: "applyCont", val: clos, cont: rest });
                 }
 
                 default:
-                    throw new Error(`Unknown type: ${(cont as { kind: "__invalid__" }).kind}`);
+                    throw new Error(`Unknown type: ${(frame as { kind: "__invalid__" }).kind}`);
             }
         }
         default:
@@ -90,8 +87,8 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
 const execute = (state: CKState): Result<Value, Error> => {
     let nextState = state;
     while (true) {
-        if (nextState.kind === "applyCont" && nextState.cont.kind === "halt") {
-            return ok(nextState.value);
+        if (nextState.kind === "applyCont" && nextState.cont.isEmpty()) {
+            return ok(nextState.val);
         }
 
         const nextStateResult = executeStep(nextState);
@@ -107,7 +104,7 @@ const initState = (expr: Expression): CKState => {
     return {
         kind: "eval",
         expr: expr,
-        cont: { kind: "halt" }
+        cont: List.of()
     };
 }
 
