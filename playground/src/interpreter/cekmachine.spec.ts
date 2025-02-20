@@ -51,7 +51,8 @@ describe("CKMachine", () => {
 
         const actual1 = executeStep(subject);
 
-        expect(actual1).toEqual(ok({
+        expect(actual1.isOk()).toBeTruthy()
+        expect(actual1._unsafeUnwrap()).toEqual({
             kind: "eval",
             expr: {
                 kind: "lambda",
@@ -66,11 +67,11 @@ describe("CKMachine", () => {
                     body: { kind: "variable", name: "y" },
                 }
             }),
-        }));
+        });
 
-        const actual2 = executeStep(actual1._unsafeUnwrap());
+        const actual2 = executeStep(actual1._unsafeUnwrap())._unsafeUnwrap();
 
-        expect(actual2).toEqual(ok({
+        expect(actual2).toEqual({
             kind: "applyCont",
             val: {
                 kind: "closure",
@@ -89,11 +90,11 @@ describe("CKMachine", () => {
                     body: { kind: "variable", name: "y" },
                 }
             }),
-        }));
+        });
 
-        const actual3 = executeStep(actual2._unsafeUnwrap());
+        const actual3 = executeStep(actual2)._unsafeUnwrap();
 
-        expect(actual3).toEqual(ok({
+        expect(actual3).toEqual({
             kind: "eval",
             expr: {
                 kind: "lambda",
@@ -112,11 +113,11 @@ describe("CKMachine", () => {
                     env: List.of()
                 }
             })
-        }));
+        });
 
-        const actual4 = executeStep(actual3._unsafeUnwrap());
+        const actual4 = executeStep(actual3)._unsafeUnwrap();
 
-        expect(actual4).toEqual(ok({
+        expect(actual4).toEqual({
             kind: "applyCont",
             val: {
                 kind: "closure",
@@ -139,11 +140,11 @@ describe("CKMachine", () => {
                     env: List.of()
                 }
             })
-        }));
+        });
 
-        const actual5 = executeStep(actual4._unsafeUnwrap());
+        const actual5 = executeStep(actual4)._unsafeUnwrap();
 
-        expect(actual5).toEqual(ok({
+        expect(actual5).toEqual({
             kind: "eval",
             expr: { kind: "variable", name: "x" },
             cont: List.of({
@@ -159,11 +160,11 @@ describe("CKMachine", () => {
                     env: List.of()
                 }
             })
-        }));
+        });
 
-        const actual6 = executeStep(actual5._unsafeUnwrap());
+        const actual6 = executeStep(actual5)._unsafeUnwrap();
 
-        expect(actual6).toEqual(ok({
+        expect(actual6).toEqual({
             kind: "applyCont",
             val: {
                 kind: "closure",
@@ -186,7 +187,8 @@ describe("CKMachine", () => {
                     },
                     env: List.of()
                 }
-            })}));
+            })
+        });
     });
 
     it("case 3", () => {
@@ -210,12 +212,12 @@ describe("CKMachine", () => {
             (fn c -> c)
         `));
 
-        const result = execute(subject);
+        const actual1 = execute(subject);
 
-        expect(result.isOk()).toBeTruthy();
-        let v = result._unsafeUnwrap();
-        expect(v.kind).toEqual("closure");
-        expect(v.lambda).toEqual({
+        expect(actual1.isOk()).toBeTruthy();
+        let actual2 = actual1._unsafeUnwrap();
+        expect(actual2.kind).toEqual("closure");
+        expect(actual2.lambda).toEqual({
             kind: "lambda",
             param: { kind: "variable", name: "c" },
             body: { kind: "variable", name: "c" }

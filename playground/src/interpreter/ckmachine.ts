@@ -64,12 +64,12 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                         kind: "eval",
                         expr: body,
                         cont: env
-                            .push({ kind: "frame", var: param, val: val })
+                            .push({ kind: "env", var: param, val: val })
                             .concat(rest)
                     });
                 }
 
-                case "frame": {
+                case "env": {
                     const { lambda, env } = val;
                     const clos = { kind: "closure" as const, lambda: lambda, env: env.push(frame) };
                     return ok({ kind: "applyCont", val: clos, cont: rest });

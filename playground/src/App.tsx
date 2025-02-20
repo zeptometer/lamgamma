@@ -2,7 +2,7 @@ import './App.css';
 import { useEffect, useRef, useState } from 'react';
 import Parser from 'web-tree-sitter';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import { parseNode } from './interpreter/treeParser';
+import { parseNode } from './interpreter/parseNode';
 
 const App: React.FC = () => {
   const editorContainer = useRef<HTMLDivElement>(null);

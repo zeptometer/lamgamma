@@ -23,7 +23,7 @@ export type AppRFrame = {
 };
 
 export type EnvFrame = {
-    kind: "frame";
+    kind: "env";
     var: Variable;
     val: Value;
 };
@@ -31,7 +31,7 @@ export type EnvFrame = {
 export const Cont = {
     lookup: (cont: Cont, v: Variable): Value | null => {
         const frame = cont.find((frame) => {
-            return frame.kind === "frame" && frame.var.name === v.name;
+            return frame.kind === "env" && frame.var.name === v.name;
         });
         if (frame === null) {
             return null;
