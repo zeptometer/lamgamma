@@ -67,14 +67,12 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
             fontFamily: "MonaSpace Neon",
             paddingTop: "1em"
         }}>
-            <code>
-                {
-                    state.match(
-                        (state) => <CKStateVis state={state} />,
-                        (err) => err.message
-                    )
-                }
-            </code>
+            {
+                state.match(
+                    (state) => <CKStateVis state={state} />,
+                    (err) => err.message
+                )
+            }
         </Container>
     </Box>
 }

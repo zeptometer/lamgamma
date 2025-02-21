@@ -1,4 +1,3 @@
-import '@fontsource/monaspace-neon';
 import { useEffect, useState } from 'react';
 import Parser from 'web-tree-sitter';
 import { OnChange } from '@monaco-editor/react';

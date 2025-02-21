@@ -39,22 +39,48 @@ const EnvVis: React.FC<EnvProp> = ({ var: v, val, matched }) => {
         onClick={toggleExpand}
         sx={{
             display: "inline",
+            "&:hover": {
+                backgroundColor: "lightgray"
+            }
         }}>
-        [{varVis}=<Box
-            sx={{
-                display: "inline",
-                "&:hover": {
-                    backgroundColor: "lightgray"
-                }
-            }}>
-            {valVis}
-        </Box>]
+        [{varVis}={valVis}]
+    </Box >
+}
+
+interface ClosedVarProp {
+    var: Variable,
+    val: Value
+}
+
+const ClosedVarVis: React.FC<ClosedVarProp> = ({ var: v, val }) => {
+    const [expanded, setExpanded] = useState(false);
+
+    const valVis = expanded ? <>=<ValueVis val={val} /></> : <></>
+
+    const toggleExpand = () => { setExpanded(!expanded) }
+
+    return <Box
+        onClick={toggleExpand}
+        sx={{
+            display: "inline",
+            "&:hover": {
+                backgroundColor: "lightgray"
+            }
+        }}>
+        {v.name}{valVis}
     </Box >
 }
 
 const ValueVis: React.FC<{ val: Value }> = ({ val }) => {
+    const len = val.env.size;
+
     return <>
-        【{val.env.reverse().map((x) => x.var.name).join(",")}|
+        【{val.env.reverse()
+            .map((x, idx) => <>
+                <ClosedVarVis var={x.var} val={x.val} />
+                {idx < len - 1 ? "," : null}
+            </>)
+        }|
         <ExpressionVis expr={val.lambda} context="toplevel" />】
     </>
 }
