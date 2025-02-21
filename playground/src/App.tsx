@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import Parser from 'web-tree-sitter';
 import { OnChange } from '@monaco-editor/react';
 
-import { parseNode } from './interpreter/parseNode';
 import { EditorContainer } from './ui/EditorContainer';
 import { Grid2 } from '@mui/material';
 import { EvaluatorContainer } from './ui/EvaluatorContainer';
@@ -38,10 +37,13 @@ const App: React.FC = () => {
       />
     </Grid2>
     <Grid2 size={6} minWidth={0}>
-      <EvaluatorContainer
-        code={code}
-        parser={treeSitterParser}
-      />
+      {
+        treeSitterParser ?
+          <EvaluatorContainer
+            code={code}
+            treeSitterParser={treeSitterParser}
+          /> : null
+      }
     </Grid2>
   </Grid2 >;
 };
