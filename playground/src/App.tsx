@@ -1,14 +1,16 @@
 import '@fontsource/monaspace-neon';
 import { useEffect, useState } from 'react';
 import Parser from 'web-tree-sitter';
-import Editor, { OnChange } from '@monaco-editor/react';
-import styled from 'styled-components'
+import { OnChange } from '@monaco-editor/react';
 
 import { parseNode } from './interpreter/parseNode';
+import { EditorContainer } from './ui/EditorContainer';
+import { Grid2 } from '@mui/material';
+import { EvaluatorContainer } from './ui/EvaluatorContainer';
 
 const App: React.FC = () => {
   const [treeSitterParser, setTreeSitterParser] = useState<Parser | null>(null);
-  const [parseResult, setParseResult] = useState('parse result is shown here');
+  const [code, setCode] = useState('code content is put here');
 
   useEffect(() => {
     (async () => {
@@ -20,51 +22,28 @@ const App: React.FC = () => {
     })();
   }, []);
 
-  const onEditorChange: OnChange = (code, _) => {
-    if (!treeSitterParser || !code) { return; }
-
-    const tree = treeSitterParser.parse(code);
-    const msg = parseNode(tree.rootNode).match(
-      ast => JSON.stringify(ast, null, 2),
-      err => `(${err.node.startPosition.row},${err.node.startPosition.column})-(${err.node.endPosition.row},${err.node.endPosition.column}): ${err.message}`
-    )
-    setParseResult(msg);
+  const onEditorChange: OnChange = (code) => {
+    if (code == null) return;
+    setCode(code);
   }
 
-  const PlayGroundContainer = styled.div`
-    display: flex;
-  `
-
-  const EditorContainer = styled.div`
-    flex: 1;
-  `
-
-  const ResultContainer = styled.div`
-    flex: 1;
-    font-size: 20px;
-    padding: 10px;
-  `
-
-  return (<PlayGroundContainer>
-    <EditorContainer>
-      <Editor
-        height="100vh"
-        width="100%"
-        defaultLanguage="plaintext"
-        defaultValue="(fn x -> x)"
-        theme="vs-dark"
+  return <Grid2
+    container
+    spacing={0}
+    height="100vh"
+  >
+    <Grid2 size={6} minWidth={0}>
+      <EditorContainer
         onChange={onEditorChange}
-        options={{
-          fontSize: 20,
-          fontFamily: "Monaspace Neon"
-        }}
       />
-    </EditorContainer>
-    <ResultContainer>
-      <pre>{parseResult}</pre>
-    </ResultContainer>
-  </PlayGroundContainer>
-  );
+    </Grid2>
+    <Grid2 size={6} minWidth={0}>
+      <EvaluatorContainer
+        code={code}
+        parser={treeSitterParser}
+      />
+    </Grid2>
+  </Grid2 >;
 };
 
 export default App;

@@ -5,7 +5,7 @@ import { CKMachine } from './ckmachine';
 import { ok, err } from 'neverthrow';
 import { List } from 'immutable';
 
-let { initState, executeStep, execute } = CKMachine;
+const { initState, executeStep, execute } = CKMachine;
 let parser: Parser;
 
 beforeAll(
@@ -215,7 +215,7 @@ describe("CKMachine", () => {
         const actual1 = execute(subject);
 
         expect(actual1.isOk()).toBeTruthy();
-        let actual2 = actual1._unsafeUnwrap();
+        const actual2 = actual1._unsafeUnwrap();
         expect(actual2.kind).toEqual("closure");
         expect(actual2.lambda).toEqual({
             kind: "lambda",
