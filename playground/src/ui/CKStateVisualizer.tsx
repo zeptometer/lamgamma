@@ -117,7 +117,7 @@ const ExpressionVis: React.FC<{ expr: Expression, context: string }> = ({ expr, 
         }
 
         case "application": {
-            return <Paren cond={context in ["appR", "env"]}>
+            return <Paren cond={context === "appR" || context === "env"}>
                 <ExpressionVis expr={expr.func} context={"appL"} />&nbsp;
                 <ExpressionVis expr={expr.arg} context={"appR"} />
             </Paren>
