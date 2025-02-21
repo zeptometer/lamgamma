@@ -1,17 +1,18 @@
 import { Editor, OnChange } from "@monaco-editor/react";
 
 interface Props {
+    code: string,
     onChange: OnChange
 }
 
-export const EditorContainer: React.FC<Props> = (props) => {
+export const EditorContainer: React.FC<Props> = ({ code, onChange }) => {
     return <Editor
             height="100%"
             width="100%"
             defaultLanguage="plaintext"
-            defaultValue="(fn x -> x)"
+            defaultValue={code}
             theme="vs-dark"
-            onChange={props.onChange}
+            onChange={onChange}
             options={{
                 fontSize: 16,
                 fontFamily: "Monaspace Neon",

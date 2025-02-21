@@ -7,6 +7,7 @@ import { parseNode } from '../interpreter/parseNode';
 import { CKMachine } from "../interpreter/ckmachine";
 import { CKState } from "../interpreter/ckstate";
 import { Result } from "neverthrow";
+import { CKStateVis } from "./CKStateVisualizer";
 
 interface Props {
     code: string,
@@ -20,6 +21,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
     const initialState = exprResult.map((expr) => CKMachine.initState(expr))
 
     const [state, setState] = useState<Result<CKState, Error>>(initialState);
+    const [isComplete, setComplete] = useState(false);
 
     useEffect(() => {
         const tree = treeSitterParser.parse(code)
@@ -30,6 +32,12 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
 
     const evaluate = () => {
         if (state.isErr()) {
+            return;
+        }
+        if (state.isOk() &&
+            state.value.kind === "applyCont"
+            && state.value.cont.isEmpty()) {
+            setComplete(true);
             return;
         }
 
@@ -46,13 +54,27 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
                     aria-label="menu"
                     sx={{ mr: 2 }}
                     onClick={evaluate}
+                    disabled={isComplete}
                 >
                     <PlayCircleFilledIcon />
                 </IconButton>
+                {
+                    isComplete ? "completed" : ""
+                }
             </Toolbar>
         </AppBar>
-        <Container>
-            {JSON.stringify(state)}
+        <Container sx={{
+            fontFamily: "MonaSpace Neon",
+            paddingTop: "1em"
+        }}>
+            <code>
+                {
+                    state.match(
+                        (state) => <CKStateVis state={state} />,
+                        (err) => err.message
+                    )
+                }
+            </code>
         </Container>
     </Box>
 }

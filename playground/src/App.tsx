@@ -6,10 +6,11 @@ import { OnChange } from '@monaco-editor/react';
 import { EditorContainer } from './ui/EditorContainer';
 import { Grid2 } from '@mui/material';
 import { EvaluatorContainer } from './ui/EvaluatorContainer';
+import { ExamplePrograms } from './examples';
 
 const App: React.FC = () => {
   const [treeSitterParser, setTreeSitterParser] = useState<Parser | null>(null);
-  const [code, setCode] = useState('code content is put here');
+  const [code, setCode] = useState(ExamplePrograms.ski);
 
   useEffect(() => {
     (async () => {
@@ -33,6 +34,7 @@ const App: React.FC = () => {
   >
     <Grid2 size={6} minWidth={0}>
       <EditorContainer
+        code={code}
         onChange={onEditorChange}
       />
     </Grid2>
