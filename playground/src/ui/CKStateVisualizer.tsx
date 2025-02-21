@@ -39,6 +39,7 @@ const EnvVis: React.FC<EnvProp> = ({ var: v, val, matched }) => {
         onClick={toggleExpand}
         sx={{
             display: "inline",
+            backgroundColor: matched ? "MistyRose" : "inherit",
             "&:hover": {
                 backgroundColor: "lightgray"
             }
@@ -134,10 +135,11 @@ interface ContVisProp {
     cont: Cont,
     childKind: ChildKind,
     varopt: string | null,
-    children: ReactNode
+    children: ReactNode,
+    redex?: boolean
 }
 
-const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt }) => {
+const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, redex }) => {
     if (cont.isEmpty()) {
         return children
     }
@@ -149,7 +151,12 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt }) =
                 cont={cont.rest()}
                 childKind={"application"}
                 varopt={varopt}>
-                {children} <ExpressionVis expr={frame.arg} context={"appR"} />
+                <Box
+                    sx={{ backgroundColor: redex ? "MistyRose" : "inherit" }}
+                    display={"inline"}
+                >
+                    {children} <ExpressionVis expr={frame.arg} context={"appR"} />
+                </Box>
             </ContVis>
 
         case "appR":
@@ -158,9 +165,14 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt }) =
                 childKind={"application"}
                 varopt={varopt}
             >
-                <ValueVis val={frame.closure} />
-                {children}
-            </ContVis>
+                <Box
+                    sx={{ backgroundColor: redex ? "MistyRose" : "inherit" }}
+                    display={"inline"}
+                >
+                    <ValueVis val={frame.closure} />
+                    {children}
+                </Box>
+            </ContVis >
 
         case "env": {
             /* Take all sequential envs */
@@ -183,10 +195,16 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt }) =
                 childKind={"env"}
                 varopt={v}
             >
-                {envs.reverse()}
-                <Paren cond={childKind === "application"}>
-                    {children}
-                </Paren>
+                {envs.slice(1).reverse()}
+                <Box
+                    sx={{ backgroundColor: redex ? "MistyRose" : "inherit" }}
+                    display={"inline"}
+                >
+                    {envs[0]}
+                    <Paren cond={childKind === "application"}>
+                        {children}
+                    </Paren>
+                </Box>
             </ContVis>;
         }
     }
@@ -219,7 +237,12 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
         }
 
         case "applyCont":
-            return <ContVis cont={state.cont} childKind={state.val.kind} varopt={null}>
+            return <ContVis
+                cont={state.cont}
+                childKind={state.val.kind}
+                varopt={null}
+                redex
+            >
                 <Box sx={{
                     backgroundColor: "cyan",
                     display: "inline"
