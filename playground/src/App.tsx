@@ -31,13 +31,19 @@ const App: React.FC = () => {
     spacing={0}
     height="100vh"
   >
-    <Grid2 size={6} minWidth={0}>
+    <Grid2
+      size={{ xs: 12, md: 6 }}
+      height={{ xs: "50%", md: "100%" }}
+      minWidth={0}>
       <EditorContainer
         code={code}
         onChange={onEditorChange}
       />
     </Grid2>
-    <Grid2 size={6} minWidth={0}>
+    <Grid2
+      size={{ xs: 12, md: 6 }}
+      height={{ xs: "50%", md: "100%" }}
+      minWidth={0}>
       {
         treeSitterParser ?
           <EvaluatorContainer
