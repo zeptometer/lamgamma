@@ -1,5 +1,87 @@
 [
   {
+    "type": "add",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "application",
     "named": true,
     "fields": {},
@@ -7,6 +89,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "add",
+          "named": true
+        },
         {
           "type": "application",
           "named": true
@@ -17,6 +103,14 @@
         },
         {
           "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "mult",
+          "named": true
+        },
+        {
+          "type": "number",
           "named": true
         }
       ]
@@ -31,6 +125,10 @@
       "required": true,
       "types": [
         {
+          "type": "add",
+          "named": true
+        },
+        {
           "type": "application",
           "named": true
         },
@@ -43,10 +141,100 @@
           "named": true
         },
         {
+          "type": "mult",
+          "named": true
+        },
+        {
+          "type": "number",
+          "named": true
+        },
+        {
           "type": "parameters",
           "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "mult",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -74,6 +262,10 @@
       "required": true,
       "types": [
         {
+          "type": "add",
+          "named": true
+        },
+        {
           "type": "application",
           "named": true
         },
@@ -83,6 +275,14 @@
         },
         {
           "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "mult",
+          "named": true
+        },
+        {
+          "type": "number",
           "named": true
         }
       ]
@@ -97,6 +297,14 @@
     "named": false
   },
   {
+    "type": "*",
+    "named": false
+  },
+  {
+    "type": "+",
+    "named": false
+  },
+  {
     "type": "->",
     "named": false
   },
@@ -106,6 +314,10 @@
   },
   {
     "type": "identifier",
+    "named": true
+  },
+  {
+    "type": "number",
     "named": true
   }
 ]
