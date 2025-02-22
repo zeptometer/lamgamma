@@ -1,5 +1,4 @@
-import { AppBar, Box, Container, IconButton, Toolbar } from "@mui/material"
-import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
+import { AppBar, Box, Button, Container, Toolbar } from "@mui/material"
 import React, { useEffect, useState } from "react"
 import Parser from "web-tree-sitter";
 
@@ -23,12 +22,15 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
     const [state, setState] = useState<Result<CKState, Error>>(initialState);
     const [isComplete, setComplete] = useState(false);
 
-    useEffect(() => {
+    const resetState = () => {
         const tree = treeSitterParser.parse(code)
         const exprResult = parseNode(tree.rootNode)
 
         setState(exprResult.map(expr => CKMachine.initState(expr)))
-    }, [code, treeSitterParser])
+        setComplete(false)
+    }
+
+    useEffect(resetState, [code, treeSitterParser])
 
     const evaluate = () => {
         if (state.isErr()) {
@@ -44,28 +46,13 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
         setState(CKMachine.executeStep(state.value))
     }
 
-    return <Box>
-        <AppBar position="static">
-            <Toolbar>
-                <IconButton
-                    size="large"
-                    edge="start"
-                    color="inherit"
-                    aria-label="menu"
-                    sx={{ mr: 2 }}
-                    onClick={evaluate}
-                    disabled={isComplete}
-                >
-                    <PlayCircleFilledIcon />
-                </IconButton>
-                {
-                    isComplete ? "completed" : ""
-                }
-            </Toolbar>
-        </AppBar>
+    return <Box sx={{
+        height: "100%"
+    }}>
         <Container sx={{
             fontFamily: "MonaSpace Neon",
-            paddingTop: "1em"
+            paddingTop: "1em",
+            height: "100%"
         }}>
             {
                 state.match(
@@ -74,5 +61,19 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
                 )
             }
         </Container>
+        <AppBar position="sticky" sx={{ top: 'auto', bottom: 0 }}>
+            <Toolbar>
+                <Button variant="contained"
+                    onClick={evaluate}
+                    disabled={isComplete}>
+                    {isComplete ? "Eval Completed" : "Eval Step"}
+                </Button>
+
+                <Button variant="contained"
+                    onClick={resetState}>
+                    Reset
+                </Button>
+            </Toolbar>
+        </AppBar>
     </Box>
 }
