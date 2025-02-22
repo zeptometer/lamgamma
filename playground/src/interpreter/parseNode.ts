@@ -3,13 +3,22 @@ import { SyntaxError } from './SyntaxError';
 import Parser from 'web-tree-sitter';
 import { err, ok, Result } from 'neverthrow';
 
+const stringifyPosition = (node: Parser.SyntaxNode): string => {
+    const {
+        startPosition: { row: sr, column: sc },
+        endPosition: { row: er, column: ec }
+    } = node;
+
+    return `(${sr+1},${sc})-(${er+1}-${ec})`;
+}
+
 export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxError> => {
     if (node.isError) {
-        return err(new SyntaxError("Syntax error", node));
+        return err(new SyntaxError(`${stringifyPosition(node)}: Syntax error`, node));
     }
 
     if (node.isMissing) {
-        return err(new SyntaxError(`Missing node: ${node.type}`, node));
+        return err(new SyntaxError(`${stringifyPosition(node)}: Missing ${node.type}`, node));
     }
 
     if (node.type === 'source_file') {
@@ -17,6 +26,12 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
         if (expr == null) {
             return err(new SyntaxError(
                 "Expected unreachable: source_file node has no children",
+                node
+            ));
+        }
+        if (node.namedChild(1)?.isError) {
+            return err(new SyntaxError(
+                `${stringifyPosition(node.namedChild(1)!)}: Syntax Error`,
                 node
             ));
         }
@@ -72,7 +87,7 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
             }
         )
     } else {
-        return err(new SyntaxError(`Got unexpected node: ${node.type}`, node));
+        return err(new SyntaxError(`${stringifyPosition(node)}: Got unexpected node: ${node.type}`, node));
     }
 }
 
@@ -82,12 +97,12 @@ const parseParams = (node: Parser.SyntaxNode): Result<Variable[], SyntaxError> =
 
 const parseIdentifier = (node: Parser.SyntaxNode): Result<Variable, SyntaxError> => {
     if (node.isMissing) {
-        return err(new SyntaxError(`Missing node: ${node.type}`, node));
+        return err(new SyntaxError(`${stringifyPosition(node)} Missing node: ${node.type}`, node));
     }
 
     if (node.type === "identifier") {
         return ok({ kind: "variable" as const, name: node.text });
     } else {
-        return err(new SyntaxError(`Expected identifier, but got ${node.type}`, node));
+        return err(new SyntaxError(`${stringifyPosition(node)}: Expected identifier, but got ${node.type}`, node));
     }
 }
