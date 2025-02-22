@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react"
+import { MouseEventHandler, ReactNode, useState } from "react"
 import { CKState, Cont, EnvFrame, Frame, Value } from "../interpreter/ckstate"
 import { Expression, Variable } from "../interpreter/expression"
 import { Box } from "@mui/material";
@@ -9,6 +9,25 @@ const Paren: React.FC<{ cond: boolean, children: ReactNode }> = ({ cond, childre
         {children}
         {cond ? ")" : ""}
     </>
+}
+
+interface RedexProp {
+    redex?: boolean,
+    onClick?: MouseEventHandler<HTMLDivElement> | undefined,
+    children: ReactNode
+}
+
+const Term: React.FC<RedexProp> = ({ redex, children, onClick }) => {
+    return redex ?
+        <Box
+            onClick={onClick}
+            sx={{
+                display: "inline",
+                borderBottom: redex ? "black solid 2pt" : "inherit",
+            }}>
+            {children}
+        </Box> :
+        children;
 }
 
 interface EnvProp {
@@ -35,17 +54,9 @@ const EnvVis: React.FC<EnvProp> = ({ var: v, val, matched }) => {
 
     const toggleExpand = () => { setExpanded(!expanded) }
 
-    return <Box
-        onClick={toggleExpand}
-        sx={{
-            display: "inline",
-            backgroundColor: matched ? "MistyRose" : "inherit",
-            "&:hover": {
-                backgroundColor: "lightgray"
-            }
-        }}>
+    return <Term onClick={toggleExpand} redex={matched}>
         [{varVis}={valVis}]
-    </Box >
+    </Term>
 }
 
 interface ClosedVarProp {
@@ -86,16 +97,24 @@ const ValueVis: React.FC<{ val: Value }> = ({ val }) => {
     </>
 }
 
-const ExpressionVis: React.FC<{ expr: Expression, context: string }> = ({ expr, context }) => {
+interface ExpressionVisProp {
+    expr: Expression,
+    context: string,
+    underEvaluation?: boolean
+}
+
+const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvaluation }) => {
     switch (expr.kind) {
         case "variable":
-            if (context === "toplevel") {
+            if (underEvaluation) {
                 return <Box sx={{
                     color: "red",
                     fontWeight: "bold",
                     display: "inline"
                 }}>
-                    {expr.name}
+                    <Term redex>
+                        {expr.name}
+                    </Term>
                 </Box>
             } else {
                 return <>{expr.name}</>
@@ -151,12 +170,7 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
                 cont={cont.rest()}
                 childKind={"application"}
                 varopt={varopt}>
-                <Box
-                    sx={{ backgroundColor: redex ? "MistyRose" : "inherit" }}
-                    display={"inline"}
-                >
-                    {children} <ExpressionVis expr={frame.arg} context={"appR"} />
-                </Box>
+                {children} <ExpressionVis expr={frame.arg} context={"appR"} />
             </ContVis>
 
         case "appR":
@@ -165,13 +179,10 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
                 childKind={"application"}
                 varopt={varopt}
             >
-                <Box
-                    sx={{ backgroundColor: redex ? "MistyRose" : "inherit" }}
-                    display={"inline"}
-                >
+                <Term redex={redex}>
                     <ValueVis val={frame.closure} />
                     {children}
-                </Box>
+                </Term>
             </ContVis >
 
         case "env": {
@@ -196,15 +207,12 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
                 varopt={v}
             >
                 {envs.slice(1).reverse()}
-                <Box
-                    sx={{ backgroundColor: redex ? "MistyRose" : "inherit" }}
-                    display={"inline"}
-                >
+                <Term redex={redex}>
                     {envs[0]}
                     <Paren cond={childKind === "application"}>
                         {children}
                     </Paren>
-                </Box>
+                </Term>
             </ContVis>;
         }
     }
@@ -228,7 +236,7 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
                     backgroundColor: "yellow",
                     display: "inline"
                 }}>
-                    <ExpressionVis
+                    <ExpressionVis underEvaluation
                         expr={state.expr}
                         context={state.cont.first()?.kind ?? "toplevel"}
                     />
