@@ -207,6 +207,207 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
             }
         )
 
+    } else if (node.type == "boolean") {
+        if (node.text == "true") {
+            return ok({
+                kind: "boolean" as const,
+                value: true
+            })
+        } else if (node.text == "false") {
+            return ok({
+                kind: "boolean" as const,
+                value: false
+            })
+        } else {
+            return err(new SyntaxError(`${stringifyPosition(node)}: Expected unreachable: "${node.text}" is not a boolean`, node));
+        }
+
+    } else if (node.type == "ctrl_if") {
+        const condNode = node.namedChild(0);
+        const thenNode = node.namedChild(1);
+        const elseNode = node.namedChild(2);
+        if (condNode == null || thenNode == null || elseNode == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: cond or then or else is missing in ctrl_if",
+                node));
+        }
+
+        return Result.combine([parseNode(condNode), parseNode(thenNode), parseNode(elseNode)]).andThen(
+            ([cond, then, else_]) => {
+                return ok({
+                    kind: "if" as const,
+                    cond: cond,
+                    then: then,
+                    else_: else_
+                })
+            }
+        )
+
+    } else if (node.type == "eq") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in eq",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "primitive" as const,
+                    op: "eq" as const,
+                    args: List.of(left, right)
+                })
+            }
+        )
+
+    } else if (node.type == "ne") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in ne",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "primitive" as const,
+                    op: "ne" as const,
+                    args: List.of(left, right)
+                })
+            }
+        )
+    } else if (node.type == "lt") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in lt",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "primitive" as const,
+                    op: "lt" as const,
+                    args: List.of(left, right)
+                })
+            }
+        )
+    } else if (node.type == "le") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in le",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "primitive" as const,
+                    op: "le" as const,
+                    args: List.of(left, right)
+                })
+            }
+        )
+    } else if (node.type == "gt") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in gt",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "primitive" as const,
+                    op: "gt" as const,
+                    args: List.of(left, right)
+                })
+            }
+        )
+    } else if (node.type == "ge") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in ge",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "primitive" as const,
+                    op: "ge" as const,
+                    args: List.of(left, right)
+                })
+            }
+        )
+    } else if (node.type == "and") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in and",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "short_circuit" as const,
+                    op: "and" as const,
+                    left: left,
+                    right: right
+                })
+            }
+        )
+
+    } else if (node.type == "or") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in or",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "short_circuit" as const,
+                    op: "or" as const,
+                    left: left,
+                    right: right
+                })
+            }
+        )
+
+    } else if (node.type == "neg") {
+        const expr = node.namedChild(0);
+        if (expr == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: expr is missing in neg",
+                node));
+        }
+
+        return parseNode(expr).map((expr) => {
+            return {
+                kind: "primitive" as const,
+                op: "neg" as const,
+                args: List.of(expr)
+            }
+        })
+
     } else {
         return err(new SyntaxError(`${stringifyPosition(node)}: Got unexpected node: ${node.type}`, node));
     }
@@ -218,7 +419,7 @@ const parseParams = (node: Parser.SyntaxNode): Result<Variable[], SyntaxError> =
 
 const parseIdentifier = (node: Parser.SyntaxNode): Result<Variable, SyntaxError> => {
     if (node.isMissing) {
-        return err(new SyntaxError(`${stringifyPosition(node)} Missing node: ${node.type}`, node));
+        return err(new SyntaxError(`${stringifyPosition(node)}: Missing ${node.type}`, node));
     }
 
     if (node.type === "identifier") {

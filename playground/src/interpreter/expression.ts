@@ -80,8 +80,13 @@ const color = (id: Identifier): Identifier => {
     }
 }
 
-export type Expression = Variable | Lambda | Application | Integer | Primitive;
-export type PrimitiveOp = "add" | "sub" | "mul" | "div" | "mod";
+export type Expression = Variable | Lambda | Application | Integer | Primitive | Boolean | ShortCircuit | If;
+
+export type BinOp = "add" | "sub" | "mul" | "div" | "mod" | "eq" | "ne" | "lt" | "le" | "gt" | "ge";
+export type UniOp = "neg";
+export type PrimitiveOp = BinOp | UniOp;
+
+export type ShortCircuitOp = "and" | "or";
 
 export type Variable = {
     kind: "variable";
@@ -111,4 +116,22 @@ export type Integer = {
     value: number;
 }
 
+export type Boolean = {
+    kind: "boolean";
+    value: boolean;
+}
+
+export type ShortCircuit = {
+    kind: "short_circuit";
+    op: ShortCircuitOp;
+    left: Expression;
+    right: Expression;
+}
+
+export type If = {
+    kind: "if";
+    cond: Expression;
+    then: Expression;
+    else_: Expression; // `else` is a reserved word in TypeScript
+}
 export const Identifier = { color, stringify: stringifyIdentifier, eq: eqIdentifier };
