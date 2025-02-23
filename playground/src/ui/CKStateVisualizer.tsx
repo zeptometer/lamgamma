@@ -1,8 +1,19 @@
 import { MouseEventHandler, ReactNode, useState } from "react"
 import { CKState, Cont, EnvFrame, Frame, Value } from "../interpreter/ckstate"
-import { Expression, Variable } from "../interpreter/expression"
+import { Expression, PrimitiveOp, Variable } from "../interpreter/expression"
 import { Box } from "@mui/material";
 
+const stringifyOp = (op: PrimitiveOp) => {
+    switch (op) {
+        case "add": return "+"
+        case "sub": return "-"
+        case "mul": return "*"
+        case "div": return "/"
+        case "mod": return "mod"
+        default:
+            throw new Error(`Unknown type: ${(op as { kind: "__invalid__" }).kind}`);
+    }
+}
 const Paren: React.FC<{ cond: boolean, children: ReactNode }> = ({ cond, children }) => {
     return <>
         {cond ? "(" : ""}
@@ -85,17 +96,25 @@ const ClosedVarVis: React.FC<ClosedVarProp> = ({ var: v, val }) => {
 }
 
 const ValueVis: React.FC<{ val: Value }> = ({ val }) => {
-    const len = val.env.size;
+    switch (val.kind) {
+        case "closure": {
+            const len = val.env.size;
 
-    return <>
-        【{val.env.reverse()
-            .map((x, idx) => <>
-                <ClosedVarVis var={x.var} val={x.val} />
-                {idx < len - 1 ? "," : null}
-            </>)
-        }|
-        <ExpressionVis expr={val.lambda} context="toplevel" />】
-    </>
+            return <>
+                【{val.env.reverse()
+                    .map((x, idx) => <>
+                        <ClosedVarVis var={x.var} val={x.val} />
+                        {idx < len - 1 ? "," : null}
+                    </>)
+                }|
+                <ExpressionVis expr={val.lambda} context="toplevel" />】
+            </>
+        }
+
+        case "integer": {
+            return <>{val.value}</>
+        }
+    }
 }
 
 interface ExpressionVisProp {
@@ -138,18 +157,31 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
         }
 
         case "application": {
-            return <Paren cond={context === "appR" || context === "env"}>
+            return <Paren cond={["appR", "env", "prim"].includes(context)}>
                 <ExpressionVis expr={expr.func} context={"appL"} />&nbsp;
                 <ExpressionVis expr={expr.arg} context={"appR"} />
             </Paren>
-
         }
 
+        case "integer": {
+            return <>{expr.value}</>
+        }
+
+        case "primitive": {
+            return <Paren cond={true}>
+                <ExpressionVis expr={expr.args.first()!} context={"primitive"} />
+                &nbsp;{stringifyOp(expr.op)}&nbsp;
+                <ExpressionVis expr={expr.args.last()!} context={"primitive"} />
+            </Paren>
+        }
+
+        default:
+            throw new Error(`Unknown type: ${(expr as { kind: "__invalid__" }).kind}`);
     }
     return null;
 }
 
-type ChildKind = "variable" | "application" | "lambda" | "env" | "closure"
+type ChildKind = "variable" | "application" | "lambda" | "env" | "closure" | "integer" | "primitive"
 
 interface ContVisProp {
     cont: Cont,
@@ -216,6 +248,36 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
                 </Group>
             </ContVis>;
         }
+
+        case "prim": {
+            let x;
+
+            if (frame.done.isEmpty()) {
+                x = <>
+                    {children}
+                    &nbsp;{stringifyOp(frame.op)}&nbsp;
+                    <ExpressionVis expr={frame.rest.first()!} context={"primitive"} />
+                </>
+            } else {
+                x = <>
+                    <ValueVis val={frame.done.first()!} />
+                    &nbsp;{stringifyOp(frame.op)}&nbsp;
+                    {children}
+                </>
+            }
+
+            return <ContVis
+                cont={cont.rest()}
+                childKind={"primitive"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <Paren cond={true}>
+                        {x}
+                    </Paren>
+                </Group>
+            </ContVis>
+        }
     }
 }
 
@@ -228,29 +290,32 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
         case "eval": {
             const varopt = (state.expr.kind === "variable") ? state.expr.name : null;
 
-            return <ContVis
-                cont={state.cont}
-                childKind={state.expr.kind}
-                varopt={varopt}
-            >
-                <Box sx={{
-                    backgroundColor: "yellow",
-                    display: "inline"
-                }}>
-                    <ExpressionVis underEvaluation
-                        expr={state.expr}
-                        context={state.cont.first()?.kind ?? "toplevel"}
-                    />
-                </Box>
-            </ContVis>
+            return <Box sx={{ lineBreak: "anywhere" }}>
+                <ContVis
+                    cont={state.cont}
+                    childKind={state.expr.kind}
+                    varopt={varopt}
+                >
+                    <Box sx={{
+                        backgroundColor: "yellow",
+                        display: "inline"
+                    }}>
+                        <ExpressionVis underEvaluation
+                            expr={state.expr}
+                            context={state.cont.first()?.kind ?? "toplevel"}
+                        />
+                    </Box>
+                </ContVis>
+            </Box>
         }
 
         case "applyCont":
-            return <ContVis
-                cont={state.cont}
-                childKind={state.val.kind}
-                varopt={null}
-                redex
+            return <Box sx={{ lineBreak: "anywhere" }}>
+                <ContVis
+                    cont={state.cont}
+                    childKind={state.val.kind}
+                    varopt={null}
+                    redex
             >
                 <Box sx={{
                     backgroundColor: "cyan",
@@ -259,5 +324,6 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
                     <ValueVis val={state.val} />
                 </Box>
             </ContVis>
+            </Box>
     }
 }
