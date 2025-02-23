@@ -42,6 +42,23 @@ const Group: React.FC<RedexProp> = ({ redex, children, onClick }) => {
     </Box>;
 }
 
+interface IdentVisProp {
+    ident: Identifier
+}
+
+const IdentVis: React.FC<IdentVisProp> = ({ ident }) => {
+    switch (ident.kind) {
+        case "raw":
+            return <>{ident.name}</>
+        case "generated":
+            return <>_<sub>{ident.id}</sub></>
+        case "colored":
+            return <>{ident.basename}<sub>{ident.id}</sub></>
+        default:
+            throw new Error(`Unknown type: ${(ident as { kind: "__invalid__" }).kind}`);
+    }
+}
+
 interface EnvProp {
     ident: Identifier,
     val: Value,
@@ -58,9 +75,9 @@ const EnvVis: React.FC<EnvProp> = ({ ident, val, matched }) => {
                 fontWeight: "bold",
                 display: "inline"
             }}>
-            {Identifier.stringify(ident)}
+            <IdentVis ident={ident} />
         </Box> :
-        <>{Identifier.stringify(ident)}</>;
+        <IdentVis ident={ident} />;
 
     const valVis = expanded ? <ValueVis val={val} /> : <>…</>
 
@@ -97,22 +114,29 @@ const ClosedVarVis: React.FC<ClosedVarProp> = ({ ident, val }) => {
                 backgroundColor: "inherit"
             }
         }}>
-        {Identifier.stringify(ident)}={valVis}
+        <IdentVis ident={ident} />={valVis}
     </Box >
 }
 
 const ValueVis: React.FC<{ val: Value }> = ({ val }) => {
     switch (val.kind) {
         case "closure": {
-            const len = val.env.size;
-
+            const envlen = val.env.size;
+            const renvlen = val.renv.size;
             return <>
                 【{val.env.reverse()
                     .map((x, idx) => <>
                         <ClosedVarVis ident={x.ident} val={x.val} />
-                        {idx < len - 1 ? "," : null}
+                        {idx < envlen - 1 ? "," : null}
                     </>)
                 }|
+                {val.renv.reverse()
+                    .map((x, idx) => <>
+                        <IdentVis ident={x.from} />→<IdentVis ident={x.to} />
+                        {idx < renvlen - 1 ? "," : null}
+                    </>)
+                }
+                |
                 <ExpressionVis expr={val.lambda} context="toplevel" />】
             </>
         }
@@ -139,11 +163,11 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
                     display: "inline"
                 }}>
                     <Group redex>
-                        {Identifier.stringify(expr.ident)}
+                        <IdentVis ident={expr.ident} />
                     </Group>
                 </Box>
             } else {
-                return <>{Identifier.stringify(expr.ident)}</>
+                return <IdentVis ident={expr.ident} />
             }
 
         case "lambda": {
@@ -156,7 +180,9 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
 
             return <Paren cond={context !== "toplevel"}>
                 <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em" }}>fn</Box>
-                <Box sx={{ display: "inline" }}>{vars.map((v) => Identifier.stringify(v.ident)).join(" ")}</Box>
+                <Box sx={{ display: "inline" }}>
+                    {vars.map((v) => <IdentVis ident={v.ident} />).reduce((acc, curr) => <>{acc},{curr}</>)}
+                </Box>
                 <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em", paddingLeft: "0.5em" }}>→</Box>
                 <ExpressionVis expr={body} context={"lambda"} />
             </Paren>
@@ -192,7 +218,7 @@ type ChildKind = "variable" | "application" | "lambda" | "env" | "closure" | "in
 interface ContVisProp {
     cont: Cont,
     childKind: ChildKind,
-    varopt: string | null,
+    varopt: Identifier | null,
     children: ReactNode,
     redex?: boolean
 }
@@ -231,7 +257,7 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
             let v = varopt;
             while (!rest.isEmpty() && rest.first()!.kind === "env") {
                 const env = rest.first() as EnvFrame;
-                if (Identifier.stringify(env.ident) === v) {
+                if (v && Identifier.eq(env.ident, v)) {
                     envs.push(<EnvVis ident={env.ident} val={env.val} matched />)
                     v = null;
                 } else {
@@ -294,7 +320,15 @@ interface CKStateVisProp {
 export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
     switch (state.kind) {
         case "eval": {
-            const varopt = (state.expr.kind === "variable") ? Identifier.stringify(state.expr.ident) : null;
+            let varopt = null;
+            if (state.expr.kind === "variable") {
+                const ident = state.expr.ident;
+                const renv = state.renv;
+                const renamed = RenamingEnv.lookup(renv, ident);
+                if (renamed) {
+                    varopt = renamed;
+                }
+            }
 
             return <Box sx={{ lineBreak: "anywhere" }}>
                 <ContVis
@@ -337,7 +371,7 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
 export const RenamingEnvVis: React.FC<{ renv: RenamingEnv }> = ({ renv }) => {
     return <Box>
         {renv.map((x) => <>
-            {Identifier.stringify(x.from)}→{Identifier.stringify(x.to)},
+            <IdentVis ident={x.from} />→<IdentVis ident={x.to} />,
         </>)
         }
     </Box>
