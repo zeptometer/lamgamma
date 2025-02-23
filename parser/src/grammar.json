@@ -28,7 +28,19 @@
         },
         {
           "type": "SYMBOL",
+          "name": "sub"
+        },
+        {
+          "type": "SYMBOL",
           "name": "mult"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "div"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mod"
         }
       ]
     },

@@ -24,6 +24,10 @@
             "named": true
           },
           {
+            "type": "div",
+            "named": true
+          },
+          {
             "type": "identifier",
             "named": true
           },
@@ -32,11 +36,19 @@
             "named": true
           },
           {
+            "type": "mod",
+            "named": true
+          },
+          {
             "type": "mult",
             "named": true
           },
           {
             "type": "number",
+            "named": true
+          },
+          {
+            "type": "sub",
             "named": true
           }
         ]
@@ -62,6 +74,10 @@
             "named": true
           },
           {
+            "type": "div",
+            "named": true
+          },
+          {
             "type": "identifier",
             "named": true
           },
@@ -70,11 +86,19 @@
             "named": true
           },
           {
+            "type": "mod",
+            "named": true
+          },
+          {
             "type": "mult",
             "named": true
           },
           {
             "type": "number",
+            "named": true
+          },
+          {
+            "type": "sub",
             "named": true
           }
         ]
@@ -98,11 +122,19 @@
           "named": true
         },
         {
+          "type": "div",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
         {
           "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "mod",
           "named": true
         },
         {
@@ -112,8 +144,118 @@
         {
           "type": "number",
           "named": true
+        },
+        {
+          "type": "sub",
+          "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "div",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -133,11 +275,19 @@
           "named": true
         },
         {
+          "type": "div",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
         {
           "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "mod",
           "named": true
         },
         {
@@ -151,8 +301,118 @@
         {
           "type": "parameters",
           "named": true
+        },
+        {
+          "type": "sub",
+          "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "mod",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -180,6 +440,10 @@
             "named": true
           },
           {
+            "type": "div",
+            "named": true
+          },
+          {
             "type": "identifier",
             "named": true
           },
@@ -188,11 +452,19 @@
             "named": true
           },
           {
+            "type": "mod",
+            "named": true
+          },
+          {
             "type": "mult",
             "named": true
           },
           {
             "type": "number",
+            "named": true
+          },
+          {
+            "type": "sub",
             "named": true
           }
         ]
@@ -218,6 +490,10 @@
             "named": true
           },
           {
+            "type": "div",
+            "named": true
+          },
+          {
             "type": "identifier",
             "named": true
           },
@@ -226,11 +502,19 @@
             "named": true
           },
           {
+            "type": "mod",
+            "named": true
+          },
+          {
             "type": "mult",
             "named": true
           },
           {
             "type": "number",
+            "named": true
+          },
+          {
+            "type": "sub",
             "named": true
           }
         ]
@@ -270,11 +554,19 @@
           "named": true
         },
         {
+          "type": "div",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
         {
           "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "mod",
           "named": true
         },
         {
@@ -284,8 +576,118 @@
         {
           "type": "number",
           "named": true
+        },
+        {
+          "type": "sub",
+          "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "sub",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -305,7 +707,15 @@
     "named": false
   },
   {
+    "type": "-",
+    "named": false
+  },
+  {
     "type": "->",
+    "named": false
+  },
+  {
+    "type": "/",
     "named": false
   },
   {
@@ -315,6 +725,10 @@
   {
     "type": "identifier",
     "named": true
+  },
+  {
+    "type": "mod",
+    "named": false
   },
   {
     "type": "number",

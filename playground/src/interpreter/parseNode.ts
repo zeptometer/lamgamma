@@ -2,6 +2,7 @@ import { Expression, Variable } from './expression';
 import { SyntaxError } from './SyntaxError';
 import Parser from 'web-tree-sitter';
 import { err, ok, Result } from 'neverthrow';
+import { List } from 'immutable';
 
 const stringifyPosition = (node: Parser.SyntaxNode): string => {
     const {
@@ -9,7 +10,7 @@ const stringifyPosition = (node: Parser.SyntaxNode): string => {
         endPosition: { row: er, column: ec }
     } = node;
 
-    return `(${sr+1},${sc})-(${er+1}-${ec})`;
+    return `(${sr + 1},${sc})-(${er + 1}-${ec})`;
 }
 
 export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxError> => {
@@ -86,6 +87,123 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
                 })
             }
         )
+
+    } else if (node.type == "number") {
+        if (node.text == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: number has no text",
+                node
+            ));
+        }
+
+        const number = Number(node.text);
+        if (isNaN(number)) {
+            return err(new SyntaxError(
+                `Expected unreachable: failed to parse number: ${node.text}`,
+                node
+            ));
+        }
+
+        return ok({
+            kind: "number" as const,
+            value: number
+        })
+
+    } else if (node.type == "add") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in add",
+                node));
+        };
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "primitive" as const,
+                    op: "add" as const,
+                    args: List.of(left, right)
+                })
+            }
+        )
+
+    } else if (node.type == "sub") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in sub",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "primitive" as const,
+                    op: "sub" as const,
+                    args: List.of(left, right)
+                })
+            }
+        )
+
+    } else if (node.type == "mult") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in mul",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "primitive" as const,
+                    op: "mul" as const,
+                    args: List.of(left, right)
+                })
+            }
+        )
+
+    } else if (node.type == "div") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in div",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "primitive" as const,
+                    op: "div" as const,
+                    args: List.of(left, right)
+                })
+            }
+        )
+
+    } else if (node.type == "mod") {
+        const left = node.namedChild(0);
+        const right = node.namedChild(1);
+        if (left == null || right == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: left or right is missing in mod",
+                node));
+        }
+
+        return Result.combine([parseNode(left), parseNode(right)]).andThen(
+            ([left, right]) => {
+                return ok({
+                    kind: "primitive" as const,
+                    op: "mod" as const,
+                    args: List.of(left, right)
+                })
+            }
+        )
+
     } else {
         return err(new SyntaxError(`${stringifyPosition(node)}: Got unexpected node: ${node.type}`, node));
     }

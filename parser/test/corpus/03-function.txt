@@ -37,13 +37,13 @@ x fn y -> y
 ---
 
 (source_file
-  (application
+  (sub
     (application
       (application
         (identifier)
         (identifier))
       (identifier))
-    (ERROR)
+    (ERROR (UNEXPECTED '>'))
     (identifier)))
 
 ==================

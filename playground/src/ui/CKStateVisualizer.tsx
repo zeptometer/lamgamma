@@ -14,7 +14,7 @@ const Paren: React.FC<{ cond: boolean, children: ReactNode }> = ({ cond, childre
 interface RedexProp {
     redex?: boolean,
     onClick?: MouseEventHandler<HTMLDivElement> | undefined,
-    children: ReactNode
+    children: ReactNode,
 }
 
 const Group: React.FC<RedexProp> = ({ redex, children, onClick }) => {

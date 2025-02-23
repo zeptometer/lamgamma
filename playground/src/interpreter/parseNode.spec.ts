@@ -3,6 +3,7 @@ import Parser from 'web-tree-sitter';
 
 import { parseNode } from './parseNode';
 import { ok } from 'neverthrow';
+import { List } from 'immutable';
 
 let parser: Parser;
 
@@ -17,72 +18,133 @@ beforeAll(
 )
 
 describe('Tree Parser, success cases', () => {
-  it('parse variable', () => {
-    const input = 'x';
-    const expectedOutput = { kind: 'variable', name: 'x' };
-    expect(parseNode((parser.parse(input)).rootNode))
-      .toEqual(ok(expectedOutput));
-  });
+  describe('basic stlc constructs', () => {
+    it('parse variable', () => {
+      const input = 'x';
+      const expectedOutput = { kind: 'variable', name: 'x' };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
 
-  it('parse abstraction', () => {
-    const input = 'fn x -> x';
-    const expectedOutput = {
-      kind: 'lambda',
-      param: { kind: 'variable', name: 'x' },
-      body: { kind: 'variable', name: 'x' }
-    };
-    expect(parseNode((parser.parse(input)).rootNode))
-      .toEqual(ok(expectedOutput));
-  });
-
-  it('parse abstraction with multiple params', () => {
-    const input = 'fn x y -> x';
-    const expectedOutput = {
-      kind: 'lambda',
-      param: { kind: 'variable', name: 'x' },
-      body: {
-        kind: 'lambda',
-        param: { kind: 'variable', name: 'y' },
-        body: { kind: 'variable', name: 'x' }
-      }
-    };
-    expect(parseNode((parser.parse(input)).rootNode))
-      .toEqual(ok(expectedOutput));
-  });
-
-  it('parse application', () => {
-    const input = 'x y';
-    const expectedOutput = {
-      kind: 'application',
-      func: { kind: 'variable', name: 'x' },
-      arg: { kind: 'variable', name: 'y' }
-    };
-    expect(parseNode((parser.parse(input)).rootNode))
-      .toEqual(ok(expectedOutput));
-  });
-
-  it('parse paren', () => {
-    const input = '(x)';
-    const expectedOutput = { kind: 'variable', name: 'x' };
-    expect(parseNode((parser.parse(input)).rootNode))
-      .toEqual(ok(expectedOutput));
-  });
-
-  it('compound expression', () => {
-    const input = '(fn x -> x) y';
-    const expectedOutput = {
-      kind: 'application',
-      func: {
+    it('parse abstraction', () => {
+      const input = 'fn x -> x';
+      const expectedOutput = {
         kind: 'lambda',
         param: { kind: 'variable', name: 'x' },
         body: { kind: 'variable', name: 'x' }
-      },
-      arg: { kind: 'variable', name: 'y' }
-    };
-    expect(parseNode((parser.parse(input)).rootNode))
-      .toEqual(ok(expectedOutput))
-  })
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+
+    it('parse abstraction with multiple params', () => {
+      const input = 'fn x y -> x';
+      const expectedOutput = {
+        kind: 'lambda',
+        param: { kind: 'variable', name: 'x' },
+        body: {
+          kind: 'lambda',
+          param: { kind: 'variable', name: 'y' },
+          body: { kind: 'variable', name: 'x' }
+        }
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+
+    it('parse application', () => {
+      const input = 'x y';
+      const expectedOutput = {
+        kind: 'application',
+        func: { kind: 'variable', name: 'x' },
+        arg: { kind: 'variable', name: 'y' }
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+
+    it('parse paren', () => {
+      const input = '(x)';
+      const expectedOutput = { kind: 'variable', name: 'x' };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+
+    it('compound expression', () => {
+      const input = '(fn x -> x) y';
+      const expectedOutput = {
+        kind: 'application',
+        func: {
+          kind: 'lambda',
+          param: { kind: 'variable', name: 'x' },
+          body: { kind: 'variable', name: 'x' }
+        },
+        arg: { kind: 'variable', name: 'y' }
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput))
+    })
+  });
+  describe('basic arithmetic', () => {
+    it('parse number', () => {
+      const input = '123';
+      const expectedOutput = { kind: 'number', value: 123 };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+    it('parse addition', () => {
+      const input = '1 + 2';
+      const expectedOutput = {
+        kind: 'primitive',
+        op: 'add',
+        args: List.of({ kind: 'number', value: 1 }, { kind: 'number', value: 2 })
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+    it('parse subtraction', () => {
+      const input = '1 - 2';
+      const expectedOutput = {
+        kind: 'primitive',
+        op: 'sub',
+        args: List.of({ kind: 'number', value: 1 }, { kind: 'number', value: 2 })
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+    it('parse multiplication', () => {
+      const input = '1 * 2';
+      const expectedOutput = {
+        kind: 'primitive',
+        op: 'mul',
+        args: List.of({ kind: 'number', value: 1 }, { kind: 'number', value: 2 })
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+    it('parse division', () => {
+      const input = '1 / 2';
+      const expectedOutput = {
+        kind: 'primitive',
+        op: 'div',
+        args: List.of({ kind: 'number', value: 1 }, { kind: 'number', value: 2 })
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+    it('parse modulo', () => {
+      const input = '1 mod 2';
+      const expectedOutput = {
+        kind: 'primitive',
+        op: 'mod',
+        args: List.of({ kind: 'number', value: 1 }, { kind: 'number', value: 2 })
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+  });
 });
+
 
 describe('Tree Parser, failing cases', () => {
   it('missing body in function', () => {
