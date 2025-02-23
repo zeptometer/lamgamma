@@ -17,17 +17,18 @@ interface RedexProp {
     children: ReactNode
 }
 
-const Term: React.FC<RedexProp> = ({ redex, children, onClick }) => {
-    return redex ?
-        <Box
-            onClick={onClick}
-            sx={{
-                display: "inline",
-                borderBottom: redex ? "black solid 2pt" : "inherit",
-            }}>
-            {children}
-        </Box> :
-        children;
+const Group: React.FC<RedexProp> = ({ redex, children, onClick }) => {
+    return <Box
+        onClick={onClick}
+        sx={{
+            display: "inline",
+            borderBottom: redex ? "black solid 2pt" : "inherit",
+            "&:hover": onClick ? {
+                backgroundColor: "lightgray"
+            } : {},
+        }}>
+        {children}
+    </Box>;
 }
 
 interface EnvProp {
@@ -54,9 +55,9 @@ const EnvVis: React.FC<EnvProp> = ({ var: v, val, matched }) => {
 
     const toggleExpand = () => { setExpanded(!expanded) }
 
-    return <Term onClick={toggleExpand} redex={matched}>
+    return <Group onClick={toggleExpand} redex={matched}>
         [{varVis}={valVis}]
-    </Term>
+    </Group>
 }
 
 interface ClosedVarProp {
@@ -67,7 +68,7 @@ interface ClosedVarProp {
 const ClosedVarVis: React.FC<ClosedVarProp> = ({ var: v, val }) => {
     const [expanded, setExpanded] = useState(false);
 
-    const valVis = expanded ? <>=<ValueVis val={val} /></> : <></>
+    const valVis = expanded ? <>=<ValueVis val={val} /></> : <>…</>
 
     const toggleExpand = () => { setExpanded(!expanded) }
 
@@ -79,7 +80,7 @@ const ClosedVarVis: React.FC<ClosedVarProp> = ({ var: v, val }) => {
                 backgroundColor: "lightgray"
             }
         }}>
-        {v.name}{valVis}
+        {v.name}={valVis}
     </Box >
 }
 
@@ -112,9 +113,9 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
                     fontWeight: "bold",
                     display: "inline"
                 }}>
-                    <Term redex>
+                    <Group redex>
                         {expr.name}
-                    </Term>
+                    </Group>
                 </Box>
             } else {
                 return <>{expr.name}</>
@@ -179,10 +180,10 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
                 childKind={"application"}
                 varopt={varopt}
             >
-                <Term redex={redex}>
+                <Group redex={redex}>
                     <ValueVis val={frame.closure} />
                     {children}
-                </Term>
+                </Group>
             </ContVis >
 
         case "env": {
@@ -207,12 +208,12 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
                 varopt={v}
             >
                 {envs.slice(1).reverse()}
-                <Term redex={redex}>
+                <Group redex={redex}>
                     {envs[0]}
                     <Paren cond={childKind === "application"}>
                         {children}
                     </Paren>
-                </Term>
+                </Group>
             </ContVis>;
         }
     }

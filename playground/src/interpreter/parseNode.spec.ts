@@ -20,7 +20,7 @@ describe('Tree Parser, success cases', () => {
   it('parse variable', () => {
     const input = 'x';
     const expectedOutput = { kind: 'variable', name: 'x' };
-    expect(parseNode((parser?.parse(input)).rootNode))
+    expect(parseNode((parser.parse(input)).rootNode))
       .toEqual(ok(expectedOutput));
   });
 
@@ -31,7 +31,7 @@ describe('Tree Parser, success cases', () => {
       param: { kind: 'variable', name: 'x' },
       body: { kind: 'variable', name: 'x' }
     };
-    expect(parseNode((parser?.parse(input)).rootNode))
+    expect(parseNode((parser.parse(input)).rootNode))
       .toEqual(ok(expectedOutput));
   });
 
@@ -46,7 +46,7 @@ describe('Tree Parser, success cases', () => {
         body: { kind: 'variable', name: 'x' }
       }
     };
-    expect(parseNode((parser?.parse(input)).rootNode))
+    expect(parseNode((parser.parse(input)).rootNode))
       .toEqual(ok(expectedOutput));
   });
 
@@ -57,14 +57,14 @@ describe('Tree Parser, success cases', () => {
       func: { kind: 'variable', name: 'x' },
       arg: { kind: 'variable', name: 'y' }
     };
-    expect(parseNode((parser?.parse(input)).rootNode))
+    expect(parseNode((parser.parse(input)).rootNode))
       .toEqual(ok(expectedOutput));
   });
 
   it('parse paren', () => {
     const input = '(x)';
     const expectedOutput = { kind: 'variable', name: 'x' };
-    expect(parseNode((parser?.parse(input)).rootNode))
+    expect(parseNode((parser.parse(input)).rootNode))
       .toEqual(ok(expectedOutput));
   });
 
@@ -79,7 +79,7 @@ describe('Tree Parser, success cases', () => {
       },
       arg: { kind: 'variable', name: 'y' }
     };
-    expect(parseNode((parser?.parse(input)).rootNode))
+    expect(parseNode((parser.parse(input)).rootNode))
       .toEqual(ok(expectedOutput))
   })
 });
@@ -87,7 +87,7 @@ describe('Tree Parser, success cases', () => {
 describe('Tree Parser, failing cases', () => {
   it('missing body in function', () => {
     const input = 'fn x ->';
-    const r = parseNode((parser?.parse(input)).rootNode);
+    const r = parseNode((parser.parse(input)).rootNode);
     expect(r.isErr()).toBeTruthy();
 
     const e = r._unsafeUnwrapErr();
@@ -98,7 +98,7 @@ describe('Tree Parser, failing cases', () => {
 
   it('missing parameter in function', () => {
     const input = 'fn -> x';
-    const r = parseNode((parser?.parse(input)).rootNode);
+    const r = parseNode((parser.parse(input)).rootNode);
     expect(r.isErr()).toBeTruthy();
 
     const e = r._unsafeUnwrapErr();
@@ -109,7 +109,7 @@ describe('Tree Parser, failing cases', () => {
 
   it('function needs to be parenthesized', () => {
     const input = 'x fn x -> x';
-    const r = parseNode((parser?.parse(input)).rootNode);
+    const r = parseNode((parser.parse(input)).rootNode);
     expect(r.isErr()).toBeTruthy();
 
     const e = r._unsafeUnwrapErr();
