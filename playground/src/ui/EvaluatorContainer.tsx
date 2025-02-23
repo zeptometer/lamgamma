@@ -7,6 +7,7 @@ import { CKMachine } from "../interpreter/ckmachine";
 import { CKState } from "../interpreter/ckstate";
 import { Result } from "neverthrow";
 import { CKStateVis } from "./CKStateVisualizer";
+import { List } from "immutable";
 
 interface Props {
     code: string,
@@ -19,20 +20,21 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
     const exprResult = parseNode(tree.rootNode)
     const initialState = exprResult.map((expr) => CKMachine.initState(expr))
 
-    const [state, setState] = useState<Result<CKState, Error>>(initialState);
+    const [states, setStates] = useState<List<Result<CKState, Error>>>(List.of(initialState));
     const [isComplete, setComplete] = useState(false);
 
     const resetState = () => {
         const tree = treeSitterParser.parse(code)
         const exprResult = parseNode(tree.rootNode)
 
-        setState(exprResult.map(expr => CKMachine.initState(expr)))
+        setStates(List.of(exprResult.map(expr => CKMachine.initState(expr))))
         setComplete(false)
     }
 
     useEffect(resetState, [code, treeSitterParser])
 
     const evaluate = () => {
+        const state = states.last()!;
         if (state.isErr()) {
             return;
         }
@@ -43,7 +45,12 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
             return;
         }
 
-        setState(CKMachine.executeStep(state.value))
+        const nextState = CKMachine.executeStep(state.value);
+        setStates(states.push(nextState));
+    }
+
+    const undo = () => {
+        setStates(states.pop());
     }
 
     return <Box sx={{
@@ -55,7 +62,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
             height: "100%"
         }}>
             {
-                state.match(
+                states.last()!.match(
                     (state) => <CKStateVis state={state} />,
                     (err) => err.message
                 )
@@ -67,6 +74,12 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
                     onClick={evaluate}
                     disabled={isComplete}>
                     {isComplete ? "Eval Completed" : "Eval Step"}
+                </Button>
+
+                <Button variant="contained"
+                    onClick={undo}
+                    disabled={states.size === 1}>
+                    Undo
                 </Button>
 
                 <Button variant="contained"

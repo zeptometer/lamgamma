@@ -5,4 +5,12 @@ const ski =
 (fn x -> x)
 `
 
-export const ExamplePrograms = { ski };
+const churchnum =
+`
+(fn f x -> f (f x))
+(fn f x -> f (f x))
+(fn n -> n + 1)
+0
+`
+
+export const ExamplePrograms = { ski, churchnum };

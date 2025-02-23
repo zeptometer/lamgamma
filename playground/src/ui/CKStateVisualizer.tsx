@@ -322,14 +322,14 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
                     childKind={state.val.kind}
                     varopt={null}
                     redex
-            >
-                <Box sx={{
-                    backgroundColor: "cyan",
-                    display: "inline"
-                }}>
-                    <ValueVis val={state.val} />
-                </Box>
-            </ContVis>
+                >
+                    <Box sx={{
+                        backgroundColor: "cyan",
+                        display: "inline"
+                    }}>
+                        <ValueVis val={state.val} />
+                    </Box>
+                </ContVis>
             </Box>
     }
 }
