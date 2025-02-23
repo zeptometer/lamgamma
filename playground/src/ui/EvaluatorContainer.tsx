@@ -6,7 +6,7 @@ import { parseNode } from '../interpreter/parseNode';
 import { CKMachine } from "../interpreter/ckmachine";
 import { CKState } from "../interpreter/ckstate";
 import { Result } from "neverthrow";
-import { CKStateVis } from "./CKStateVisualizer";
+import { CKStateVis, RenamingEnvVis } from "./CKStateVisualizer";
 import { List } from "immutable";
 
 interface Props {
@@ -63,10 +63,20 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
         }}>
             {
                 states.last()!.match(
-                    (state) => <CKStateVis state={state} />,
+                    (state) => <Box>
+                        <CKStateVis state={state} />
+
+                        <Box>
+
+                        REnv: {state.kind === "eval" && <RenamingEnvVis renv={state.renv} />}
+                        </Box>
+
+                        {/* JSON: {JSON.stringify(state)} */}
+                    </Box>,
                     (err) => err.message
                 )
             }
+
         </Container>
         <AppBar position="sticky" sx={{ top: 'auto', bottom: 0 }}>
             <Toolbar>

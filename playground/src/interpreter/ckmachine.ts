@@ -1,5 +1,5 @@
-import { Expression } from "./expression"
-import { CKState, Value, Cont, Frame } from "./ckstate";
+import { Expression, Identifier } from "./expression"
+import { CKState, Value, Cont, Frame, RenamingEnv } from "./ckstate";
 import { Result, ok, err } from "neverthrow";
 import { List } from "immutable";
 
@@ -46,9 +46,13 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
             const { expr, cont } = state;
             switch (expr.kind) {
                 case "variable": {
-                    const val = Cont.lookup(cont, expr);
+                    const finalIdent = RenamingEnv.lookup(state.renv, expr.ident);
+                    if (finalIdent === null) {
+                        return err(new Error(`Failed to rename identifier: ${Identifier.stringify(expr.ident)}`));
+                    }
+                    const val = Cont.lookup(cont, finalIdent);
                     if (val === null) {
-                        return err(new Error(`Unbound variable: ${expr.name}`));
+                        return err(new Error(`Unbound variable: ${Identifier.stringify(expr.ident)}`));
                     }
                     return ok({
                         kind: "applyCont",
@@ -60,7 +64,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                 case "lambda": {
                     return ok({
                         kind: "applyCont",
-                        val: { kind: "closure", lambda: expr, env: List.of() },
+                        val: { kind: "closure", lambda: expr, renv: state.renv, env: List.of() },
                         cont: cont
                     });
                 }
@@ -68,8 +72,9 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                 case "application": {
                     return ok({
                         kind: "eval",
+                        renv: state.renv,
                         expr: expr.func,
-                        cont: cont.unshift({ kind: "appL", arg: expr.arg })
+                        cont: cont.unshift({ kind: "appL", arg: expr.arg, renv: state.renv })
                     });
                 }
 
@@ -90,10 +95,12 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     }
                     return ok({
                         kind: "eval",
+                        renv: state.renv,
                         // expr.args.first() is guaranteed to be non-null because we checked the size above
                         expr: expr.args.first()!,
                         cont: cont.unshift({
                             kind: "prim",
+                            renv: state.renv,
                             op: expr.op,
                             done: List.of(),
                             rest: expr.args.rest()
@@ -121,18 +128,22 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     }
                     return ok({
                         kind: "eval",
+                        renv: frame.renv,
                         expr: frame.arg,
                         cont: rest.unshift({ kind: "appR", closure: val })
                     });
                 }
 
                 case "appR": {
-                    const { closure: { lambda: { body, param }, env } } = frame;
+                    const { closure: { lambda: { body, param }, renv, env } } = frame;
+                    const renamedParam = Identifier.color(param.ident);
+                    const newRenv = renv.push({ from: param.ident, to: renamedParam });
                     return ok({
                         kind: "eval",
+                        renv: newRenv,
                         expr: body,
                         cont: env
-                            .push({ kind: "env", var: param, val: val })
+                            .push({ kind: "env", ident: renamedParam, val: val })
                             .concat(rest)
                     });
                 }
@@ -140,8 +151,13 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                 case "env": {
                     switch (val.kind) {
                         case "closure": {
-                            const { lambda, env } = val;
-                            const clos = { kind: "closure" as const, lambda: lambda, env: env.push(frame) };
+                            const { lambda, renv, env } = val;
+                            const clos = {
+                                kind: "closure" as const,
+                                renv: renv,
+                                env: env.push(frame),
+                                lambda: lambda
+                            };
                             return ok({ kind: "applyCont", val: clos, cont: rest });
                         }
 
@@ -165,9 +181,11 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     } else {
                         return ok({
                             kind: "eval",
+                            renv: frame.renv,
                             expr: frame.rest.first()!,
                             cont: rest.unshift({
                                 kind: "prim",
+                                renv: frame.renv,
                                 op: frame.op,
                                 done: frame.done.push(val),
                                 rest: frame.rest.rest()
@@ -204,6 +222,7 @@ const execute = (state: CKState): Result<Value, Error> => {
 const initState = (expr: Expression): CKState => {
     return {
         kind: "eval",
+        renv: List.of(),
         expr: expr,
         cont: List.of()
     };

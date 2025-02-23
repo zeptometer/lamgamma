@@ -39,7 +39,10 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
         return parseNode(expr);
 
     } else if (node.type === "identifier") {
-        return ok({ kind: "variable", name: node.text });
+        return ok({ kind: "variable", ident: {
+            kind: "raw",
+            name: node.text,
+        } });
 
     } else if (node.type === "lambda") {
         const paramsNode = node.namedChild(0);
@@ -219,7 +222,10 @@ const parseIdentifier = (node: Parser.SyntaxNode): Result<Variable, SyntaxError>
     }
 
     if (node.type === "identifier") {
-        return ok({ kind: "variable" as const, name: node.text });
+        return ok({ kind: "variable" as const, ident: {
+            kind: "raw",
+            name: node.text,
+        } });
     } else {
         return err(new SyntaxError(`${stringifyPosition(node)}: Expected identifier, but got ${node.type}`, node));
     }

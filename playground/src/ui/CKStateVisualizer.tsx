@@ -1,6 +1,6 @@
 import { MouseEventHandler, ReactNode, useState } from "react"
-import { CKState, Cont, EnvFrame, Frame, Value } from "../interpreter/ckstate"
-import { Expression, PrimitiveOp, Variable } from "../interpreter/expression"
+import { CKState, Cont, EnvFrame, Frame, RenamingEnv, Value } from "../interpreter/ckstate"
+import { Expression, Identifier, PrimitiveOp } from "../interpreter/expression"
 import { Box } from "@mui/material";
 
 const stringifyOp = (op: PrimitiveOp) => {
@@ -43,12 +43,12 @@ const Group: React.FC<RedexProp> = ({ redex, children, onClick }) => {
 }
 
 interface EnvProp {
-    var: Variable,
+    ident: Identifier,
     val: Value,
     matched?: boolean
 }
 
-const EnvVis: React.FC<EnvProp> = ({ var: v, val, matched }) => {
+const EnvVis: React.FC<EnvProp> = ({ ident, val, matched }) => {
     const [expanded, setExpanded] = useState(false);
 
     const varVis = matched ?
@@ -58,9 +58,9 @@ const EnvVis: React.FC<EnvProp> = ({ var: v, val, matched }) => {
                 fontWeight: "bold",
                 display: "inline"
             }}>
-            {v.name}
+            {Identifier.stringify(ident)}
         </Box> :
-        <>{v.name}</>;
+        <>{Identifier.stringify(ident)}</>;
 
     const valVis = expanded ? <ValueVis val={val} /> : <>…</>
 
@@ -72,11 +72,11 @@ const EnvVis: React.FC<EnvProp> = ({ var: v, val, matched }) => {
 }
 
 interface ClosedVarProp {
-    var: Variable,
+    ident: Identifier,
     val: Value
 }
 
-const ClosedVarVis: React.FC<ClosedVarProp> = ({ var: v, val }) => {
+const ClosedVarVis: React.FC<ClosedVarProp> = ({ ident, val }) => {
     const [expanded, setExpanded] = useState(false);
 
     const valVis = expanded ? <ValueVis val={val} /> : <>…</>
@@ -97,7 +97,7 @@ const ClosedVarVis: React.FC<ClosedVarProp> = ({ var: v, val }) => {
                 backgroundColor: "inherit"
             }
         }}>
-        {v.name}={valVis}
+        {Identifier.stringify(ident)}={valVis}
     </Box >
 }
 
@@ -109,7 +109,7 @@ const ValueVis: React.FC<{ val: Value }> = ({ val }) => {
             return <>
                 【{val.env.reverse()
                     .map((x, idx) => <>
-                        <ClosedVarVis var={x.var} val={x.val} />
+                        <ClosedVarVis ident={x.ident} val={x.val} />
                         {idx < len - 1 ? "," : null}
                     </>)
                 }|
@@ -139,11 +139,11 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
                     display: "inline"
                 }}>
                     <Group redex>
-                        {expr.name}
+                        {Identifier.stringify(expr.ident)}
                     </Group>
                 </Box>
             } else {
-                return <>{expr.name}</>
+                return <>{Identifier.stringify(expr.ident)}</>
             }
 
         case "lambda": {
@@ -156,7 +156,7 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
 
             return <Paren cond={context !== "toplevel"}>
                 <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em" }}>fn</Box>
-                <Box sx={{ display: "inline" }}>{vars.map((v) => v.name).join(" ")}</Box>
+                <Box sx={{ display: "inline" }}>{vars.map((v) => Identifier.stringify(v.ident)).join(" ")}</Box>
                 <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em", paddingLeft: "0.5em" }}>→</Box>
                 <ExpressionVis expr={body} context={"lambda"} />
             </Paren>
@@ -231,11 +231,11 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
             let v = varopt;
             while (!rest.isEmpty() && rest.first()!.kind === "env") {
                 const env = rest.first() as EnvFrame;
-                if (env.var.name === v) {
-                    envs.push(<EnvVis var={env.var} val={env.val} matched />)
+                if (Identifier.stringify(env.ident) === v) {
+                    envs.push(<EnvVis ident={env.ident} val={env.val} matched />)
                     v = null;
                 } else {
-                    envs.push(<EnvVis var={env.var} val={env.val} />)
+                    envs.push(<EnvVis ident={env.ident} val={env.val} />)
                 }
                 rest = rest.rest();
             }
@@ -294,7 +294,7 @@ interface CKStateVisProp {
 export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
     switch (state.kind) {
         case "eval": {
-            const varopt = (state.expr.kind === "variable") ? state.expr.name : null;
+            const varopt = (state.expr.kind === "variable") ? Identifier.stringify(state.expr.ident) : null;
 
             return <Box sx={{ lineBreak: "anywhere" }}>
                 <ContVis
@@ -332,4 +332,13 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
                 </ContVis>
             </Box>
     }
+}
+
+export const RenamingEnvVis: React.FC<{ renv: RenamingEnv }> = ({ renv }) => {
+    return <Box>
+        {renv.map((x) => <>
+            {Identifier.stringify(x.from)}→{Identifier.stringify(x.to)},
+        </>)
+        }
+    </Box>
 }
