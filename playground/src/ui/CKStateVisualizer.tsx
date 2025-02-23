@@ -79,9 +79,12 @@ interface ClosedVarProp {
 const ClosedVarVis: React.FC<ClosedVarProp> = ({ var: v, val }) => {
     const [expanded, setExpanded] = useState(false);
 
-    const valVis = expanded ? <>=<ValueVis val={val} /></> : <>…</>
+    const valVis = expanded ? <ValueVis val={val} /> : <>…</>
 
-    const toggleExpand = () => { setExpanded(!expanded) }
+    const toggleExpand = (e: React.MouseEvent<HTMLDivElement>) => {
+        e.stopPropagation();
+        setExpanded(!expanded)
+    }
 
     return <Box
         onClick={toggleExpand}
@@ -89,6 +92,9 @@ const ClosedVarVis: React.FC<ClosedVarProp> = ({ var: v, val }) => {
             display: "inline",
             "&:hover": {
                 backgroundColor: "lightgray"
+            },
+            ":has(:hover)": {
+                backgroundColor: "inherit"
             }
         }}>
         {v.name}={valVis}
