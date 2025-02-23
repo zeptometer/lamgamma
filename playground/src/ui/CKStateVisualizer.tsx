@@ -1,15 +1,24 @@
 import { MouseEventHandler, ReactNode, useState } from "react"
 import { CKState, Cont, EnvFrame, Frame, RenamingEnv, Value } from "../interpreter/ckstate"
-import { Expression, Identifier, PrimitiveOp } from "../interpreter/expression"
+import { Expression, Identifier, PrimitiveOp, ShortCircuitOp, UniOp } from "../interpreter/expression"
 import { Box } from "@mui/material";
 
-const stringifyOp = (op: PrimitiveOp) => {
+const stringifyOp = (op: PrimitiveOp | ShortCircuitOp) => {
     switch (op) {
         case "add": return "+"
         case "sub": return "-"
         case "mul": return "*"
         case "div": return "/"
         case "mod": return "mod"
+        case "neg": return "!"
+        case "and": return "&&"
+        case "or": return "||"
+        case "eq": return "=="
+        case "ne": return "!="
+        case "lt": return "<"
+        case "le": return "<="
+        case "gt": return ">"
+        case "ge": return ">="
         default:
             throw new Error(`Unknown type: ${(op as { kind: "__invalid__" }).kind}`);
     }
@@ -189,7 +198,7 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
         }
 
         case "application": {
-            return <Paren cond={["appR", "env", "prim"].includes(context)}>
+            return <Paren cond={["appR", "env"].includes(context)}>
                 <ExpressionVis expr={expr.func} context={"appL"} />&nbsp;
                 <ExpressionVis expr={expr.arg} context={"appR"} />
             </Paren>
@@ -199,11 +208,41 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
             return <>{expr.value}</>
         }
 
+        case "boolean": {
+            return <>{expr.value ? "true" : "false"}</>
+        }
+
         case "primitive": {
+            if (expr.op in UniOp) {
+                return <Paren cond={true}>
+                    {stringifyOp(expr.op)}
+                    <ExpressionVis expr={expr.args.first()!} context={"primitive"} />
+                </Paren>
+            } else {
+                return <Paren cond={true}>
+                    <ExpressionVis expr={expr.args.first()!} context={"primitive"} />
+                    &nbsp;{stringifyOp(expr.op)}&nbsp;
+                    <ExpressionVis expr={expr.args.last()!} context={"primitive"} />
+                </Paren>
+            }
+        }
+
+        case "short_circuit": {
             return <Paren cond={true}>
-                <ExpressionVis expr={expr.args.first()!} context={"primitive"} />
+                <ExpressionVis expr={expr.left} context={"short_circuit"} />
                 &nbsp;{stringifyOp(expr.op)}&nbsp;
-                <ExpressionVis expr={expr.args.last()!} context={"primitive"} />
+                <ExpressionVis expr={expr.right} context={"short_circuit"} />
+            </Paren>
+        }
+
+        case "if": {
+            return <Paren cond={true}>
+                <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em" }}>if</Box>
+                <ExpressionVis expr={expr.cond} context={"if"} />
+                <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>then</Box>
+                <ExpressionVis expr={expr.then} context={"if"} />
+                <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>else</Box>
+                <ExpressionVis expr={expr.else_} context={"if"} />
             </Paren>
         }
 

@@ -56,7 +56,7 @@ const color = (id: Identifier): Identifier => {
     switch (id.kind) {
         case "raw": {
             return {
-                kind: "colored",    
+                kind: "colored",
                 basename: id.name,
                 id: counter,
             }
@@ -83,7 +83,21 @@ const color = (id: Identifier): Identifier => {
 export type Expression = Variable | Lambda | Application | Integer | Primitive | Boolean | ShortCircuit | If;
 
 export type BinOp = "add" | "sub" | "mul" | "div" | "mod" | "eq" | "ne" | "lt" | "le" | "gt" | "ge";
+export const BinOp = {
+    add: "add",
+    sub: "sub",
+    mul: "mul",
+    div: "div",
+    mod: "mod",
+    eq: "eq",
+    ne: "ne",
+    lt: "lt",
+    le: "le",
+    gt: "gt",
+    ge: "ge"
+} as const;
 export type UniOp = "neg";
+export const UniOp = { neg: "neg" } as const;
 export type PrimitiveOp = BinOp | UniOp;
 
 export type ShortCircuitOp = "and" | "or";
