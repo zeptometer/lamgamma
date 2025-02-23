@@ -105,7 +105,7 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
         }
 
         return ok({
-            kind: "number" as const,
+            kind: "integer" as const,
             value: number
         })
 

@@ -1,7 +1,7 @@
 import { List } from "immutable";
-import { Variable, Lambda, Expression } from "./expression";
+import { Variable, Lambda, Expression, PrimitiveOp, Integer } from "./expression";
 
-export type Value = Closure;
+export type Value = Closure | Integer;
 
 export type Closure = {
     kind: "closure";
@@ -9,7 +9,7 @@ export type Closure = {
     env: List<EnvFrame>;
 };
 
-export type Frame = AppLFrame | AppRFrame | EnvFrame;
+export type Frame = AppLFrame | AppRFrame | EnvFrame | PrimFrame;
 export type Cont = List<Frame>;
 
 export type AppLFrame = {
@@ -27,6 +27,13 @@ export type EnvFrame = {
     var: Variable;
     val: Value;
 };
+
+export type PrimFrame = {
+    kind: "prim";
+    op: PrimitiveOp;
+    done: List<Value>;
+    rest: List<Expression>;
+}
 
 export const Cont = {
     lookup: (cont: Cont, v: Variable): Value | null => {

@@ -1,7 +1,7 @@
 import { List } from "immutable";
 
-export type Expression = Variable | Lambda | Application | Number | Primitive;
-export type BinOp = "add" | "sub" | "mul" | "div" | "mod";
+export type Expression = Variable | Lambda | Application | Integer | Primitive;
+export type PrimitiveOp = "add" | "sub" | "mul" | "div" | "mod";
 
 export type Variable = {
     kind: "variable";
@@ -16,7 +16,7 @@ export type Lambda = {
 
 export type Primitive = {
     kind: "primitive";
-    op: BinOp;
+    op: PrimitiveOp;
     args: List<Expression>;
 }
 
@@ -26,7 +26,7 @@ export type Application = {
     arg: Expression;
 }
 
-export type Number = {
-    kind: "number";
+export type Integer = {
+    kind: "integer";
     value: number;
 }

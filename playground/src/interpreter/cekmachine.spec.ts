@@ -4,6 +4,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { CKMachine } from './ckmachine';
 import { ok, err } from 'neverthrow';
 import { List } from 'immutable';
+import { Closure } from './ckstate';
 
 const { initState, executeStep, execute } = CKMachine;
 let parser: Parser;
@@ -49,134 +50,18 @@ describe("CKMachine", () => {
     it("case 2", () => {
         const subject = initState(parse("(fn x -> x) (fn y -> y)"));
 
-        const actual1 = executeStep(subject);
+        const actual = execute(subject);
 
-        expect(actual1.isOk()).toBeTruthy()
-        expect(actual1._unsafeUnwrap()).toEqual({
-            kind: "eval",
-            expr: {
-                kind: "lambda",
-                param: { kind: "variable", name: "x" },
-                body: { kind: "variable", name: "x" },
-            },
-            cont: List.of({
-                kind: "appL",
-                arg: {
-                    kind: "lambda",
-                    param: { kind: "variable", name: "y" },
-                    body: { kind: "variable", name: "y" },
-                }
-            }),
-        });
-
-        const actual2 = executeStep(actual1._unsafeUnwrap())._unsafeUnwrap();
-
-        expect(actual2).toEqual({
-            kind: "applyCont",
-            val: {
-                kind: "closure",
-                lambda: {
-                    kind: "lambda",
-                    param: { kind: "variable", name: "x" },
-                    body: { kind: "variable", name: "x" },
-                },
-                env: List.of()
-            },
-            cont: List.of({
-                kind: "appL",
-                arg: {
-                    kind: "lambda",
-                    param: { kind: "variable", name: "y" },
-                    body: { kind: "variable", name: "y" },
-                }
-            }),
-        });
-
-        const actual3 = executeStep(actual2)._unsafeUnwrap();
-
-        expect(actual3).toEqual({
-            kind: "eval",
-            expr: {
+        expect(actual.isOk()).toBeTruthy();
+        expect(actual._unsafeUnwrap()).toEqual({
+            kind: "closure",
+            lambda: {
                 kind: "lambda",
                 param: { kind: "variable", name: "y" },
                 body: { kind: "variable", name: "y" },
             },
-            cont: List.of({
-                kind: "appR",
-                closure: {
-                    kind: "closure",
-                    lambda: {
-                        kind: "lambda",
-                        param: { kind: "variable", name: "x" },
-                        body: { kind: "variable", name: "x" },
-                    },
-                    env: List.of()
-                }
-            })
-        });
-
-        const actual4 = executeStep(actual3)._unsafeUnwrap();
-
-        expect(actual4).toEqual({
-            kind: "applyCont",
-            val: {
-                kind: "closure",
-                lambda: {
-                    kind: "lambda",
-                    param: { kind: "variable", name: "y" },
-                    body: { kind: "variable", name: "y" },
-                },
-                env: List.of()
-            },
-            cont: List.of({
-                kind: "appR",
-                closure: {
-                    kind: "closure",
-                    lambda: {
-                        kind: "lambda",
-                        param: { kind: "variable", name: "x" },
-                        body: { kind: "variable", name: "x" },
-                    },
-                    env: List.of()
-                }
-            })
-        });
-
-        const actual5 = executeStep(actual4)._unsafeUnwrap();
-
-        expect(actual5).toEqual({
-            kind: "eval",
-            expr: { kind: "variable", name: "x" },
-            cont: List.of({
-                kind: "frame",
-                var: { kind: "variable", name: "x" },
-                val: {
-                    kind: "closure",
-                    lambda: {
-                        kind: "lambda",
-                        param: { kind: "variable", name: "y" },
-                        body: { kind: "variable", name: "y" },
-                    },
-                    env: List.of()
-                }
-            })
-        });
-
-        const actual6 = executeStep(actual5)._unsafeUnwrap();
-
-        expect(actual6).toEqual({
-            kind: "applyCont",
-            val: {
-                kind: "closure",
-                lambda: {
-                    kind: "lambda",
-                    param: { kind: "variable", name: "y" },
-                    body: { kind: "variable", name: "y" },
-                },
-                env: List.of()
-            },
-            cont: List.of({
-                kind: "frame",
+            env: List.of({
+                kind: "env",
                 var: { kind: "variable", name: "x" },
                 val: {
                     kind: "closure",
@@ -199,7 +84,7 @@ describe("CKMachine", () => {
         expect(actual1.isOk()).toBeTruthy();
         const v = actual1._unsafeUnwrap();
         expect(v.kind).toEqual("closure");
-        expect(v.lambda).toEqual({
+        expect((v as Closure).lambda).toEqual({
             kind: "lambda",
             param: { kind: "variable", name: "y" },
             body: { kind: "variable", name: "y" }
@@ -217,10 +102,23 @@ describe("CKMachine", () => {
         expect(actual1.isOk()).toBeTruthy();
         const actual2 = actual1._unsafeUnwrap();
         expect(actual2.kind).toEqual("closure");
-        expect(actual2.lambda).toEqual({
+        expect((actual2 as Closure).lambda).toEqual({
             kind: "lambda",
             param: { kind: "variable", name: "c" },
             body: { kind: "variable", name: "c" }
         });
+    });
+
+    it("case 4", () => {
+        const subject = initState(parse("(1 + 2 * 3 - 4 / 2) mod 4"));
+
+        const actual = execute(subject);
+
+        expect(actual).toEqual(ok(
+            {
+                kind: "integer",
+                value: 1
+            }
+        ))
     });
 });
