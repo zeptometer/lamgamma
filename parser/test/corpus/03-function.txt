@@ -43,7 +43,7 @@ x fn y -> y
         (identifier)
         (identifier))
       (identifier))
-    (ERROR (UNEXPECTED '>'))
+    (ERROR)
     (identifier)))
 
 ==================

@@ -1,0 +1,90 @@
+==================
+boolean
+==================
+
+true && false
+
+---
+
+(source_file
+  (and
+    (boolean)
+    (boolean)))
+
+==================
+if statement
+==================
+
+if x then y else x z
+
+---
+
+(source_file
+  (ctrl_if
+    (identifier)
+    (identifier)
+    (application
+      (identifier)
+      (identifier))))
+
+==================
+nested if statement
+==================
+
+if x then if y then z else w else v
+
+---
+
+(source_file
+  (ctrl_if
+    (identifier)
+    (ctrl_if
+      (identifier)
+      (identifier)
+      (identifier))
+    (identifier)))
+
+==================
+comparison and logical operators
+==================
+
+x == y || x != y && x < y && x <= y || x > y || x >= y
+
+---
+
+(source_file
+  (or
+    (or
+      (or
+        (eq
+          (identifier)
+          (identifier))
+        (and
+          (and
+            (ne
+              (identifier)
+              (identifier))
+            (lt
+              (identifier)
+              (identifier)))
+          (le
+            (identifier)
+            (identifier))))
+      (gt
+        (identifier)
+        (identifier)))
+    (ge
+      (identifier)
+      (identifier))))
+
+==================
+negation
+==================
+
+!x
+
+---
+
+(source_file
+  (neg
+    (identifier)))

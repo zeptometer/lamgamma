@@ -44,18 +44,31 @@ module.exports = grammar({
       $._simple_expression,
       $.lambda,
       $.application,
+      // arithmetic
       $.add,
       $.sub,
       $.mult,
       $.div,
-      $.mod
+      $.mod,
+      // boolean
+      $.ctrl_if,
+      $.eq,
+      $.ne,
+      $.lt,
+      $.le,
+      $.gt,
+      $.ge,
+      $.and,
+      $.or,
+      $.neg
     ),
 
     // Expressions that can be used as an argument as-is
     _simple_expression: $ => choice(
       seq('(', $._expression, ')'),
       $.identifier,
-      $.number
+      $.number,
+      $.boolean
     ),
 
     lambda: $ => prec.right(PREC.lambda,
@@ -71,9 +84,9 @@ module.exports = grammar({
 
     identifier: $ => /[a-z_][a-zA-Z0-9_]*/,
 
+    // arithmetic
     number: $ => /\d+/,
 
-    // binary operators
     add: $ => prec.left(PREC.additive,
       seq(
         field("left", $._expression),
@@ -102,6 +115,68 @@ module.exports = grammar({
       seq(
         field("left", $._expression),
         'mod',
-        field("right", $._expression)))
+        field("right", $._expression))),
+
+    // boolean
+    boolean: $ => choice('true', 'false'),
+
+    ctrl_if: $ => prec.right(PREC.match,
+      seq('if',
+        field("cond", $._expression),
+        'then',
+        field("then", $._expression),
+        'else',
+        field("else", $._expression))),
+
+    eq: $ => prec.left(PREC.comparative,
+      seq(
+        field("left", $._expression),
+        '==',
+        field("right", $._expression))),
+
+    ne: $ => prec.left(PREC.comparative,
+      seq(
+        field("left", $._expression),
+        '!=',
+        field("right", $._expression))),
+
+    lt: $ => prec.left(PREC.comparative,
+      seq(
+        field("left", $._expression),
+        '<',
+        field("right", $._expression))),
+
+    le: $ => prec.left(PREC.comparative,
+      seq(
+        field("left", $._expression),
+        '<=',
+        field("right", $._expression))),
+
+    gt: $ => prec.left(PREC.comparative,
+      seq(
+        field("left", $._expression),
+        '>',
+        field("right", $._expression))),
+
+    ge: $ => prec.left(PREC.comparative,
+      seq(
+        field("left", $._expression),
+        '>=',
+        field("right", $._expression))),
+
+    and: $ => prec.left(PREC.and,
+      seq(
+        field("left", $._expression),
+        '&&',
+        field("right", $._expression))),
+
+    or: $ => prec.left(PREC.or,
+      seq(
+        field("left", $._expression),
+        '||',
+        field("right", $._expression))),
+
+    neg: $ => prec.right(PREC.unary,
+      seq('!', $._expression)),
   }
 });
