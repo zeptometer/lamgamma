@@ -9,6 +9,10 @@ import { Result } from "neverthrow";
 import { CKStateVis, RenamingEnvVis } from "./CKStateVisualizer";
 import { List } from "immutable";
 
+const MAX_STATES = 100;
+const MAX_EVAL_STEPS = 1000000;
+
+
 interface Props {
     code: string,
     treeSitterParser: Parser
@@ -38,15 +42,36 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
         if (state.isErr()) {
             return;
         }
+
+        const nextState = CKMachine.executeStep(state.value);
+
+        setStates(states.takeLast(MAX_STATES).push(nextState));
         if (state.isOk() &&
             state.value.kind === "applyCont"
             && state.value.cont.isEmpty()) {
             setComplete(true);
             return;
         }
+    }
 
-        const nextState = CKMachine.executeStep(state.value);
-        setStates(states.push(nextState));
+    const evaluateAll = () => {
+        let newStates = states;
+        for (let i = 0; i < MAX_EVAL_STEPS; i++) {
+            const state = newStates.last()!;
+            if (state.isErr()) {
+                break;
+            }
+            const nextState = CKMachine.executeStep(state.value);
+            newStates = newStates.takeLast(MAX_STATES).push(nextState);
+
+            if (nextState.isOk() &&
+                nextState.value.kind === "applyCont"
+                && nextState.value.cont.isEmpty()) {
+                setComplete(true);
+                break;
+            }
+        }
+        setStates(newStates);
     }
 
     const undo = () => {
@@ -64,13 +89,13 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
             {
                 states.last()!.match(
                     (state) => <Box>
+                        <h2>Expression</h2>
+
                         <CKStateVis state={state} />
 
-                        <Box>
+                        <h2>Renaming Env</h2>
 
-                        REnv: {state.kind === "eval" && <RenamingEnvVis renv={state.renv} />}
-                        </Box>
-
+                        {state.kind === "eval" && <RenamingEnvVis renv={state.renv} />}
                         {/* JSON: {JSON.stringify(state)} */}
                     </Box>,
                     (err) => err.message
@@ -95,6 +120,15 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
                 <Button variant="contained"
                     onClick={resetState}>
                     Reset
+                </Button>
+
+                <Box sx={{ flexGrow: 1 }} />
+
+                <Button variant="contained"
+                    onClick={evaluateAll}
+                    disabled={isComplete}
+                    sx={{ mr: "4em" }}>
+                    EVal All
                 </Button>
             </Toolbar>
         </AppBar>
