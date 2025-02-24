@@ -105,7 +105,7 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
             ([ident, body]) => {
                 return ok({
                     kind: "fixpoint" as const,
-                    ident: ident,
+                    param: ident,
                     body: body
                 })
             }

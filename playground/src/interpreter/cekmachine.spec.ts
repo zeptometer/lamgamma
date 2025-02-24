@@ -121,4 +121,34 @@ describe("CKMachine", () => {
             }
         ))
     });
+
+    it("variable resolves to most closely bound value", () => {
+        const subject = initState(parse(`
+            (fn x -> (fn x -> x)) 1 2
+        `));
+
+        const actual = execute(subject);
+
+        expect(actual).toEqual(ok(
+            {
+                kind: "integer",
+                value: 2
+            }
+        ))
+    });
+
+    it("fixpoint", () => {
+        const subject = initState(parse(`
+            (fix f -> fn n -> if n == 0 then 1 else n * f (n - 1)) 5
+        `));
+
+        const actual = execute(subject);
+
+        expect(actual).toEqual(ok(
+            {
+                kind: "integer",
+                value: 120
+            }
+        ))
+    });
 });

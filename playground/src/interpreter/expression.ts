@@ -127,7 +127,7 @@ export type Application = {
 
 export type Fixpoint = {
     kind: "fixpoint";
-    ident: Identifier;
+    param: Identifier;
     body: Expression;
 }
 

@@ -209,7 +209,7 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
             return <Paren cond={context !== "toplevel"}>
                 <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em" }}>fn</Box>
                 <Box sx={{ display: "inline" }}>
-                    {params.map((param) => <IdentVis ident={param} />).reduce((acc, curr) => <>{acc},{curr}</>)}
+                    {params.map((param) => <IdentVis ident={param} />).reduce((acc, curr) => <>{acc}&nbsp;{curr}</>)}
                 </Box>
                 <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em", paddingLeft: "0.5em" }}>→</Box>
                 <ExpressionVis expr={body} context={"lambda"} />
@@ -220,6 +220,15 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
             return <Paren cond={["appR", "env"].includes(context)}>
                 <ExpressionVis expr={expr.func} context={"appL"} />&nbsp;
                 <ExpressionVis expr={expr.arg} context={"appR"} />
+            </Paren>
+        }
+
+        case "fixpoint": {
+            return <Paren cond={context !== "toplevel"}>
+                <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em" }}>fix</Box>
+                <IdentVis ident={expr.param} />
+                <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em", paddingLeft: "0.5em" }}>→</Box>
+                <ExpressionVis expr={expr.body} context={"fixpoint"} />
             </Paren>
         }
 
@@ -266,12 +275,12 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
         }
 
         default:
-            throw new Error(`Unknown type: ${(expr as { kind: "__invalid__" }).kind}`);
+            throw unreachable(expr);
     }
     return null;
 }
 
-type ChildKind = "variable" | "application" | "lambda" | "env" | "closure" | "integer" | "primitive" | "boolean" | "shortCircuit" | "if"
+type ChildKind = "variable" | "application" | "lambda" | "env" | "closure" | "integer" | "primitive" | "boolean" | "shortCircuit" | "if" | "fixpoint" | "toplevel";
 
 interface ContVisProp {
     cont: Cont,

@@ -1,5 +1,5 @@
 import { List } from "immutable";
-import { Lambda, Expression, PrimitiveOp, Integer, Identifier, ShortCircuitOp, Boolean } from "./expression";
+import { Lambda, Expression, PrimitiveOp, Integer, Identifier, ShortCircuitOp, Boolean, Fixpoint } from "./expression";
 
 export type RenamingEnv = List<{ from: Identifier, to: Identifier }>;
 
@@ -13,7 +13,7 @@ export type Value = Closure | Integer | Boolean;
 
 export type Closure = {
     kind: "closure";
-    lambda: Lambda;
+    lambda: Lambda | Fixpoint;
     renv: RenamingEnv;
     env: List<EnvFrame>;
 };

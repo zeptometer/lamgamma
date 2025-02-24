@@ -1,4 +1,4 @@
-import { Expression, Identifier, Integer, Boolean } from "./expression"
+import { Expression, Identifier, Integer, Boolean, Lambda } from "./expression"
 import { CKState, Value, Cont, Frame, RenamingEnv } from "./ckstate";
 import { Result, ok, err } from "neverthrow";
 import { List } from "immutable";
@@ -158,6 +158,22 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     });
                 }
 
+                case "fixpoint": {
+                    if (expr.body.kind !== "lambda") {
+                        return err(new Error("Fixpoint operator expects a lambda expression"));
+                    }
+                    return ok({
+                        kind: "applyCont",
+                        val: {
+                            kind: "closure",
+                            lambda: expr,
+                            renv: state.renv,
+                            env: List.of()
+                        },
+                        cont: cont
+                    });
+                }
+
                 case "integer": {
                     return ok({
                         kind: "applyCont",
@@ -250,17 +266,49 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                 }
 
                 case "appR": {
-                    const { closure: { lambda: { body, param }, renv, env } } = frame;
-                    const renamedParam = Identifier.color(param);
-                    const newRenv = renv.push({ from: param, to: renamedParam });
-                    return ok({
-                        kind: "eval",
-                        renv: newRenv,
-                        expr: body,
-                        cont: env
-                            .push({ kind: "env", ident: renamedParam, val: val })
-                            .concat(rest)
-                    });
+                    const { closure: { lambda, renv, env } } = frame;
+
+                    switch (lambda.kind) {
+                        case "lambda": {
+                            const { param, body } = lambda;
+
+                            const renamedParam = Identifier.color(param);
+                            const newRenv = renv.unshift({ from: param, to: renamedParam });
+                            return ok({
+                                kind: "eval",
+                                renv: newRenv,
+                                expr: body,
+                                cont: env
+                                    .push({ kind: "env", ident: renamedParam, val: val })
+                                    .concat(rest)
+                            });
+                        }
+
+                        case "fixpoint": {
+                            const { param: recParam, body: recBody } = lambda;
+                            // We know that recBody is a lambda because we checked it in the eval state
+                            const { param: funcParam, body: funcBody } = recBody as Lambda;
+
+                            const renamedRecParam = Identifier.color(recParam);
+                            const renamedFuncParam = Identifier.color(funcParam);
+                            const newRenv = renv
+                                .unshift({ from: recParam, to: renamedRecParam })
+                                .unshift({ from: funcParam, to: renamedFuncParam });
+                            const self = frame.closure;
+
+                            return ok({
+                                kind: "eval",
+                                renv: newRenv,
+                                expr: funcBody,
+                                cont: env
+                                    .push({ kind: "env", ident: renamedFuncParam, val: val })
+                                    .push({ kind: "env", ident: renamedRecParam, val: self })
+                                    .concat(rest)
+                            });
+                        }
+
+                        default: throw unreachable(lambda);
+                    }
                 }
 
                 case "env": {
