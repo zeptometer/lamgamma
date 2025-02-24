@@ -15,4 +15,14 @@ const churchnum =
 0
 `.trim();
 
-export const ExamplePrograms = { ski, churchnum };
+const fib = `
+(fn t -> (fn f -> t (fn z -> f f z)) (fn f -> t (fn z -> f f z)))
+(fn fib -> (fn n ->
+  if n <= 1
+  then 1
+  else (fib (n-1)) + (fib (n-2))
+))
+10
+`.trim();
+
+export const ExamplePrograms = { ski, churchnum, fib };

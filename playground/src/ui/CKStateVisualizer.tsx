@@ -128,12 +128,15 @@ const ClosedVarVis: React.FC<ClosedVarProp> = ({ ident, val }) => {
     </Box >
 }
 
-const ValueVis: React.FC<{ val: Value }> = ({ val }) => {
+const ValueVis: React.FC<{ underEvaluation?: boolean, val: Value }> = ({ underEvaluation, val }) => {
+
+    let x: ReactNode;
+
     switch (val.kind) {
         case "closure": {
             const envlen = val.env.size;
             const renvlen = val.renv.size;
-            return <>
+            x = <>
                 【{val.env.reverse()
                     .map((x, idx) => <>
                         <ClosedVarVis ident={x.ident} val={x.val} />
@@ -148,19 +151,28 @@ const ValueVis: React.FC<{ val: Value }> = ({ val }) => {
                 }
                 |
                 <ExpressionVis expr={val.lambda} context="toplevel" />】
-            </>
+            </>;
+            break;
         }
 
         case "integer": {
-            return <>{val.value}</>
+            x = <>
+                {val.value}
+            </>;
+            break;
         }
 
         case "boolean": {
-            return <>{val.value ? "true" : "false"}</>
+            x = <>
+                {val.value ? "true" : "false"}
+            </>;
+            break;
         }
 
         default: throw unreachable(val);
     }
+
+    return <Box sx={{ backgroundColor: underEvaluation ? "inherit" : "LightGray", display: "inline" }}>{x}</Box>;
 }
 
 interface ExpressionVisProp {
@@ -441,10 +453,10 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
                     redex
                 >
                     <Box sx={{
-                        backgroundColor: "cyan",
+                        backgroundColor: "LightSkyBlue",
                         display: "inline"
                     }}>
-                        <ValueVis val={state.val} />
+                        <ValueVis underEvaluation val={state.val} />
                     </Box>
                 </ContVis>
             </Box>
