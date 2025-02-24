@@ -8,6 +8,7 @@ import { CKState } from "../interpreter/ckstate";
 import { Result } from "neverthrow";
 import { CKStateVis, RenamingEnvVis } from "./CKStateVisualizer";
 import { List } from "immutable";
+import { Identifier } from "../interpreter/expression";
 
 const MAX_STATES = 100;
 const MAX_EVAL_STEPS = 1000000;
@@ -28,6 +29,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
     const [isComplete, setComplete] = useState(false);
 
     const resetState = () => {
+        Identifier.reset();
         const tree = treeSitterParser.parse(code)
         const exprResult = parseNode(tree.rootNode)
 

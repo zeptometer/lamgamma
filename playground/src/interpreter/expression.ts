@@ -80,6 +80,10 @@ const color = (id: Identifier): Identifier => {
     }
 }
 
+const resetIdentifierCounter = () => {
+    counter = 0;
+}
+
 export type Expression = Variable | Lambda | Application | Integer | Primitive | Boolean | ShortCircuit | If | Fixpoint;
 
 export type BinOp = "add" | "sub" | "mul" | "div" | "mod" | "eq" | "ne" | "lt" | "le" | "gt" | "ge";
@@ -154,4 +158,4 @@ export type If = {
     then: Expression;
     else_: Expression; // `else` is a reserved word in TypeScript
 }
-export const Identifier = { color, stringify: stringifyIdentifier, eq: eqIdentifier };
+export const Identifier = { color, reset: resetIdentifierCounter, stringify: stringifyIdentifier, eq: eqIdentifier };
