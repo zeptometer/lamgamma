@@ -121,10 +121,10 @@ const ValueVis: React.FC<ValueVisProp> = ({ underEvaluation, val, close: closedB
             const renvlen = val.renv.size;
             let y: ReactNode;
             if (expanded) {
-                y = <>【…】</>
+                y = <>…</>
             } else {
                 y = <>
-                    【{val.env.reverse()
+                    {val.env.reverse()
                         .map((x, idx) => <>
                             <ClosedVarVis ident={x.ident} val={x.val} />
                             {idx < envlen - 1 ? "," : null}
@@ -137,24 +137,27 @@ const ValueVis: React.FC<ValueVisProp> = ({ underEvaluation, val, close: closedB
                         </>)
                     }
                     |
-                    <ExpressionVis expr={val.lambda} context="toplevel" />】
+                    <ExpressionVis expr={val.lambda} context="toplevel" />
                 </>;
             }
-            x = <Box
-                onClick={toggleExpand}
-                sx={{
-                    display: "inline",
-                    "&:hover": {
-                        backgroundColor: "LightCoral",
-                        cursor: "pointer"
-                    },
-                    ":has(:hover)": {
-                        backgroundColor: "inherit",
-                        cursor: "auto"
-                    }
-                }}>
-                {y}
-            </Box>
+            x = <>【
+                <Box
+                    onClick={toggleExpand}
+                    sx={{
+                        display: "inline",
+                        "&:hover": {
+                            backgroundColor: "LightCoral",
+                            cursor: "pointer"
+                        },
+                        ":has(:hover)": {
+                            backgroundColor: "inherit",
+                            cursor: "auto"
+                        }
+                    }}>
+                    {y}
+                </Box>
+                】
+            </>
             break;
         }
 
