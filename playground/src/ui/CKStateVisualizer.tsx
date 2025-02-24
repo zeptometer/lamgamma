@@ -305,7 +305,9 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
                 cont={cont.rest()}
                 childKind={"application"}
                 varopt={varopt}>
-                {children} <ExpressionVis expr={frame.arg} context={"appR"} />
+                <Group redex={redex}>
+                    {children} <ExpressionVis expr={frame.arg} context={"appR"} />
+                </Group>
             </ContVis>
 
         case "appR":
@@ -390,14 +392,16 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
                 childKind={"if"}
                 varopt={varopt}
             >
-                <Paren cond={true}>
-                    <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em" }}>if</Box>
-                    {children}
-                    <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>then</Box>
-                    <ExpressionVis expr={frame.then} context={"if"} />
-                    <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>else</Box>
-                    <ExpressionVis expr={frame.else_} context={"if"} />
-                </Paren>
+                <Group redex={redex}>
+                    <Paren cond={true}>
+                        <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em" }}>if</Box>
+                        {children}
+                        <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>then</Box>
+                        <ExpressionVis expr={frame.then} context={"if"} />
+                        <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>else</Box>
+                        <ExpressionVis expr={frame.else_} context={"if"} />
+                    </Paren>
+                </Group>
             </ContVis>
         }
 
