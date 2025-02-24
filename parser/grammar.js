@@ -44,6 +44,8 @@ module.exports = grammar({
       $._simple_expression,
       $.lambda,
       $.application,
+      // fixpoint
+      $.fixpoint,
       // arithmetic
       $.add,
       $.sub,
@@ -73,6 +75,9 @@ module.exports = grammar({
 
     lambda: $ => prec.right(PREC.lambda,
       seq('fn', $.parameters, '->', $._expression)),
+
+    fixpoint: $ => prec.right(PREC.lambda,
+      seq('fix', $.identifier, '->', $._expression)),
 
     application: $ =>
       prec.left(PREC.application, seq(

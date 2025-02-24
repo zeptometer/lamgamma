@@ -24,6 +24,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "fixpoint"
+        },
+        {
+          "type": "SYMBOL",
           "name": "add"
         },
         {
@@ -131,6 +135,31 @@
           {
             "type": "SYMBOL",
             "name": "parameters"
+          },
+          {
+            "type": "STRING",
+            "value": "->"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        ]
+      }
+    },
+    "fixpoint": {
+      "type": "PREC_RIGHT",
+      "value": 3,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "fix"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "identifier"
           },
           {
             "type": "STRING",

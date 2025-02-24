@@ -44,6 +44,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -135,6 +139,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -238,6 +246,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -332,6 +344,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -421,6 +437,10 @@
         },
         {
           "type": "eq",
+          "named": true
+        },
+        {
+          "type": "fixpoint",
           "named": true
         },
         {
@@ -528,6 +548,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -622,6 +646,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -713,6 +741,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -816,6 +848,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -907,6 +943,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -1010,6 +1050,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -1101,6 +1145,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -1160,6 +1208,101 @@
     }
   },
   {
+    "type": "fixpoint",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "add",
+          "named": true
+        },
+        {
+          "type": "and",
+          "named": true
+        },
+        {
+          "type": "application",
+          "named": true
+        },
+        {
+          "type": "boolean",
+          "named": true
+        },
+        {
+          "type": "ctrl_if",
+          "named": true
+        },
+        {
+          "type": "div",
+          "named": true
+        },
+        {
+          "type": "eq",
+          "named": true
+        },
+        {
+          "type": "fixpoint",
+          "named": true
+        },
+        {
+          "type": "ge",
+          "named": true
+        },
+        {
+          "type": "gt",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "le",
+          "named": true
+        },
+        {
+          "type": "lt",
+          "named": true
+        },
+        {
+          "type": "mod",
+          "named": true
+        },
+        {
+          "type": "mult",
+          "named": true
+        },
+        {
+          "type": "ne",
+          "named": true
+        },
+        {
+          "type": "neg",
+          "named": true
+        },
+        {
+          "type": "number",
+          "named": true
+        },
+        {
+          "type": "or",
+          "named": true
+        },
+        {
+          "type": "sub",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "ge",
     "named": true,
     "fields": {
@@ -1201,6 +1344,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -1295,6 +1442,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -1398,6 +1549,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -1492,6 +1647,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -1581,6 +1740,10 @@
         },
         {
           "type": "eq",
+          "named": true
+        },
+        {
+          "type": "fixpoint",
           "named": true
         },
         {
@@ -1687,6 +1850,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -1778,6 +1945,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -1881,6 +2052,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -1972,6 +2147,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -2075,6 +2254,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -2166,6 +2349,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -2269,6 +2456,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -2360,6 +2551,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -2463,6 +2658,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -2557,6 +2756,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -2646,6 +2849,10 @@
         },
         {
           "type": "eq",
+          "named": true
+        },
+        {
+          "type": "fixpoint",
           "named": true
         },
         {
@@ -2748,6 +2955,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -2839,6 +3050,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -2950,6 +3165,10 @@
           "named": true
         },
         {
+          "type": "fixpoint",
+          "named": true
+        },
+        {
           "type": "ge",
           "named": true
         },
@@ -3049,6 +3268,10 @@
             "named": true
           },
           {
+            "type": "fixpoint",
+            "named": true
+          },
+          {
             "type": "ge",
             "named": true
           },
@@ -3140,6 +3363,10 @@
           },
           {
             "type": "eq",
+            "named": true
+          },
+          {
+            "type": "fixpoint",
             "named": true
           },
           {
@@ -3264,6 +3491,10 @@
   },
   {
     "type": "false",
+    "named": false
+  },
+  {
+    "type": "fix",
     "named": false
   },
   {

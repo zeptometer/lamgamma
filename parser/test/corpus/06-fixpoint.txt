@@ -1,0 +1,23 @@
+==================
+fixpoint
+==================
+
+fix rec -> fn n -> if n <= 0 then 0 else rec (n-1)
+
+---
+
+(source_file
+  (fixpoint
+    (identifier)
+    (lambda
+      (parameters (identifier))
+      (ctrl_if
+        (le
+          (identifier)
+          (number))
+        (number)
+        (application
+          (identifier)
+          (sub
+            (identifier)
+            (number)))))))
