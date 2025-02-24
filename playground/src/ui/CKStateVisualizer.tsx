@@ -38,15 +38,11 @@ interface RedexProp {
     children: ReactNode,
 }
 
-const Group: React.FC<RedexProp> = ({ redex, children, onClick }) => {
+const Group: React.FC<RedexProp> = ({ redex, children }) => {
     return <Box
-        onClick={onClick}
         sx={{
             display: "inline",
             borderBottom: redex ? "black solid 2pt" : "inherit",
-            "&:hover": onClick ? {
-                backgroundColor: "lightgray"
-            } : {},
         }}>
         {children}
     </Box>;
@@ -76,7 +72,6 @@ interface EnvProp {
 }
 
 const EnvVis: React.FC<EnvProp> = ({ ident, val, matched }) => {
-    const [expanded, setExpanded] = useState(false);
 
     const varVis = matched ?
         <Box
@@ -89,12 +84,8 @@ const EnvVis: React.FC<EnvProp> = ({ ident, val, matched }) => {
         </Box> :
         <IdentVis ident={ident} />;
 
-    const valVis = expanded ? <ValueVis val={val} /> : <>…</>
-
-    const toggleExpand = () => { setExpanded(!expanded) }
-
-    return <Group onClick={toggleExpand} redex={matched}>
-        [{varVis}={valVis}]
+    return <Group redex={matched}>
+        [{varVis}=<ValueVis close val={val} />]
     </Group>
 }
 
@@ -104,54 +95,66 @@ interface ClosedVarProp {
 }
 
 const ClosedVarVis: React.FC<ClosedVarProp> = ({ ident, val }) => {
-    const [expanded, setExpanded] = useState(false);
+    return <>
+        <IdentVis ident={ident} />=<ValueVis close val={val} />
+    </>
+}
 
-    const valVis = expanded ? <ValueVis val={val} /> : <>…</>
+interface ValueVisProp {
+    underEvaluation?: boolean,
+    val: Value,
+    close?: boolean
+}
 
+const ValueVis: React.FC<ValueVisProp> = ({ underEvaluation, val, close: closedByDefault }) => {
+
+    const [expanded, setExpanded] = useState(closedByDefault);
     const toggleExpand = (e: React.MouseEvent<HTMLDivElement>) => {
         e.stopPropagation();
         setExpanded(!expanded)
     }
-
-    return <Box
-        onClick={toggleExpand}
-        sx={{
-            display: "inline",
-            "&:hover": {
-                backgroundColor: "lightgray"
-            },
-            ":has(:hover)": {
-                backgroundColor: "inherit"
-            }
-        }}>
-        <IdentVis ident={ident} />={valVis}
-    </Box >
-}
-
-const ValueVis: React.FC<{ underEvaluation?: boolean, val: Value }> = ({ underEvaluation, val }) => {
-
     let x: ReactNode;
 
     switch (val.kind) {
         case "closure": {
             const envlen = val.env.size;
             const renvlen = val.renv.size;
-            x = <>
-                【{val.env.reverse()
-                    .map((x, idx) => <>
-                        <ClosedVarVis ident={x.ident} val={x.val} />
-                        {idx < envlen - 1 ? "," : null}
-                    </>)
-                }|
-                {val.renv.reverse()
-                    .map((x, idx) => <>
-                        <IdentVis ident={x.from} />→<IdentVis ident={x.to} />
-                        {idx < renvlen - 1 ? "," : null}
-                    </>)
-                }
-                |
-                <ExpressionVis expr={val.lambda} context="toplevel" />】
-            </>;
+            let y: ReactNode;
+            if (expanded) {
+                y = <>【…】</>
+            } else {
+                y = <>
+                    【{val.env.reverse()
+                        .map((x, idx) => <>
+                            <ClosedVarVis ident={x.ident} val={x.val} />
+                            {idx < envlen - 1 ? "," : null}
+                        </>)
+                    }|
+                    {val.renv.reverse()
+                        .map((x, idx) => <>
+                            <IdentVis ident={x.from} />→<IdentVis ident={x.to} />
+                            {idx < renvlen - 1 ? "," : null}
+                        </>)
+                    }
+                    |
+                    <ExpressionVis expr={val.lambda} context="toplevel" />】
+                </>;
+            }
+            x = <Box
+                onClick={toggleExpand}
+                sx={{
+                    display: "inline",
+                    "&:hover": {
+                        backgroundColor: "LightCoral",
+                        cursor: "pointer"
+                    },
+                    ":has(:hover)": {
+                        backgroundColor: "inherit",
+                        cursor: "auto"
+                    }
+                }}>
+                {y}
+            </Box>
             break;
         }
 
