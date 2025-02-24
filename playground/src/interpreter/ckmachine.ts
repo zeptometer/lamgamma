@@ -251,8 +251,8 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
 
                 case "appR": {
                     const { closure: { lambda: { body, param }, renv, env } } = frame;
-                    const renamedParam = Identifier.color(param.ident);
-                    const newRenv = renv.push({ from: param.ident, to: renamedParam });
+                    const renamedParam = Identifier.color(param);
+                    const newRenv = renv.push({ from: param, to: renamedParam });
                     return ok({
                         kind: "eval",
                         renv: newRenv,

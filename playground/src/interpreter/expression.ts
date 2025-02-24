@@ -80,7 +80,7 @@ const color = (id: Identifier): Identifier => {
     }
 }
 
-export type Expression = Variable | Lambda | Application | Integer | Primitive | Boolean | ShortCircuit | If;
+export type Expression = Variable | Lambda | Application | Integer | Primitive | Boolean | ShortCircuit | If | Fixpoint;
 
 export type BinOp = "add" | "sub" | "mul" | "div" | "mod" | "eq" | "ne" | "lt" | "le" | "gt" | "ge";
 export const BinOp = {
@@ -109,7 +109,7 @@ export type Variable = {
 
 export type Lambda = {
     kind: "lambda";
-    param: Variable;
+    param: Identifier;
     body: Expression;
 }
 
@@ -123,6 +123,12 @@ export type Application = {
     kind: "application";
     func: Expression;
     arg: Expression;
+}
+
+export type Fixpoint = {
+    kind: "fixpoint";
+    ident: Identifier;
+    body: Expression;
 }
 
 export type Integer = {

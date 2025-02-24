@@ -199,17 +199,17 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
             }
 
         case "lambda": {
-            const vars = [];
+            const params = [];
             let body: Expression = expr;
             while (body.kind === "lambda") {
-                vars.push(body.param);
+                params.push(body.param);
                 body = body.body;
             }
 
             return <Paren cond={context !== "toplevel"}>
                 <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em" }}>fn</Box>
                 <Box sx={{ display: "inline" }}>
-                    {vars.map((v) => <IdentVis ident={v.ident} />).reduce((acc, curr) => <>{acc},{curr}</>)}
+                    {params.map((param) => <IdentVis ident={param} />).reduce((acc, curr) => <>{acc},{curr}</>)}
                 </Box>
                 <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em", paddingLeft: "0.5em" }}>→</Box>
                 <ExpressionVis expr={body} context={"lambda"} />

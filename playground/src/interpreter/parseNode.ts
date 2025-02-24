@@ -1,4 +1,4 @@
-import { Expression, Variable } from './expression';
+import { Expression, Identifier } from './expression';
 import { SyntaxError } from './SyntaxError';
 import Parser from 'web-tree-sitter';
 import { err, ok, Result } from 'neverthrow';
@@ -56,7 +56,7 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
 
         return Result.combine([parseParams(paramsNode), parseNode(bodyNode)]).andThen(
             ([params, body]) => {
-                const curry = (params: Variable[], body: Expression): Expression => {
+                const curry = (params: Identifier[], body: Expression): Expression => {
                     if (params.length === 0) {
                         return body;
                     } else {
@@ -87,6 +87,26 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
                     kind: "application" as const,
                     func: func,
                     arg: arg
+                })
+            }
+        )
+
+    } else if (node.type == "fixpoint") {
+        const nameNode = node.namedChild(0);
+        const bodyNode = node.namedChild(1);
+        if (nameNode == null || bodyNode == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: name or body is missing in fixpoint",
+                node
+            ));
+        }
+
+        return Result.combine([parseIdentifier(nameNode), parseNode(bodyNode)]).andThen(
+            ([ident, body]) => {
+                return ok({
+                    kind: "fixpoint" as const,
+                    ident: ident,
+                    body: body
                 })
             }
         )
@@ -298,6 +318,7 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
                 })
             }
         )
+
     } else if (node.type == "le") {
         const left = node.namedChild(0);
         const right = node.namedChild(1);
@@ -413,20 +434,17 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
     }
 }
 
-const parseParams = (node: Parser.SyntaxNode): Result<Variable[], SyntaxError> => {
+const parseParams = (node: Parser.SyntaxNode): Result<Identifier[], SyntaxError> => {
     return Result.combine(node.children.map((child) => parseIdentifier(child)));
 }
 
-const parseIdentifier = (node: Parser.SyntaxNode): Result<Variable, SyntaxError> => {
+const parseIdentifier = (node: Parser.SyntaxNode): Result<Identifier, SyntaxError> => {
     if (node.isMissing) {
         return err(new SyntaxError(`${stringifyPosition(node)}: Missing ${node.type}`, node));
     }
 
     if (node.type === "identifier") {
-        return ok({ kind: "variable" as const, ident: {
-            kind: "raw",
-            name: node.text,
-        } });
+        return ok({ kind: "raw", name: node.text });
     } else {
         return err(new SyntaxError(`${stringifyPosition(node)}: Expected identifier, but got ${node.type}`, node));
     }

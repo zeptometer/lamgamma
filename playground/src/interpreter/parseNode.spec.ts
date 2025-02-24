@@ -30,7 +30,7 @@ describe('Tree Parser, success cases', () => {
       const input = 'fn x -> x';
       const expectedOutput = {
         kind: 'lambda',
-        param: { kind: 'variable', ident: { kind: 'raw', name: 'x' } },
+        param: { kind: 'raw', name: 'x' },
         body: { kind: 'variable', ident: { kind: 'raw', name: 'x' } }
       };
       expect(parseNode((parser.parse(input)).rootNode))
@@ -41,10 +41,10 @@ describe('Tree Parser, success cases', () => {
       const input = 'fn x y -> x';
       const expectedOutput = {
         kind: 'lambda',
-        param: { kind: 'variable', ident: { kind: 'raw', name: 'x' } },
+        param: { kind: 'raw', name: 'x' },
         body: {
           kind: 'lambda',
-          param: { kind: 'variable', ident: { kind: 'raw', name: 'y' } },
+          param: { kind: 'raw', name: 'y' },
           body: { kind: 'variable', ident: { kind: 'raw', name: 'x' } }
         }
       };
@@ -76,7 +76,7 @@ describe('Tree Parser, success cases', () => {
         kind: 'application',
         func: {
           kind: 'lambda',
-          param: { kind: 'variable', ident: { kind: 'raw', name: 'x' } },
+          param: { kind: 'raw', name: 'x' },
           body: { kind: 'variable', ident: { kind: 'raw', name: 'x' } }
         },
         arg: { kind: 'variable', ident: { kind: 'raw', name: 'y' } }
@@ -220,7 +220,7 @@ describe('Tree Parser, success cases', () => {
     it('parse and', () => {
       const input = 'true && false';
       const expectedOutput = {
-        kind: 'short_circuit',
+        kind: 'shortCircuit',
         op: 'and',
         left: { kind: 'boolean', value: true },
         right: { kind: 'boolean', value: false }
@@ -231,10 +231,26 @@ describe('Tree Parser, success cases', () => {
     it('parse or', () => {
       const input = 'true || false';
       const expectedOutput = {
-        kind: 'short_circuit',
+        kind: 'shortCircuit',
         op: 'or',
         left: { kind: 'boolean', value: true },
         right: { kind: 'boolean', value: false }
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+  });
+  describe('fixpoint', () => {
+    it('parse fixpoint', () => {
+      const input = 'fix x -> fn y -> y';
+      const expectedOutput = {
+        kind: 'fixpoint',
+        ident: { kind: 'raw', name: 'x' },
+        body: {
+          kind: 'lambda',
+          param: { kind: 'raw', name: 'y' },
+          body: { kind: 'variable', ident: { kind: 'raw', name: 'y' } }
+        }
       };
       expect(parseNode((parser.parse(input)).rootNode))
         .toEqual(ok(expectedOutput));
