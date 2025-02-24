@@ -1,43 +1,123 @@
-import { Expression, Identifier } from "./expression"
+import { Expression, Identifier, Integer, Boolean } from "./expression"
 import { CKState, Value, Cont, Frame, RenamingEnv } from "./ckstate";
 import { Result, ok, err } from "neverthrow";
 import { List } from "immutable";
+import { unreachable } from "../common/assertNever";
 
 const arityOps = {
-    add: 2,
-    sub: 2,
-    mul: 2,
-    div: 2,
-    mod: 2,
+    add: [2, ["integer", "integer"]],
+    sub: [2, ["integer", "integer"]],
+    mul: [2, ["integer", "integer"]],
+    div: [2, ["integer", "integer"]],
+    mod: [2, ["integer", "integer"]],
+    eq: [2, ["integer", "integer"]],
+    ne: [2, ["integer", "integer"]],
+    lt: [2, ["integer", "integer"]],
+    le: [2, ["integer", "integer"]],
+    gt: [2, ["integer", "integer"]],
+    ge: [2, ["integer", "integer"]],
+    neg: [1, ["boolean"]],
 } as const;
 
 const performPrimitiveOp = (op: keyof typeof arityOps, args: List<Value>): Result<Value, Error> => {
-    const values = args.map(arg => {
-        if (arg.kind !== "integer") {
-            return err(new Error(`Expected integer but got ${arg.kind}`));
-        }
-        return ok(arg.value);
-    });
-
-    if (values.some(v => v.isErr())) {
-        return err(new Error("All arguments must be integers"));
+    const [arity, types] = arityOps[op];
+    if (args.size !== arity) {
+        return err(new Error(`Arity mismatch: ${op} expects ${arity} arguments, but got ${args.size}`));
     }
 
-    const nums = values.map(v => v._unsafeUnwrap());
-    let result: number;
+    for (let i = 0; i < arity; i++) {
+        if (args.get(i)!.kind !== types[i]) {
+            return err(new Error(`Type mismatch: ${op} expects ${types[i]} but got ${args.get(i)!.kind}`));
+        }
+    }
 
     switch (op) {
-        case "add": result = nums.get(0)! + nums.get(1)!; break;
-        case "sub": result = nums.get(0)! - nums.get(1)!; break;
-        case "mul": result = nums.get(0)! * nums.get(1)!; break;
-        case "div": result = Math.floor(nums.get(0)! / nums.get(1)!); break;
-        case "mod": result = nums.get(0)! % nums.get(1)!; break;
-    }
+        case "add": {
+            return ok({
+                kind: "integer",
+                value: (args.get(0) as Integer).value + (args.get(1) as Integer).value
+            });
+        }
 
-    return ok({
-        kind: "integer",
-        value: result
-    });
+        case "sub": {
+            return ok({
+                kind: "integer",
+                value: (args.get(0) as Integer).value - (args.get(1) as Integer).value
+            });
+        }
+
+        case "mul": {
+            return ok({
+                kind: "integer",
+                value: (args.get(0) as Integer).value * (args.get(1) as Integer).value
+            });
+        }
+
+        case "div": {
+            return ok({
+                kind: "integer",
+                value: Math.floor((args.get(0) as Integer).value / (args.get(1) as Integer).value)
+            });
+        }
+
+        case "mod": {
+            return ok({
+                kind: "integer",
+                value: (args.get(0) as Integer).value % (args.get(1) as Integer).value
+            });
+        }
+
+        case "eq": {
+            return ok({
+                kind: "boolean",
+                value: (args.get(0) as Integer).value === (args.get(1) as Integer).value
+            });
+        }
+
+        case "ne": {
+            return ok({
+                kind: "boolean",
+                value: (args.get(0) as Integer).value !== (args.get(1) as Integer).value
+            });
+        }
+
+        case "lt": {
+            return ok({
+                kind: "boolean",
+                value: (args.get(0) as Integer).value < (args.get(1) as Integer).value
+            });
+        }
+
+        case "le": {
+            return ok({
+                kind: "boolean",
+                value: (args.get(0) as Integer).value <= (args.get(1) as Integer).value
+            });
+        }
+
+        case "gt": {
+            return ok({
+                kind: "boolean",
+                value: (args.get(0) as Integer).value > (args.get(1) as Integer).value
+            });
+        }
+
+        case "ge": {
+            return ok({
+                kind: "boolean",
+                value: (args.get(0) as Integer).value >= (args.get(1) as Integer).value
+            });
+        }
+
+        case "neg": {
+            return ok({
+                kind: "boolean",
+                value: !(args.get(0) as Boolean).value
+            });
+        }
+
+        default: throw unreachable(op);
+    }
 }
 
 const executeStep = (state: CKState): Result<CKState, Error> => {
@@ -87,7 +167,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                 }
 
                 case "primitive": {
-                    if (expr.args.size !== arityOps[expr.op]) {
+                    if (expr.args.size !== arityOps[expr.op][0]) {
                         return err(new Error(`Arity mismatch: ${expr.op} expects ${arityOps[expr.op]} arguments, but got ${expr.args.size}`));
                     }
                     if (expr.args.isEmpty()) {
@@ -108,8 +188,43 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     });
                 }
 
-                default:
-                    throw new Error(`Unknown type: ${(expr as { kind: "__invalid__" }).kind}`);
+                case "boolean": {
+                    return ok({
+                        kind: "applyCont",
+                        val: { kind: "boolean", value: expr.value },
+                        cont: cont
+                    })
+                }
+
+                case "if": {
+                    return ok({
+                        kind: "eval",
+                        renv: state.renv,
+                        expr: expr.cond,
+                        cont: cont.unshift({
+                            kind: "ifC",
+                            renv: state.renv,
+                            then: expr.then,
+                            else_: expr.else_
+                        })
+                    })
+                }
+
+                case "shortCircuit": {
+                    return ok({
+                        kind: "eval",
+                        renv: state.renv,
+                        expr: expr.left,
+                        cont: cont.unshift({
+                            kind: "shortCircuit",
+                            renv: state.renv,
+                            op: expr.op,
+                            right: expr.right
+                        })
+                    })
+                }
+
+                default: throw (unreachable(expr));
             }
         }
         case "applyCont": {
@@ -161,12 +276,13 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                             return ok({ kind: "applyCont", val: clos, cont: rest });
                         }
 
-                        case "integer": {
+                        case "integer":
+                        case "boolean": {
                             return ok({ kind: "applyCont", val: val, cont: rest });
                         }
 
                         default:
-                            throw new Error(`Unknown type: ${(val as { kind: "__invalid__" }).kind}`);
+                            throw unreachable(val);
                     }
                 }
 
@@ -194,12 +310,69 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     }
                 }
 
+                case "ifC": {
+                    if (val.kind !== "boolean") {
+                        return err(new Error("Expected a boolean, but got a non-boolean"));
+                    }
+                    return ok({
+                        kind: "eval",
+                        renv: frame.renv,
+                        expr: val.value ? frame.then : frame.else_,
+                        cont: rest
+                    });
+                }
+
+                case "shortCircuit": {
+                    if (val.kind !== "boolean") {
+                        return err(new Error("Expected a boolean, but got a non-boolean"));
+                    }
+                    const op = frame.op;
+                    switch (op) {
+                        case "and": {
+                            if (val.value) {
+                                return ok({
+                                    kind: "eval",
+                                    renv: frame.renv,
+                                    expr: frame.right,
+                                    cont: rest
+                                });
+                            } else {
+                                return ok({
+                                    kind: "applyCont",
+                                    val: { kind: "boolean", value: false },
+                                    cont: rest
+                                });
+                            }
+                        }
+
+                        case "or": {
+                            if (val.value) {
+                                return ok({
+                                    kind: "applyCont",
+                                    val: { kind: "boolean", value: true },
+                                    cont: rest
+                                });
+                            } else {
+                                return ok({
+                                    kind: "eval",
+                                    renv: frame.renv,
+                                    expr: frame.right,
+                                    cont: rest
+                                });
+                            }
+                        }
+
+                        default:
+                            throw unreachable(op);
+                    }
+                }
+
                 default:
-                    throw new Error(`Unknown type: ${(frame as { kind: "__invalid__" }).kind}`);
+                    throw unreachable(frame);
             }
         }
         default:
-            throw new Error(`Unknown type: ${(state as { kind: "__invalid__" }).kind}`);
+            throw unreachable(state);
     }
 }
 

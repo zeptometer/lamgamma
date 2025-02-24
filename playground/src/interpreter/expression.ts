@@ -136,7 +136,7 @@ export type Boolean = {
 }
 
 export type ShortCircuit = {
-    kind: "short_circuit";
+    kind: "shortCircuit";
     op: ShortCircuitOp;
     left: Expression;
     right: Expression;

@@ -1,5 +1,5 @@
 import { List } from "immutable";
-import { Lambda, Expression, PrimitiveOp, Integer, Identifier } from "./expression";
+import { Lambda, Expression, PrimitiveOp, Integer, Identifier, ShortCircuitOp, Boolean } from "./expression";
 
 export type RenamingEnv = List<{ from: Identifier, to: Identifier }>;
 
@@ -9,7 +9,7 @@ const lookupRenamingEnv = (renv: RenamingEnv, ident: Identifier): Identifier | n
 
 export const RenamingEnv = { lookup: lookupRenamingEnv };
 
-export type Value = Closure | Integer;
+export type Value = Closure | Integer | Boolean;
 
 export type Closure = {
     kind: "closure";
@@ -18,7 +18,7 @@ export type Closure = {
     env: List<EnvFrame>;
 };
 
-export type Frame = AppLFrame | AppRFrame | EnvFrame | PrimFrame;
+export type Frame = AppLFrame | AppRFrame | EnvFrame | PrimFrame | IfCFrame | ShortCircuitFrame;
 export type Cont = List<Frame>;
 
 export type AppLFrame = {
@@ -44,6 +44,20 @@ export type PrimFrame = {
     op: PrimitiveOp;
     done: List<Value>;
     rest: List<Expression>;
+}
+
+export type IfCFrame = {
+    kind: "ifC";
+    renv: RenamingEnv;
+    then: Expression;
+    else_: Expression;
+}
+
+export type ShortCircuitFrame = {
+    kind: "shortCircuit";
+    renv: RenamingEnv;
+    op: ShortCircuitOp;
+    right: Expression;
 }
 
 export const Cont = {

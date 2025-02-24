@@ -364,7 +364,7 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
         return Result.combine([parseNode(left), parseNode(right)]).andThen(
             ([left, right]) => {
                 return ok({
-                    kind: "short_circuit" as const,
+                    kind: "shortCircuit" as const,
                     op: "and" as const,
                     left: left,
                     right: right
@@ -384,7 +384,7 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
         return Result.combine([parseNode(left), parseNode(right)]).andThen(
             ([left, right]) => {
                 return ok({
-                    kind: "short_circuit" as const,
+                    kind: "shortCircuit" as const,
                     op: "or" as const,
                     left: left,
                     right: right

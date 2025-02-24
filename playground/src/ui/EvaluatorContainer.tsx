@@ -46,9 +46,9 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
         const nextState = CKMachine.executeStep(state.value);
 
         setStates(states.takeLast(MAX_STATES).push(nextState));
-        if (state.isOk() &&
-            state.value.kind === "applyCont"
-            && state.value.cont.isEmpty()) {
+        if (nextState.isOk() &&
+            nextState.value.kind === "applyCont"
+            && nextState.value.cont.isEmpty()) {
             setComplete(true);
             return;
         }
@@ -76,6 +76,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
 
     const undo = () => {
         setStates(states.pop());
+        setComplete(false);
     }
 
     return <Box sx={{

@@ -2,6 +2,7 @@ import { MouseEventHandler, ReactNode, useState } from "react"
 import { CKState, Cont, EnvFrame, Frame, RenamingEnv, Value } from "../interpreter/ckstate"
 import { Expression, Identifier, PrimitiveOp, ShortCircuitOp, UniOp } from "../interpreter/expression"
 import { Box } from "@mui/material";
+import { unreachable } from "../common/assertNever";
 
 const stringifyOp = (op: PrimitiveOp | ShortCircuitOp) => {
     switch (op) {
@@ -153,6 +154,12 @@ const ValueVis: React.FC<{ val: Value }> = ({ val }) => {
         case "integer": {
             return <>{val.value}</>
         }
+
+        case "boolean": {
+            return <>{val.value ? "true" : "false"}</>
+        }
+
+        default: throw unreachable(val);
     }
 }
 
@@ -227,11 +234,11 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
             }
         }
 
-        case "short_circuit": {
+        case "shortCircuit": {
             return <Paren cond={true}>
-                <ExpressionVis expr={expr.left} context={"short_circuit"} />
+                <ExpressionVis expr={expr.left} context={"shortCircuit"} />
                 &nbsp;{stringifyOp(expr.op)}&nbsp;
-                <ExpressionVis expr={expr.right} context={"short_circuit"} />
+                <ExpressionVis expr={expr.right} context={"shortCircuit"} />
             </Paren>
         }
 
@@ -252,7 +259,7 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
     return null;
 }
 
-type ChildKind = "variable" | "application" | "lambda" | "env" | "closure" | "integer" | "primitive"
+type ChildKind = "variable" | "application" | "lambda" | "env" | "closure" | "integer" | "primitive" | "boolean" | "shortCircuit" | "if"
 
 interface ContVisProp {
     cont: Cont,
@@ -323,7 +330,11 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
         case "prim": {
             let x;
 
-            if (frame.done.isEmpty()) {
+            if (frame.op === "neg") {
+                x = <>
+                    !{children}
+                </>
+            } else if (frame.done.isEmpty()) {
                 x = <>
                     {children}
                     &nbsp;{stringifyOp(frame.op)}&nbsp;
@@ -349,6 +360,39 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
                 </Group>
             </ContVis>
         }
+        case "ifC": {
+            return <ContVis
+                cont={cont.rest()}
+                childKind={"if"}
+                varopt={varopt}
+            >
+                <Paren cond={true}>
+                    <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em" }}>if</Box>
+                    {children}
+                    <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>then</Box>
+                    <ExpressionVis expr={frame.then} context={"if"} />
+                    <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>else</Box>
+                    <ExpressionVis expr={frame.else_} context={"if"} />
+                </Paren>
+            </ContVis>
+        }
+
+        case "shortCircuit": {
+            return <ContVis
+                cont={cont.rest()}
+                childKind={"shortCircuit"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <Paren cond={true}>
+                        {children}
+                        &nbsp;{stringifyOp(frame.op)}&nbsp;
+                        <ExpressionVis expr={frame.right} context={"shortCircuit"} />
+                    </Paren>
+                </Group>
+            </ContVis>
+        }
+        default: throw unreachable(frame);
     }
 }
 
@@ -404,6 +448,8 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
                     </Box>
                 </ContVis>
             </Box>
+
+        default: throw unreachable(state);
     }
 }
 
