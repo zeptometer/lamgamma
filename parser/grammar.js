@@ -62,7 +62,7 @@ module.exports = grammar({
       $.ge,
       $.and,
       $.or,
-      $.neg
+      $.neg,
     ),
 
     // Expressions that can be used as an argument as-is
@@ -70,7 +70,10 @@ module.exports = grammar({
       seq('(', $._expression, ')'),
       $.identifier,
       $.number,
-      $.boolean
+      $.boolean,
+      // staging
+      $.quote,
+      $.splice,
     ),
 
     lambda: $ => prec.right(PREC.lambda,
@@ -183,5 +186,16 @@ module.exports = grammar({
 
     neg: $ => prec.right(PREC.unary,
       seq('!', $._expression)),
+
+    // staging
+    quote: $ => prec(PREC.stage,
+      seq('`{', $._expression, '}')),
+
+    splice: $ => prec(PREC.stage,
+      choice(
+        seq('~{', field("body", $._expression), '}'),
+        seq('~', field("shift", $.number), '{', field("body", $._expression), '}')
+      )
+    )
   }
 });

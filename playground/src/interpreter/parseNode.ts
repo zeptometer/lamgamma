@@ -39,10 +39,12 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
         return parseNode(expr);
 
     } else if (node.type === "identifier") {
-        return ok({ kind: "variable", ident: {
-            kind: "raw",
-            name: node.text,
-        } });
+        return ok({
+            kind: "variable", ident: {
+                kind: "raw",
+                name: node.text,
+            }
+        });
 
     } else if (node.type === "lambda") {
         const paramsNode = node.namedChild(0);
@@ -428,6 +430,50 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
                 args: List.of(expr)
             }
         })
+
+    } else if (node.type == "quote") {
+        const expr = node.namedChild(0);
+        if (expr == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: expr is missing in quote",
+                node));
+        }
+
+        return parseNode(expr).map((expr) => {
+            return {
+                kind: "quote" as const,
+                expr: expr
+            }
+        })
+
+    } else if (node.type == "splice") {
+        const shiftNode = node.childrenForFieldName("shift")[0];
+        const body = node.childrenForFieldName("body")[0];
+        if (body == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: body is missing in splice",
+                node));
+        }
+
+        let shift = 1;
+        if (shiftNode) {
+            shift = Number(shiftNode.text);
+            if (isNaN(shift)) {
+                return err(new SyntaxError(
+                    `Expected unreachable: failed to parse number: ${node.text}`,
+                    node
+                ));
+            }
+        }
+
+        return parseNode(body).andThen(
+            (body) => {
+                return ok({
+                    kind: "splice" as const,
+                    shift: shift,
+                    expr: body
+                })
+            });
 
     } else {
         return err(new SyntaxError(`${stringifyPosition(node)}: Got unexpected node: ${node.type}`, node));

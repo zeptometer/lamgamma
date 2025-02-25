@@ -1,0 +1,36 @@
+==================
+Quote
+==================
+
+`{ x y }
+
+---
+
+(source_file
+  (quote (application (identifier) (identifier))))
+
+==================
+Splice
+==================
+
+`{ ~1{x} ~0{y} }
+
+---
+
+(source_file
+  (quote (application
+    (splice (number) (identifier))
+    (splice (number) (identifier)))))
+
+==================
+Splice without shift
+==================
+
+`{ ~{x} ~{y} }
+
+---
+
+(source_file
+  (quote (application
+    (splice (identifier))
+    (splice (identifier)))))

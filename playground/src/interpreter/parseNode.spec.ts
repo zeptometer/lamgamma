@@ -83,7 +83,39 @@ describe('Tree Parser, success cases', () => {
       };
       expect(parseNode((parser.parse(input)).rootNode))
         .toEqual(ok(expectedOutput))
-    })
+    });
+
+    it('parse quote', () => {
+      const input = '`{ x }';
+      const expectedOutput = {
+        kind: 'quote',
+        expr: { kind: 'variable', ident: { kind: 'raw', name: 'x' } }
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput))
+    });
+
+    it('parse splice', () => {
+      const input = '`{ ~0{ x } ~{ y } }';
+      const expectedOutput = {
+        kind: 'quote',
+        expr: {
+          kind: 'application',
+          func: {
+            kind: 'splice',
+            shift: 0,
+            expr: { kind: 'variable', ident: { kind: 'raw', name: 'x' } }
+          },
+          arg: {
+            kind: 'splice',
+            shift: 1,
+            expr: { kind: 'variable', ident: { kind: 'raw', name: 'y' } }
+          }
+        }
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput))
+    });
   });
   describe('basic arithmetic', () => {
     it('parse number', () => {
