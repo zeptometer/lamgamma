@@ -1,5 +1,5 @@
 import { MouseEventHandler, ReactNode, useState } from "react"
-import { CKState, Cont, EnvFrame, Frame, RenamingEnv, Value } from "../interpreter/ckstate"
+import { CKState, Cont, EnvRF, RuntimeFrame, RenamingEnv, Value } from "../interpreter/ckstate"
 import { Expression, Identifier, PrimitiveOp, ShortCircuitOp, UniOp } from "../interpreter/expression"
 import { Box } from "@mui/material";
 import { unreachable } from "../common/assertNever";
@@ -301,7 +301,7 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
         return children
     }
 
-    const frame = cont.first() as Frame;
+    const frame = cont.first() as RuntimeFrame;
     switch (frame.kind) {
         case "appL":
             return <ContVis
@@ -331,7 +331,7 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
             let rest: Cont = cont;
             let v = varopt;
             while (!rest.isEmpty() && rest.first()!.kind === "env") {
-                const env = rest.first() as EnvFrame;
+                const env = rest.first() as EnvRF;
                 if (v && Identifier.eq(env.ident, v)) {
                     envs.push(<EnvVis ident={env.ident} val={env.val} matched />)
                     v = null;

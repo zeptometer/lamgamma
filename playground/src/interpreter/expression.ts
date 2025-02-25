@@ -1,4 +1,5 @@
 import { List } from "immutable";
+import { unreachable } from "../common/assertNever";
 
 export type Identifier = RawIdentifier | GeneratedIdentifier | ColoredIdentifier
 export type RawIdentifier = {
@@ -171,3 +172,60 @@ export type Splice = {
     shift: number;
     expr: Expression;
 }
+
+/** TODO: Add utility function for general-purpose AST traversal */
+const hasFreeVariable = (expr: Expression, ident: Identifier): boolean => {
+    switch (expr.kind) {
+        case "variable":
+            return Identifier.eq(expr.ident, ident);
+
+        case "lambda":
+            if (Identifier.eq(expr.param, ident)) {
+                return false;
+            } else {
+                return hasFreeVariable(expr.body, ident)
+            }
+
+        case "fixpoint":
+            if (Identifier.eq(expr.param, ident)) {
+                return false;
+            } else {
+                return hasFreeVariable(expr.body, ident)
+            }
+
+        case "application":
+            return hasFreeVariable(expr.func, ident)
+                || hasFreeVariable(expr.arg, ident);
+
+        case "integer":
+        case "boolean":
+            return false;
+
+        case "primitive":
+            for (const arg of expr.args) {
+                if (hasFreeVariable(arg, ident)) {
+                    return true;
+                }
+            }
+            return false;
+
+        case "shortCircuit":
+            return hasFreeVariable(expr.left, ident)
+                || hasFreeVariable(expr.right, ident);
+
+        case "if":
+            return hasFreeVariable(expr.cond, ident)
+                || hasFreeVariable(expr.then, ident)
+                || hasFreeVariable(expr.else_, ident);
+
+        case "quote":
+            return hasFreeVariable(expr.expr, ident);
+
+        case "splice":
+            return hasFreeVariable(expr.expr, ident);
+
+        default: throw unreachable(expr)
+    }
+}
+
+export const Expression = { hasFreeVariable }

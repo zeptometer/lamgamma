@@ -1,10 +1,10 @@
 import Parser from 'web-tree-sitter';
 import { parseNode } from './parseNode';
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { CKMachine } from './ckmachine';
 import { ok, err } from 'neverthrow';
 import { List } from 'immutable';
-import { Closure } from './ckstate';
+import { Identifier } from './expression';
 
 const { initState, executeStep, execute } = CKMachine;
 let parser: Parser;
@@ -19,6 +19,12 @@ beforeAll(
     }
 )
 
+beforeEach(
+    () => {
+        Identifier.reset();
+    }
+)
+
 /* We assume that expressions in tests are valid */
 const parse = (input: string) => parseNode((parser.parse(input)).rootNode)._unsafeUnwrap();
 
@@ -29,14 +35,15 @@ describe("CKMachine", () => {
         const actual1 = executeStep(subject);
 
         expect(actual1).toEqual(ok({
-            kind: "applyCont",
+            kind: "applyCont0",
             val: {
                 kind: "closure",
                 lambda: {
                     kind: "lambda",
-                    param: { kind: "variable", name: "x" },
-                    body: { kind: "variable", name: "x" },
+                    param: { kind: "raw", "name": "x" },
+                    body: { kind: "variable", ident: { kind: "raw", "name": "x" } },
                 },
+                renv: List.of(),
                 env: List.of(),
             },
             cont: List.of(),
@@ -57,56 +64,40 @@ describe("CKMachine", () => {
             kind: "closure",
             lambda: {
                 kind: "lambda",
-                param: { kind: "variable", name: "y" },
-                body: { kind: "variable", name: "y" },
+                param: { kind: "raw", name: "y" },
+                body: { kind: "variable", ident: { kind: "raw", name: "y" } },
             },
+            renv: List.of(),
             env: List.of({
                 kind: "env",
-                var: { kind: "variable", name: "x" },
+                ident: { kind: "colored", basename: "x", id: 1 },
                 val: {
                     kind: "closure",
                     lambda: {
                         kind: "lambda",
-                        param: { kind: "variable", name: "y" },
-                        body: { kind: "variable", name: "y" },
+                        param: { kind: "raw", name: "y" },
+                        body: { kind: "variable", ident: { kind: "raw", name: "y" } },
                     },
+                    renv: List.of(),
                     env: List.of()
                 }
             })
         });
     });
 
-    it("case 3", () => {
-        const subject = initState(parse("(fn x -> (fn x -> x)) (fn y -> y) (fn z -> z)"));
-
-        const actual1 = execute(subject);
-
-        expect(actual1.isOk()).toBeTruthy();
-        const v = actual1._unsafeUnwrap();
-        expect(v.kind).toEqual("closure");
-        expect((v as Closure).lambda).toEqual({
-            kind: "lambda",
-            param: { kind: "variable", name: "y" },
-            body: { kind: "variable", name: "y" }
-        });
-    });
-
     it("SKK = I", () => {
         const subject = initState(parse(`
-            (fn x y z -> x z (y z)) (fn p q -> p) (fn a b -> a)
-            (fn c -> c)
+            (fn x y z -> x z (y z)) (fn p q -> p) (fn a b -> a) 0
         `));
 
         const actual1 = execute(subject);
 
-        expect(actual1.isOk()).toBeTruthy();
-        const actual2 = actual1._unsafeUnwrap();
-        expect(actual2.kind).toEqual("closure");
-        expect((actual2 as Closure).lambda).toEqual({
-            kind: "lambda",
-            param: { kind: "variable", name: "c" },
-            body: { kind: "variable", name: "c" }
-        });
+        expect(actual1).toEqual(ok(
+            {
+                kind: "integer",
+                value: 0
+            }
+        ));
     });
 
     it("case 4", () => {
@@ -148,6 +139,92 @@ describe("CKMachine", () => {
             {
                 kind: "integer",
                 value: 120
+            }
+        ))
+    });
+
+    it("quote", () => {
+        const subject = initState(parse(`
+            \`{ x }
+        `));
+
+        const actual = execute(subject);
+
+        expect(actual).toEqual(ok(
+            {
+                kind: "code",
+                expr: {
+                    kind: "variable",
+                    ident: { kind: "raw", name: "x" }
+                }
+            }
+        ))
+    });
+
+    it("quote and splice", () => {
+        const subject = initState(parse(`
+            (fn x -> \`{ ~{x} }) \`{ 1 }
+        `));
+
+        const actual = execute(subject);
+
+        expect(actual).toEqual(ok(
+            {
+                kind: "code",
+                expr: {
+                    kind: "integer",
+                    value: 1
+                }
+            }
+        ))
+    });
+
+    it("run-time evaluation", () => {
+        const subject = initState(parse(`
+            ~0{\`{ 1 }}
+        `));
+
+        const actual = execute(subject);
+
+        expect(actual).toEqual(ok(
+            {
+                kind: "integer",
+                value: 1
+            }
+        ))
+    });
+
+    it("run-time evaluation with csp", () => {
+        const subject = initState(parse(`
+            (fn x -> ~0{\`{ x }}) 1
+        `));
+
+        const actual = execute(subject);
+
+        expect(actual).toEqual(ok(
+            {
+                kind: "integer",
+                value: 1
+            }
+        ))
+    });
+
+    it("specialized power function", () => {
+        const subject = initState(parse(`
+            ~0{(fix spow -> fn n x ->
+                if n == 0 then \`{ 1 }
+                else if n == 1 then x
+                else
+                  \`{ ~{x} * ~{spow (n - 1) x}}
+            ) 5 \`{2}}
+        `));
+
+        const actual = execute(subject);
+
+        expect(actual).toEqual(ok(
+            {
+                kind: "integer",
+                value: 32
             }
         ))
     });

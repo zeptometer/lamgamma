@@ -3,42 +3,50 @@ import { Lambda, Expression, PrimitiveOp, Integer, Identifier, ShortCircuitOp, B
 
 export type RenamingEnv = List<{ from: Identifier, to: Identifier }>;
 
-const lookupRenamingEnv = (renv: RenamingEnv, ident: Identifier): Identifier | null => {
-    return renv.find((r) => Identifier.eq(r.from, ident))?.to ?? null;
+const lookupRenamingEnv = (renv: RenamingEnv, ident: Identifier): Identifier => {
+    return renv.find((r) => Identifier.eq(r.from, ident))?.to ?? ident;
 }
 
 export const RenamingEnv = { lookup: lookupRenamingEnv };
 
-export type Value = Closure | Integer | Boolean;
+export type Value = Closure | Integer | Boolean | Code;
 
 export type Closure = {
     kind: "closure";
     lambda: Lambda | Fixpoint;
     renv: RenamingEnv;
-    env: List<EnvFrame>;
+    env: List<EnvRF>;
 };
 
-export type Frame = AppLFrame | AppRFrame | EnvFrame | PrimFrame | IfCFrame | ShortCircuitFrame;
-export type Cont = List<Frame>;
+export type Code = {
+    kind: "code";
+    expr: Expression;
+}
 
-export type AppLFrame = {
+export type RuntimeFrame = AppLRF | AppRRF | EnvRF | PrimRF | IfCRF | ShortCircuitRF | SpliceRF;
+export type CodeFrame = LamCF | AppLCF | AppRCF | FixCF | PrimCF | IfCCF | IfTCF | IFECF |
+    ShortCircuitLCF | ShortCircuitRCF | QuoteCF | SpliceCF;
+export type Cont = List<RuntimeFrame | CodeFrame>;
+
+/* Runtime Frames */
+export type AppLRF = {
     kind: "appL";
     arg: Expression;
     renv: RenamingEnv;
 };
 
-export type AppRFrame = {
+export type AppRRF = {
     kind: "appR";
     closure: Closure;
 };
 
-export type EnvFrame = {
+export type EnvRF = {
     kind: "env";
     ident: Identifier;
     val: Value;
 };
 
-export type PrimFrame = {
+export type PrimRF = {
     kind: "prim";
     renv: RenamingEnv;
     op: PrimitiveOp;
@@ -46,43 +54,133 @@ export type PrimFrame = {
     rest: List<Expression>;
 }
 
-export type IfCFrame = {
+export type IfCRF = {
     kind: "ifC";
     renv: RenamingEnv;
     then: Expression;
     else_: Expression;
 }
 
-export type ShortCircuitFrame = {
+export type ShortCircuitRF = {
     kind: "shortCircuit";
     renv: RenamingEnv;
     op: ShortCircuitOp;
     right: Expression;
 }
 
+export type SpliceRF = {
+    kind: "splice";
+    shift: number;
+}
+
+/* Code Frames */
+export type LamCF = {
+    kind: "lamC",
+    param: Identifier,
+}
+
+export type AppLCF = {
+    kind: "appLC",
+    renv: RenamingEnv,
+    arg: Expression,
+}
+
+export type AppRCF = {
+    kind: "appRC",
+    func: Expression
+}
+
+export type FixCF = {
+    kind: "fixC",
+    recParam: Identifier,
+    funcParam: Identifier
+}
+
+export type PrimCF = {
+    kind: "primC",
+    op: PrimitiveOp,
+    renv: RenamingEnv,
+    done: List<Expression>,
+    rest: List<Expression>
+}
+
+export type IfCCF = {
+    kind: "ifCC",
+    renv: RenamingEnv,
+    then: Expression,
+    else_: Expression,
+}
+
+export type IfTCF = {
+    kind: "ifTC",
+    renv: RenamingEnv,
+    cond: Expression,
+    else_: Expression,
+}
+
+export type IFECF = {
+    kind: "ifEC",
+    cond: Expression,
+    then: Expression,
+}
+
+export type ShortCircuitLCF = {
+    kind: "shortCircuitLC",
+    renv: RenamingEnv,
+    op: ShortCircuitOp,
+    right: Expression,
+}
+
+export type ShortCircuitRCF = {
+    kind: "shortCircuitRC",
+    op: ShortCircuitOp,
+    left: Expression,
+}
+
+export type QuoteCF = {
+    kind: "quoteC"
+}
+
+export type SpliceCF = {
+    kind: "spliceC",
+    shift: number
+}
+
 export const Cont = {
-    lookup: (cont: Cont, ident: Identifier): Value | null => {
+    lookup: (cont: Cont, ident: Identifier): Value | "NotFound" | "FutureBinding" => {
         const frame = cont.find((frame) => {
-            return frame.kind === "env" && frame.ident === ident;
+            return (frame.kind === "env" && frame.ident === ident) ||
+            (frame.kind === "lamC" && frame.param === ident) ||
+            (frame.kind === "fixC" && (frame.recParam === ident || frame.funcParam === ident));
         });
-        if (frame === null) {
-            return null;
+        if (!frame) {
+            return "NotFound";
+        } else if (["lamC", "fixC"].includes(frame.kind)) {
+            return "FutureBinding";
         }
-        return (frame as EnvFrame).val;
+        return (frame as EnvRF).val;
     }
 }
 
-export type CKState = EvalState | ApplyContState;
+export type CKState = EvalState | ApplyCont0State | ApplyContFState;
 
 export type EvalState = {
     kind: "eval";
+    level: number;
     renv: RenamingEnv;
     expr: Expression;
     cont: Cont;
-};
+}
 
-export type ApplyContState = {
-    kind: "applyCont";
+export type ApplyCont0State = {
+    kind: "applyCont0";
     val: Value;
     cont: Cont;
-};
+}
+
+export type ApplyContFState = {
+    kind: "applyContF";
+    level: number;
+    code: Expression;
+    cont: Cont;
+}

@@ -1,5 +1,5 @@
 import { Expression, Identifier, Integer, Boolean, Lambda } from "./expression"
-import { CKState, Value, Cont, Frame, RenamingEnv } from "./ckstate";
+import { CKState, Value, Cont, RuntimeFrame, RenamingEnv, CodeFrame } from "./ckstate";
 import { Result, ok, err } from "neverthrow";
 import { List } from "immutable";
 import { unreachable } from "../common/assertNever";
@@ -123,133 +123,348 @@ const performPrimitiveOp = (op: keyof typeof arityOps, args: List<Value>): Resul
 const executeStep = (state: CKState): Result<CKState, Error> => {
     switch (state.kind) {
         case "eval": {
-            const { expr, cont } = state;
-            switch (expr.kind) {
-                case "variable": {
-                    const finalIdent = RenamingEnv.lookup(state.renv, expr.ident);
-                    if (finalIdent === null) {
-                        return err(new Error(`Failed to rename identifier: ${Identifier.stringify(expr.ident)}`));
-                    }
-                    const val = Cont.lookup(cont, finalIdent);
-                    if (val === null) {
-                        return err(new Error(`Unbound variable: ${Identifier.stringify(expr.ident)}`));
-                    }
-                    return ok({
-                        kind: "applyCont",
-                        val: val,
-                        cont: cont
-                    })
-                }
+            const { level, renv, expr, cont } = state;
+            if (level == 0) {
+                switch (expr.kind) {
+                    case "variable": {
+                        const finalIdent = RenamingEnv.lookup(renv, expr.ident);
+                        if (finalIdent === null) {
+                            return err(new Error(`Failed to rename identifier: ${Identifier.stringify(expr.ident)}`));
+                        }
+                        const val = Cont.lookup(cont, finalIdent);
+                        if (val === "NotFound") {
+                            return err(new Error(`Unbound variable: ${Identifier.stringify(expr.ident)}`));
+                        } else if (val === "FutureBinding") {
+                            return err(new Error(`The variable ${Identifier.stringify(expr.ident)} is to be bound in future stages`));
+                        }
 
-                case "lambda": {
-                    return ok({
-                        kind: "applyCont",
-                        val: { kind: "closure", lambda: expr, renv: state.renv, env: List.of() },
-                        cont: cont
-                    });
-                }
-
-                case "application": {
-                    return ok({
-                        kind: "eval",
-                        renv: state.renv,
-                        expr: expr.func,
-                        cont: cont.unshift({ kind: "appL", arg: expr.arg, renv: state.renv })
-                    });
-                }
-
-                case "fixpoint": {
-                    if (expr.body.kind !== "lambda") {
-                        return err(new Error("Fixpoint operator expects a lambda expression"));
-                    }
-                    return ok({
-                        kind: "applyCont",
-                        val: {
-                            kind: "closure",
-                            lambda: expr,
-                            renv: state.renv,
-                            env: List.of()
-                        },
-                        cont: cont
-                    });
-                }
-
-                case "integer": {
-                    return ok({
-                        kind: "applyCont",
-                        val: { kind: "integer", value: expr.value },
-                        cont: cont
-                    });
-                }
-
-                case "primitive": {
-                    if (expr.args.size !== arityOps[expr.op][0]) {
-                        return err(new Error(`Arity mismatch: ${expr.op} expects ${arityOps[expr.op]} arguments, but got ${expr.args.size}`));
-                    }
-                    if (expr.args.isEmpty()) {
-                        return err(new Error("Primitive with no arguments are not allowed"));
-                    }
-                    return ok({
-                        kind: "eval",
-                        renv: state.renv,
-                        // expr.args.first() is guaranteed to be non-null because we checked the size above
-                        expr: expr.args.first()!,
-                        cont: cont.unshift({
-                            kind: "prim",
-                            renv: state.renv,
-                            op: expr.op,
-                            done: List.of(),
-                            rest: expr.args.rest()
+                        return ok({
+                            kind: "applyCont0",
+                            val: val,
+                            cont: cont
                         })
-                    });
-                }
+                    }
 
-                case "boolean": {
-                    return ok({
-                        kind: "applyCont",
-                        val: { kind: "boolean", value: expr.value },
-                        cont: cont
-                    })
-                }
+                    case "lambda": {
+                        return ok({
+                            kind: "applyCont0",
+                            val: { kind: "closure", lambda: expr, renv: renv, env: List.of() },
+                            cont: cont
+                        });
+                    }
 
-                case "if": {
-                    return ok({
-                        kind: "eval",
-                        renv: state.renv,
-                        expr: expr.cond,
-                        cont: cont.unshift({
-                            kind: "ifC",
-                            renv: state.renv,
-                            then: expr.then,
-                            else_: expr.else_
+                    case "application": {
+                        return ok({
+                            kind: "eval",
+                            level: 0,
+                            renv: renv,
+                            expr: expr.func,
+                            cont: cont.unshift({ kind: "appL", arg: expr.arg, renv: renv })
+                        });
+                    }
+
+                    case "fixpoint": {
+                        if (expr.body.kind !== "lambda") {
+                            return err(new Error("Fixpoint operator expects a lambda expression"));
+                        }
+                        return ok({
+                            kind: "applyCont0",
+                            val: {
+                                kind: "closure",
+                                lambda: expr,
+                                renv: renv,
+                                env: List.of()
+                            },
+                            cont: cont
+                        });
+                    }
+
+                    case "integer": {
+                        return ok({
+                            kind: "applyCont0",
+                            val: { kind: "integer", value: expr.value },
+                            cont: cont
+                        });
+                    }
+
+                    case "primitive": {
+                        if (expr.args.size !== arityOps[expr.op][0]) {
+                            return err(new Error(`Arity mismatch: ${expr.op} expects ${arityOps[expr.op]} arguments, but got ${expr.args.size}`));
+                        }
+                        if (expr.args.isEmpty()) {
+                            return err(new Error("Primitive with no arguments are not allowed"));
+                        }
+                        return ok({
+                            kind: "eval",
+                            level: 0,
+                            renv: renv,
+                            // expr.args.first() is guaranteed to be non-null because we checked the size above
+                            expr: expr.args.first()!,
+                            cont: cont.unshift({
+                                kind: "prim",
+                                renv: renv,
+                                op: expr.op,
+                                done: List.of(),
+                                rest: expr.args.rest()
+                            })
+                        });
+                    }
+
+                    case "boolean": {
+                        return ok({
+                            kind: "applyCont0",
+                            val: { kind: "boolean", value: expr.value },
+                            cont: cont
                         })
-                    })
-                }
+                    }
 
-                case "shortCircuit": {
-                    return ok({
-                        kind: "eval",
-                        renv: state.renv,
-                        expr: expr.left,
-                        cont: cont.unshift({
-                            kind: "shortCircuit",
-                            renv: state.renv,
-                            op: expr.op,
-                            right: expr.right
+                    case "if": {
+                        return ok({
+                            kind: "eval",
+                            level: 0,
+                            renv: renv,
+                            expr: expr.cond,
+                            cont: cont.unshift({
+                                kind: "ifC",
+                                renv: renv,
+                                then: expr.then,
+                                else_: expr.else_
+                            })
                         })
-                    })
-                }
+                    }
 
-                default: throw (unreachable(expr));
+                    case "shortCircuit": {
+                        return ok({
+                            kind: "eval",
+                            level: 0,
+                            renv: renv,
+                            expr: expr.left,
+                            cont: cont.unshift({
+                                kind: "shortCircuit",
+                                renv: renv,
+                                op: expr.op,
+                                right: expr.right
+                            })
+                        })
+                    }
+
+                    case "quote": {
+                        return ok({
+                            kind: "eval",
+                            level: 1,
+                            renv: renv,
+                            expr: expr.expr,
+                            cont: cont.unshift({
+                                kind: "quoteC"
+                            })
+                        })
+                    }
+
+                    case "splice": {
+                        const { shift, expr: innerExpr } = expr;
+
+                        if (shift < 0 || !Number.isInteger(shift)) {
+                            return err(new Error(`Expected unreachable: Invalid shift value: ${shift}`));
+                        }
+
+                        if (shift > 0) {
+                            return err(new Error("Splice referring to a negative stage is not allowed"));
+                        }
+
+                        return ok({
+                            kind: "eval",
+                            level: 0,
+                            renv: renv,
+                            expr: innerExpr,
+                            cont: cont.unshift({
+                                kind: "splice",
+                                shift: shift
+                            })
+                        })
+                    }
+
+                    default: throw (unreachable(expr));
+                }
+            } else {
+                switch (expr.kind) {
+                    case "variable": {
+                        return ok({
+                            kind: "applyContF",
+                            level: level,
+                            code: {
+                                kind: "variable",
+                                ident: RenamingEnv.lookup(renv, expr.ident)
+                            },
+                            cont: cont
+                        })
+                    }
+
+                    case "lambda": {
+                        const coloredParam = Identifier.color(expr.param);
+                        const newRenv = renv.unshift({ from: expr.param, to: coloredParam });
+                        return ok({
+                            kind: "eval",
+                            level: level,
+                            renv: newRenv,
+                            expr: expr.body,
+                            cont: cont.unshift({ kind: "lamC", param: coloredParam })
+                        });
+                    }
+
+                    case "application": {
+                        return ok({
+                            kind: "eval",
+                            level: level,
+                            renv: renv,
+                            expr: expr.func,
+                            cont: cont.unshift({
+                                kind: "appLC",
+                                renv: renv,
+                                arg: expr.arg
+                            })
+                        });
+                    }
+
+                    case "fixpoint": {
+                        if (expr.body.kind !== "lambda") {
+                            return err(new Error("Fixpoint operator expects a lambda expression"));
+                        }
+                        const { param: recParam, body: { param: funcParam, body: funcBody } } = expr;
+                        const coloredRecParam = Identifier.color(recParam);
+                        const coloredFuncParam = Identifier.color(funcParam);
+                        const newRenv = renv
+                            .unshift({ from: recParam, to: coloredRecParam })
+                            .unshift({ from: funcParam, to: coloredFuncParam });
+                        return ok({
+                            kind: "eval",
+                            level: level,
+                            renv: newRenv,
+                            expr: funcBody,
+                            cont: cont.unshift({
+                                kind: "fixC",
+                                recParam: coloredRecParam,
+                                funcParam: coloredFuncParam
+                            })
+                        });
+                    }
+
+                    case "integer": {
+                        return ok({
+                            kind: "applyContF",
+                            level: level,
+                            code: expr,
+                            cont: cont
+                        });
+                    }
+
+                    case "primitive": {
+                        if (expr.args.size !== arityOps[expr.op][0]) {
+                            return err(new Error(`Arity mismatch: ${expr.op} expects ${arityOps[expr.op]} arguments, but got ${expr.args.size}`));
+                        }
+                        if (expr.args.isEmpty()) {
+                            return err(new Error("Primitive with no arguments are not allowed"));
+                        }
+                        return ok({
+                            kind: "eval",
+                            level: level,
+                            renv: renv,
+                            expr: expr.args.first()!,
+                            cont: cont.unshift({
+                                kind: "primC",
+                                op: expr.op,
+                                renv: renv,
+                                done: List.of(),
+                                rest: expr.args.shift()
+                            })
+                        });
+                    }
+
+                    case "boolean": {
+                        return ok({
+                            kind: "applyContF",
+                            level: level,
+                            code: expr,
+                            cont: cont
+                        })
+                    }
+
+                    case "if": {
+                        return ok({
+                            kind: "eval",
+                            level: level,
+                            renv: renv,
+                            expr: expr.cond,
+                            cont: cont.unshift({
+                                kind: "ifCC",
+                                renv: renv,
+                                then: expr.then,
+                                else_: expr.else_
+                            })
+                        })
+                    }
+
+                    case "shortCircuit": {
+                        return ok({
+                            kind: "eval",
+                            level: level,
+                            renv: renv,
+                            expr: expr.left,
+                            cont: cont.unshift({
+                                kind: "shortCircuitLC",
+                                renv: renv,
+                                op: expr.op,
+                                right: expr.right
+                            })
+                        })
+                    }
+
+                    case "quote": {
+                        return ok({
+                            kind: "eval",
+                            level: level,
+                            renv: renv,
+                            expr: expr.expr,
+                            cont: cont.unshift({
+                                kind: "quoteC"
+                            })
+                        })
+                    }
+
+                    case "splice": {
+                        const { shift, expr: innerExpr } = expr;
+
+                        if (shift < 0 || !Number.isInteger(shift)) {
+                            return err(new Error(`Expected unreachable: Invalid shift value: ${shift}`));
+                        }
+
+                        if (shift > level) {
+                            return err(new Error("Splice referring to a negative stage is not allowed"));
+                        }
+
+                        return ok({
+                            kind: "eval",
+                            level: level - shift,
+                            renv: renv,
+                            expr: innerExpr,
+                            cont: cont.unshift({
+                                kind: (level === shift) ? "splice" : "spliceC",
+                                shift: shift
+                            })
+                        })
+                    }
+
+                    default: throw (unreachable(expr));
+                }
             }
         }
-        case "applyCont": {
+        case "applyCont0": {
             const { val, cont } = state;
             if (cont.isEmpty()) {
                 return err(new Error("Empty continuation"));
             }
 
-            const frame = cont.first() as Frame;
+            // We expect cont.first() to be RuntimeFrame because applyCont0's level is 0
+            const frame = cont.first() as RuntimeFrame;
             const rest = cont.shift();
 
             switch (frame.kind) {
@@ -259,6 +474,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     }
                     return ok({
                         kind: "eval",
+                        level: 0,
                         renv: frame.renv,
                         expr: frame.arg,
                         cont: rest.unshift({ kind: "appR", closure: val })
@@ -276,6 +492,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                             const newRenv = renv.unshift({ from: param, to: renamedParam });
                             return ok({
                                 kind: "eval",
+                                level: 0,
                                 renv: newRenv,
                                 expr: body,
                                 cont: env
@@ -298,6 +515,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
 
                             return ok({
                                 kind: "eval",
+                                level: 0,
                                 renv: newRenv,
                                 expr: funcBody,
                                 cont: env
@@ -321,12 +539,23 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                                 env: env.push(frame),
                                 lambda: lambda
                             };
-                            return ok({ kind: "applyCont", val: clos, cont: rest });
+                            return ok({ kind: "applyCont0", val: clos, cont: rest });
                         }
 
                         case "integer":
                         case "boolean": {
-                            return ok({ kind: "applyCont", val: val, cont: rest });
+                            return ok({ kind: "applyCont0", val: val, cont: rest });
+                        }
+
+                        case "code": {
+                            if (Expression.hasFreeVariable(val.expr, frame.ident)) {
+                                return err(new Error(`Scope extrusion: ${frame.ident}`));
+                            }
+                            return ok({
+                                kind: "applyCont0",
+                                val: val,
+                                cont: rest
+                            })
                         }
 
                         default:
@@ -338,13 +567,14 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     if (frame.rest.isEmpty()) {
                         return performPrimitiveOp(frame.op, frame.done.push(val))
                             .map(val => ({
-                                kind: "applyCont",
+                                kind: "applyCont0",
                                 val: val,
                                 cont: rest
                             }));
                     } else {
                         return ok({
                             kind: "eval",
+                            level: 0,
                             renv: frame.renv,
                             expr: frame.rest.first()!,
                             cont: rest.unshift({
@@ -364,6 +594,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     }
                     return ok({
                         kind: "eval",
+                        level: 0,
                         renv: frame.renv,
                         expr: val.value ? frame.then : frame.else_,
                         cont: rest
@@ -380,13 +611,14 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                             if (val.value) {
                                 return ok({
                                     kind: "eval",
+                                    level: 0,
                                     renv: frame.renv,
                                     expr: frame.right,
                                     cont: rest
                                 });
                             } else {
                                 return ok({
-                                    kind: "applyCont",
+                                    kind: "applyCont0",
                                     val: { kind: "boolean", value: false },
                                     cont: rest
                                 });
@@ -396,13 +628,14 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                         case "or": {
                             if (val.value) {
                                 return ok({
-                                    kind: "applyCont",
+                                    kind: "applyCont0",
                                     val: { kind: "boolean", value: true },
                                     cont: rest
                                 });
                             } else {
                                 return ok({
                                     kind: "eval",
+                                    level: 0,
                                     renv: frame.renv,
                                     expr: frame.right,
                                     cont: rest
@@ -415,10 +648,237 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     }
                 }
 
+                case "splice": {
+                    if (val.kind !== "code") {
+                        return err(new Error(`Expected a code fragment, but got ${val.kind}`));
+                    }
+
+                    if (frame.shift === 0) {
+                        return ok({
+                            kind: "eval",
+                            level: 0,
+                            // renv can be empty because identifiers in val
+                            // are already renamed
+                            renv: List.of(),
+                            expr: val.expr,
+                            cont: rest
+                        });
+                    } else {
+                        return ok({
+                            kind: "applyContF",
+                            level: frame.shift,
+                            code: val.expr,
+                            cont: rest
+                        })
+                    }
+                }
+
                 default:
                     throw unreachable(frame);
             }
         }
+
+        case "applyContF": {
+            const { level, code, cont } = state;
+            if (cont.isEmpty()) {
+                return err(new Error("Empty continuation"));
+            } else if (level <= 0) {
+                return err(new Error("Level should be more than 0 in applyContF"));
+            }
+
+            // We expect cont.first() to be CodeFrame because applyContF requires level > 0
+            const frame = cont.first() as CodeFrame;
+            const rest = cont.shift();
+
+            switch (frame.kind) {
+                case "lamC":
+                    return ok({
+                        kind: "applyContF",
+                        level: level,
+                        code: {
+                            kind: "lambda",
+                            param: frame.param,
+                            body: code
+                        },
+                        cont: rest
+                    });
+
+                case "appLC":
+                    return ok({
+                        kind: "eval",
+                        level: level,
+                        renv: frame.renv,
+                        expr: frame.arg,
+                        cont: rest.unshift({
+                            kind: "appRC",
+                            func: code
+                        })
+                    });
+
+                case "appRC":
+                    return ok({
+                        kind: "applyContF",
+                        level: level,
+                        code: {
+                            kind: "application",
+                            func: frame.func,
+                            arg: code
+                        },
+                        cont: rest
+                    });
+
+                case "fixC":
+                    return ok({
+                        kind: "applyContF",
+                        level: level,
+                        code: {
+                            kind: "fixpoint",
+                            param: frame.recParam,
+                            body: {
+                                kind: "lambda",
+                                param: frame.funcParam,
+                                body: code
+                            }
+                        },
+                        cont: rest
+                    });
+
+                case "primC":
+                    if (frame.rest.isEmpty()) {
+                        return ok({
+                            kind: "applyContF",
+                            level: level,
+                            code: {
+                                kind: "primitive",
+                                op: frame.op,
+                                args: frame.done.push(code)
+                            },
+                            cont: rest
+                        })
+                    } else {
+                        return ok({
+                            kind: "eval",
+                            level: level,
+                            renv: frame.renv,
+                            expr: frame.rest.first()!,
+                            cont: rest.unshift({
+                                kind: "primC",
+                                renv: frame.renv,
+                                op: frame.op,
+                                done: frame.done.push(code),
+                                rest: frame.rest.rest()
+                            })
+                        });
+                    }
+
+                case "ifCC":
+                    return ok({
+                        kind: "eval",
+                        level: level,
+                        renv: frame.renv,
+                        expr: frame.then,
+                        cont: rest.unshift({
+                            kind: "ifTC",
+                            renv: frame.renv,
+                            cond: code,
+                            else_: frame.else_
+                        })
+                    })
+
+                case "ifTC":
+                    return ok({
+                        kind: "eval",
+                        level: level,
+                        renv: frame.renv,
+                        expr: frame.else_,
+                        cont: rest.unshift({
+                            kind: "ifEC",
+                            cond: frame.cond,
+                            then: code
+                        })
+                    })
+
+                case "ifEC":
+                    return ok({
+                        kind: "applyContF",
+                        level: level,
+                        code: {
+                            kind: "if",
+                            cond: frame.cond,
+                            then: frame.then,
+                            else_: code
+                        },
+                        cont: rest
+                    })
+
+                case "shortCircuitLC":
+                    return ok({
+                        kind: "eval",
+                        level: level,
+                        renv: frame.renv,
+                        expr: frame.right,
+                        cont: rest.unshift({
+                            kind: "shortCircuitRC",
+                            op: frame.op,
+                            left: code
+                        })
+                    })
+
+                case "shortCircuitRC":
+                    return ok({
+                        kind: "applyContF",
+                        level: level,
+                        code: {
+                            kind: "shortCircuit",
+                            op: frame.op,
+                            left: frame.left,
+                            right: code
+                        },
+                        cont: rest
+                    })
+
+                case "quoteC":
+                    if (level === 1) {
+                        return ok({
+                            kind: "applyCont0",
+                            val: {
+                                kind: "code",
+                                expr: code
+                            },
+                            cont: rest
+                        })
+                    } else {
+                        return ok({
+                            kind: "applyContF",
+                            level: level - 1,
+                            code: {
+                                kind: "quote",
+                                expr: code
+                            },
+                            cont: rest
+                        })
+                    }
+
+                case "spliceC":
+                    if (level <= frame.shift) {
+                        return err(new Error("Invalid shift in SpliceCF"));
+                    }
+
+                    return ok({
+                        kind: "applyContF",
+                        level: level - frame.shift,
+                        code: {
+                            kind: "splice",
+                            shift: frame.shift,
+                            expr: code,
+                        },
+                        cont: rest
+                    })
+
+                default: throw unreachable(frame)
+            }
+        }
+
         default:
             throw unreachable(state);
     }
@@ -427,7 +887,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
 const execute = (state: CKState): Result<Value, Error> => {
     let nextState = state;
     while (true) {
-        if (nextState.kind === "applyCont" && nextState.cont.isEmpty()) {
+        if (nextState.kind === "applyCont0" && nextState.cont.isEmpty()) {
             return ok(nextState.val);
         }
 
@@ -443,6 +903,7 @@ const execute = (state: CKState): Result<Value, Error> => {
 const initState = (expr: Expression): CKState => {
     return {
         kind: "eval",
+        level: 0,
         renv: List.of(),
         expr: expr,
         cont: List.of()
