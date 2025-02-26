@@ -49,7 +49,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
 
         setStates(states.takeLast(MAX_STATES).push(nextState));
         if (nextState.isOk() &&
-            nextState.value.kind === "applyCont"
+            nextState.value.kind === "applyCont0"
             && nextState.value.cont.isEmpty()) {
             setComplete(true);
             return;
@@ -67,7 +67,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
             newStates = newStates.takeLast(MAX_STATES).push(nextState);
 
             if (nextState.isOk() &&
-                nextState.value.kind === "applyCont"
+                nextState.value.kind === "applyCont0"
                 && nextState.value.cont.isEmpty()) {
                 setComplete(true);
                 break;
@@ -92,6 +92,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
             {
                 states.last()!.match(
                     (state) => <Box>
+                        <p>current level: {CKMachine.stateLevel(state)}</p>
                         <h2>Expression</h2>
 
                         <CKStateVis state={state} />

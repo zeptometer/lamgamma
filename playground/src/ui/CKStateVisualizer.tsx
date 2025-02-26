@@ -3,6 +3,8 @@ import { CKState, Cont, EnvRF, RuntimeFrame, RenamingEnv, Value } from "../inter
 import { Expression, Identifier, PrimitiveOp, ShortCircuitOp, UniOp } from "../interpreter/expression"
 import { Box } from "@mui/material";
 import { unreachable } from "../common/assertNever";
+import { List } from "immutable";
+import { Code } from "@mui/icons-material";
 
 const stringifyOp = (op: PrimitiveOp | ShortCircuitOp) => {
     switch (op) {
@@ -24,11 +26,16 @@ const stringifyOp = (op: PrimitiveOp | ShortCircuitOp) => {
             throw new Error(`Unknown type: ${(op as { kind: "__invalid__" }).kind}`);
     }
 }
-const Paren: React.FC<{ cond: boolean, children: ReactNode }> = ({ cond, children }) => {
+const Paren: React.FC<{ cond?: boolean, children: ReactNode }> = ({ cond, children }) => {
+    let show = true;
+    if (cond !== undefined) {
+        show = cond;
+    }
+
     return <>
-        {cond ? "(" : ""}
+        {show ? "(" : ""}
         {children}
-        {cond ? ")" : ""}
+        {show ? ")" : ""}
     </>
 }
 
@@ -39,30 +46,249 @@ interface RedexProp {
 }
 
 const Group: React.FC<RedexProp> = ({ redex, children }) => {
-    return <Box
-        sx={{
-            display: "inline",
-            borderBottom: redex ? "black solid 2pt" : "inherit",
-        }}>
-        {children}
-    </Box>;
+    if (redex) {
+        return <Box
+            sx={{
+                display: "inline",
+                borderBottom: "black solid 2pt",
+            }}>
+            {children}
+        </Box>;
+    } else {
+        return children
+    }
 }
 
 interface IdentVisProp {
-    ident: Identifier
+    ident: Identifier,
+    matched?: boolean
 }
 
-const IdentVis: React.FC<IdentVisProp> = ({ ident }) => {
+const IdentVis: React.FC<IdentVisProp> = ({ ident, matched }) => {
+    let identVis;
     switch (ident.kind) {
         case "raw":
-            return <>{ident.name}</>
+            identVis = <>{ident.name}</>;
+            break;
         case "generated":
-            return <>_<sub>{ident.id}</sub></>
+            identVis = <>_<sub>{ident.id}</sub></>;
+            break;
         case "colored":
-            return <>{ident.basename}<sub>{ident.id}</sub></>
+            identVis = <>{ident.basename}<sub>{ident.id}</sub></>;
+            break;
         default:
             throw new Error(`Unknown type: ${(ident as { kind: "__invalid__" }).kind}`);
     }
+
+    if (matched) {
+        return <Box
+            sx={{
+                color: "red",
+                fontWeight: "bold",
+                display: "inline"
+            }}>
+            {identVis}
+        </Box>;
+    } else {
+        return identVis
+    }
+}
+
+interface TokenProp {
+    children: ReactNode,
+    leftSpacing?: boolean,
+    rightSpacing?: boolean
+}
+
+const Token: React.FC<TokenProp> = ({ children, leftSpacing, rightSpacing }) => {
+    return <Box sx={{
+        display: "inline",
+        fontWeight: "bold",
+        marginLeft: leftSpacing ? "0.5em" : "0",
+        marginRight: rightSpacing ? "0.5em" : "0"
+    }}>
+        {children}
+    </Box>
+}
+
+const RuntimeLevel: React.FC<{ children: ReactNode }> = ({ children }) => {
+    return <Box sx={{
+        display: "inline",
+        fontFamily: "MonaSpace Neon"
+    }}>
+        {children}
+    </Box>
+}
+
+const CodeLevel: React.FC<{ children: ReactNode }> = ({ children }) => {
+    return <Box sx={{
+        display: "inline",
+        fontFamily: "MonaSpace Radon"
+    }}>
+        {children}
+    </Box>
+}
+
+/** Visualizer for syntactic constructs */
+interface VarVisProp {
+    ident: Identifier,
+    lookup?: boolean
+}
+
+const VarVis: React.FC<VarVisProp> = ({ ident, lookup }) => {
+    if (lookup) {
+        return <Box sx={{
+            color: "red",
+            fontWeight: "bold",
+            display: "inline"
+        }}>
+            <Group redex>
+                <IdentVis ident={ident} />
+            </Group>
+        </Box>
+    } else {
+        return <IdentVis ident={ident} />
+    }
+}
+
+interface LambdaVisProp {
+    params: List<Identifier>,
+    bodyVis: ReactNode,
+    lookfor?: Identifier | null
+}
+
+const LambdaVis: React.FC<LambdaVisProp> = ({ params, bodyVis, lookfor }) => {
+    const paramsVis = params.map((param) => {
+        return <IdentVis
+            ident={param}
+            matched={!!lookfor && Identifier.eq(param, lookfor)} />;
+    }).reduce((acc, curr) => <>{curr}&nbsp;{acc}</>);
+
+    return <>
+        <Token rightSpacing>fn</Token>
+        {paramsVis}
+        <Token leftSpacing rightSpacing>→</Token>
+        {bodyVis}
+    </>;
+}
+
+interface AppVisProp {
+    funcVis: ReactNode,
+    argVis: ReactNode
+}
+
+const AppVis: React.FC<AppVisProp> = ({ funcVis, argVis }) => {
+    return <>
+        {funcVis}&nbsp;{argVis}
+    </>;
+}
+
+interface FixVisProp {
+    param: Identifier,
+    bodyVis: ReactNode,
+    lookfor?: Identifier | null,
+}
+
+const FixVis: React.FC<FixVisProp> = ({ param, bodyVis, lookfor }) => {
+    return <>
+        <Token rightSpacing>fix</Token>
+        <IdentVis ident={param} matched={!!lookfor && Identifier.eq(param, lookfor)} />
+        <Token leftSpacing rightSpacing>→</Token>
+        {bodyVis}
+    </>;
+}
+
+interface UniOpVisProp {
+    op: UniOp,
+    argVis: ReactNode
+}
+
+const UniOpVis: React.FC<UniOpVisProp> = ({ op, argVis }) => {
+    return <>
+        {stringifyOp(op)} {argVis}
+    </>
+}
+
+interface BinOpVisProp {
+    op: PrimitiveOp | ShortCircuitOp,
+    leftVis: ReactNode,
+    rightVis: ReactNode
+}
+
+const BinOpVis: React.FC<BinOpVisProp> = ({ op, leftVis, rightVis }) => {
+    return <>
+        {leftVis} {stringifyOp(op)} {rightVis}
+    </>
+}
+
+interface IfVisProp {
+    condVis: ReactNode,
+    thenVis: ReactNode,
+    elseVis: ReactNode
+}
+
+const IfVis: React.FC<IfVisProp> = ({ condVis, thenVis, elseVis }) => {
+    return <>
+        <Token rightSpacing>if</Token>
+        {condVis}
+        <Token leftSpacing rightSpacing>then</Token>
+        {thenVis}
+        <Token leftSpacing rightSpacing>else</Token>
+        {elseVis}
+    </>
+}
+
+interface QuoteVisProp {
+    exprVis: ReactNode
+}
+
+const QuoteVis: React.FC<QuoteVisProp> = ({ exprVis }) => {
+    return <>
+        <Token rightSpacing>`&#123;</Token>
+        {exprVis}
+        <Token leftSpacing>&#125;</Token>
+    </>
+}
+
+interface SpliceVisProp {
+    shift: number,
+    exprVis: ReactNode
+}
+
+const SpliceVis: React.FC<SpliceVisProp> = ({ shift, exprVis }) => {
+    return <>
+        <Token>~<sub>{shift}</sub></Token>
+        <Token rightSpacing>&#123;</Token>
+        {exprVis}
+        <Token leftSpacing>&#125;</Token>
+    </>
+}
+
+// Intermediate Expression Visualizer
+interface EsubVisProp {
+    envs: List<EnvRF>,
+    exprVis: ReactNode,
+    redex?: boolean,
+    lookfor: Identifier | null,
+}
+
+const EsubVis: React.FC<EsubVisProp> = ({ envs, exprVis, redex, lookfor }) => {
+    /* Take all sequential envs */
+    const envViss = envs.map((env) => {
+        if (lookfor && Identifier.eq(env.ident, lookfor)) {
+            return <EnvVis ident={env.ident} val={env.val} matched />
+        } else {
+            return <EnvVis ident={env.ident} val={env.val} />
+        }
+    });
+
+    return <>
+        {envViss.butLast().toArray()}
+        <Group redex={redex}>
+            {envViss.last()!}
+            {exprVis}
+        </Group>
+    </>;
 }
 
 interface EnvProp {
@@ -74,15 +300,8 @@ interface EnvProp {
 const EnvVis: React.FC<EnvProp> = ({ ident, val, matched }) => {
 
     const varVis = matched ?
-        <Box
-            sx={{
-                color: "red",
-                fontWeight: "bold",
-                display: "inline"
-            }}>
-            <IdentVis ident={ident} />
-        </Box> :
-        <IdentVis ident={ident} />;
+        <IdentVis ident={ident} matched />
+        : <IdentVis ident={ident} />;
 
     return <Group redex={matched}>
         [{varVis}=<ValueVis close val={val} />]
@@ -137,7 +356,7 @@ const ValueVis: React.FC<ValueVisProp> = ({ underEvaluation, val, close: closedB
                         </>)
                     }
                     |
-                    <ExpressionVis expr={val.lambda} context="toplevel" />
+                    <ExpressionVis level={0} expr={val.lambda} context="toplevel" />
                 </>;
             }
             x = <>【
@@ -175,6 +394,17 @@ const ValueVis: React.FC<ValueVisProp> = ({ underEvaluation, val, close: closedB
             break;
         }
 
+        case "code": {
+            x = <>
+                <Token>《</Token>
+                <CodeLevel>
+                    <ExpressionVis level={1} expr={val.expr} context="quote" />
+                </CodeLevel>
+                <Token>》</Token>
+            </>;
+            break;
+        }
+
         default: throw unreachable(val);
     }
 
@@ -182,27 +412,19 @@ const ValueVis: React.FC<ValueVisProp> = ({ underEvaluation, val, close: closedB
 }
 
 interface ExpressionVisProp {
+    level: number,
     expr: Expression,
     context: string,
     underEvaluation?: boolean
 }
 
-const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvaluation }) => {
+const ExpressionVis: React.FC<ExpressionVisProp> = ({ level, expr, context, underEvaluation }) => {
     switch (expr.kind) {
         case "variable":
-            if (underEvaluation) {
-                return <Box sx={{
-                    color: "red",
-                    fontWeight: "bold",
-                    display: "inline"
-                }}>
-                    <Group redex>
-                        <IdentVis ident={expr.ident} />
-                    </Group>
-                </Box>
-            } else {
-                return <IdentVis ident={expr.ident} />
-            }
+            return <VarVis
+                ident={expr.ident}
+                lookup={level === 0 && underEvaluation}
+            />;
 
         case "lambda": {
             const params = [];
@@ -212,29 +434,27 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
                 body = body.body;
             }
 
-            return <Paren cond={context !== "toplevel"}>
-                <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em" }}>fn</Box>
-                <Box sx={{ display: "inline" }}>
-                    {params.map((param) => <IdentVis ident={param} />).reduce((acc, curr) => <>{acc}&nbsp;{curr}</>)}
-                </Box>
-                <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em", paddingLeft: "0.5em" }}>→</Box>
-                <ExpressionVis expr={body} context={"lambda"} />
+            const bodyVis = <ExpressionVis level={level} expr={body} context={"lambda"} />;
+
+            return <Paren>
+                <LambdaVis params={List(params)} bodyVis={bodyVis} />
             </Paren>
         }
 
         case "application": {
+            const funcVis = <ExpressionVis level={level} expr={expr.func} context={"appL"} />;
+            const argVis = <ExpressionVis level={level} expr={expr.arg} context={"appR"} />;
+
             return <Paren cond={["appR", "env"].includes(context)}>
-                <ExpressionVis expr={expr.func} context={"appL"} />&nbsp;
-                <ExpressionVis expr={expr.arg} context={"appR"} />
+                <AppVis funcVis={funcVis} argVis={argVis} />
             </Paren>
         }
 
         case "fixpoint": {
-            return <Paren cond={context !== "toplevel"}>
-                <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em" }}>fix</Box>
-                <IdentVis ident={expr.param} />
-                <Box sx={{ display: "inline", fontWeight: "bold", paddingRight: "0.5em", paddingLeft: "0.5em" }}>→</Box>
-                <ExpressionVis expr={expr.body} context={"fixpoint"} />
+            const bodyVis = <ExpressionVis level={level} expr={expr.body} context={"fixpoint"} />;
+
+            return <Paren>
+                <FixVis param={expr.param} bodyVis={bodyVis} />
             </Paren>
         }
 
@@ -248,111 +468,148 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ expr, context, underEvalua
 
         case "primitive": {
             if (expr.op in UniOp) {
-                return <Paren cond={true}>
-                    {stringifyOp(expr.op)}
-                    <ExpressionVis expr={expr.args.first()!} context={"primitive"} />
+                const argVis = <ExpressionVis level={level} expr={expr.args.first()!} context={"primitive"} />
+
+                return <Paren>
+                    <UniOpVis op={expr.op as UniOp} argVis={argVis} />
                 </Paren>
             } else {
-                return <Paren cond={true}>
-                    <ExpressionVis expr={expr.args.first()!} context={"primitive"} />
-                    &nbsp;{stringifyOp(expr.op)}&nbsp;
-                    <ExpressionVis expr={expr.args.last()!} context={"primitive"} />
+                const leftVis = <ExpressionVis level={level} expr={expr.args.first()!} context={"primitive"} />
+                const rightVis = <ExpressionVis level={level} expr={expr.args.last()!} context={"primitive"} />
+
+                return <Paren>
+                    <BinOpVis
+                        op={expr.op as PrimitiveOp}
+                        leftVis={leftVis}
+                        rightVis={rightVis} />
                 </Paren>
             }
         }
 
         case "shortCircuit": {
-            return <Paren cond={true}>
-                <ExpressionVis expr={expr.left} context={"shortCircuit"} />
-                &nbsp;{stringifyOp(expr.op)}&nbsp;
-                <ExpressionVis expr={expr.right} context={"shortCircuit"} />
+            const leftVis = <ExpressionVis level={level} expr={expr.left} context={"primitive"} />
+            const rightVis = <ExpressionVis level={level} expr={expr.right} context={"primitive"} />
+
+            return <Paren>
+                <BinOpVis
+                    op={expr.op as PrimitiveOp}
+                    leftVis={leftVis}
+                    rightVis={rightVis} />
             </Paren>
         }
 
         case "if": {
+            const condVis = <ExpressionVis level={level} expr={expr.cond} context={"if"} />;
+            const thenVis = <ExpressionVis level={level} expr={expr.then} context={"if"} />;
+            const elseVis = <ExpressionVis level={level} expr={expr.else_} context={"if"} />;
+
             return <Paren cond={true}>
-                <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em" }}>if</Box>
-                <ExpressionVis expr={expr.cond} context={"if"} />
-                <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>then</Box>
-                <ExpressionVis expr={expr.then} context={"if"} />
-                <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>else</Box>
-                <ExpressionVis expr={expr.else_} context={"if"} />
+                <IfVis condVis={condVis} thenVis={thenVis} elseVis={elseVis} />
             </Paren>
+        }
+
+        case "quote": {
+            const exprVis = <ExpressionVis level={level + 1} expr={expr.expr} context={"quote"} />;
+            const quoteVis = <QuoteVis exprVis={exprVis} />;
+
+            if (level == 0) {
+                // indicate that inner expression are inside code
+                return <CodeLevel>{quoteVis}</CodeLevel>
+            } else {
+                return quoteVis
+            }
+        }
+
+        case "splice": {
+            const exprVis = <ExpressionVis level={level - expr.shift} expr={expr.expr} context={"splice"} />;
+            const spliceVis = <SpliceVis shift={expr.shift} exprVis={exprVis} />;
+            if (level === expr.shift) {
+                // indicate that inner expression are inside code
+                return <RuntimeLevel>{spliceVis}</RuntimeLevel>
+            } else {
+                return spliceVis
+            }
         }
 
         default:
             throw unreachable(expr);
     }
-    return null;
 }
 
-type ChildKind = "variable" | "application" | "lambda" | "env" | "closure" | "integer" | "primitive" | "boolean" | "shortCircuit" | "if" | "fixpoint" | "toplevel";
+type ContextKind = "lambda" | "appL" | "appR" | "fixpoint" | "uniOp" | "binOp" | "ifC" | "ifT" | "ifE" | "quote" | "splice" | "env" | "toplevel";
+
+type ExpressionKind = "variable" | "lambda" | "application" | "fixpoint" | "integer" | "primitive" | "boolean" | "shortCircuit" | "if" | "quote" | "splice";
+type IntermediateExpressionKind = "env"
+type ValueKind = "closure" | "integer" | "boolean" | "code";
+type ChildKind = ExpressionKind | IntermediateExpressionKind | ValueKind;
 
 interface ContVisProp {
     cont: Cont,
+    level: number,
     childKind: ChildKind,
     varopt: Identifier | null,
     children: ReactNode,
     redex?: boolean
 }
 
-const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, redex }) => {
+const ContVis: React.FC<ContVisProp> = ({ cont, level, childKind, children, varopt, redex }) => {
     if (cont.isEmpty()) {
         return children
     }
 
-    const frame = cont.first() as RuntimeFrame;
+    const frame = cont.first()!;
     switch (frame.kind) {
-        case "appL":
+        // Runtime Frames
+        case "appL": {
+            const argVis = <ExpressionVis level={level} expr={frame.arg} context={"appR"} />;
+
             return <ContVis
                 cont={cont.rest()}
+                level={level}
                 childKind={"application"}
                 varopt={varopt}>
                 <Group redex={redex}>
-                    {children} <ExpressionVis expr={frame.arg} context={"appR"} />
+                    <AppVis funcVis={children} argVis={argVis} />
                 </Group>
             </ContVis>
+        }
 
-        case "appR":
+        case "appR": {
+            const funcVis = <ValueVis val={frame.closure} />;
+
             return <ContVis
                 cont={cont.rest()}
+                level={level}
                 childKind={"application"}
                 varopt={varopt}
             >
                 <Group redex={redex}>
-                    <ValueVis val={frame.closure} />
-                    {children}
+                    <AppVis funcVis={funcVis} argVis={children} />
                 </Group>
-            </ContVis >
+            </ContVis>
+        }
 
         case "env": {
             /* Take all sequential envs */
-            const envs: ReactNode[] = [];
+            const envs: EnvRF[] = [];
             let rest: Cont = cont;
-            let v = varopt;
             while (!rest.isEmpty() && rest.first()!.kind === "env") {
                 const env = rest.first() as EnvRF;
-                if (v && Identifier.eq(env.ident, v)) {
-                    envs.push(<EnvVis ident={env.ident} val={env.val} matched />)
-                    v = null;
-                } else {
-                    envs.push(<EnvVis ident={env.ident} val={env.val} />)
-                }
+                envs.push(env)
                 rest = rest.rest();
             }
 
+            const exprVis = <Paren >
+                {children}
+            </Paren>
+
             return <ContVis
                 cont={rest}
+                level={level}
                 childKind={"env"}
-                varopt={v}
+                varopt={varopt}
             >
-                {envs.slice(1).reverse()}
-                <Group redex={redex}>
-                    {envs[0]}
-                    <Paren cond={childKind === "application"}>
-                        {children}
-                    </Paren>
-                </Group>
+                <EsubVis envs={List(envs)} exprVis={exprVis} lookfor={varopt} />
             </ContVis>;
         }
 
@@ -360,25 +617,34 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
             let x;
 
             if (frame.op === "neg") {
-                x = <>
-                    !{children}
-                </>
+                x = <UniOpVis op={frame.op} argVis={children} />
+
             } else if (frame.done.isEmpty()) {
-                x = <>
-                    {children}
-                    &nbsp;{stringifyOp(frame.op)}&nbsp;
-                    <ExpressionVis expr={frame.rest.first()!} context={"primitive"} />
-                </>
+                const exprVis = <ExpressionVis
+                    level={level}
+                    expr={frame.rest.first()!}
+                    context={"primitive"}
+                />;
+
+                x = <BinOpVis
+                    op={frame.op}
+                    leftVis={children}
+                    rightVis={exprVis}
+                />;
+
             } else {
-                x = <>
-                    <ValueVis val={frame.done.first()!} />
-                    &nbsp;{stringifyOp(frame.op)}&nbsp;
-                    {children}
-                </>
+                const valueVis = <ValueVis val={frame.done.first()!} />;
+
+                x = <BinOpVis
+                    op={frame.op}
+                    leftVis={valueVis}
+                    rightVis={children}
+                />;
             }
 
             return <ContVis
                 cont={cont.rest()}
+                level={level}
                 childKind={"primitive"}
                 varopt={varopt}
             >
@@ -389,40 +655,311 @@ const ContVis: React.FC<ContVisProp> = ({ cont, childKind, children, varopt, red
                 </Group>
             </ContVis>
         }
+
         case "ifC": {
+            const thenVis = <ExpressionVis level={level} expr={frame.then} context={"if"} />;
+            const elseVis = <ExpressionVis level={level} expr={frame.else_} context={"if"} />;
+
             return <ContVis
                 cont={cont.rest()}
+                level={level}
                 childKind={"if"}
                 varopt={varopt}
             >
                 <Group redex={redex}>
-                    <Paren cond={true}>
-                        <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em" }}>if</Box>
-                        {children}
-                        <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>then</Box>
-                        <ExpressionVis expr={frame.then} context={"if"} />
-                        <Box sx={{ display: "inline", fontWeight: "bold", pr: "0.5em", pl: "0.5em" }}>else</Box>
-                        <ExpressionVis expr={frame.else_} context={"if"} />
+                    <Paren>
+                        <IfVis condVis={children} thenVis={thenVis} elseVis={elseVis} />
                     </Paren>
                 </Group>
             </ContVis>
         }
 
         case "shortCircuit": {
+            const right = <ExpressionVis level={level} expr={frame.right} context={"shortCircuit"} />;
             return <ContVis
                 cont={cont.rest()}
+                level={level}
                 childKind={"shortCircuit"}
                 varopt={varopt}
             >
                 <Group redex={redex}>
                     <Paren cond={true}>
-                        {children}
-                        &nbsp;{stringifyOp(frame.op)}&nbsp;
-                        <ExpressionVis expr={frame.right} context={"shortCircuit"} />
+                        <BinOpVis
+                            op={frame.op}
+                            leftVis={children}
+                            rightVis={right}
+                        />
                     </Paren>
                 </Group>
             </ContVis>
         }
+
+        case "splice": {
+            let exprVis;
+            if (level === 0 && frame.shift > 0) {
+                exprVis = <RuntimeLevel><SpliceVis shift={frame.shift} exprVis={children} /></RuntimeLevel>
+            } else {
+                exprVis = <SpliceVis shift={frame.shift} exprVis={children} />
+            }
+
+            return <ContVis
+                cont={cont.rest()}
+                level={level + frame.shift}
+                childKind={"splice"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    {exprVis}
+                </Group>
+            </ContVis>
+        }
+
+        // Code Frames
+        case "lamC":
+        case "fixC": {
+            let recParam: Identifier | null = null;
+            let funcParams: List<Identifier> = List.of();
+            let rest = cont;
+            while (true) {
+                if (rest.isEmpty()) {
+                    break;
+                }
+                const frame = rest.first()!;
+                if (frame.kind === "lamC") {
+                    funcParams = funcParams.push(frame.param);
+                    rest = rest.rest();
+                } else if (frame.kind === "fixC") {
+                    funcParams = funcParams.push(frame.funcParam);
+                    recParam = frame.recParam;
+                    rest = rest.rest();
+                    break;
+                } else {
+                    break;
+                }
+            }
+
+            const lambdaVis = (funcParams.isEmpty()) ? children :
+                <LambdaVis params={funcParams} bodyVis={children} lookfor={varopt} />
+
+            return <ContVis
+                cont={rest}
+                level={level}
+                childKind={"lambda"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <Paren>
+                        {recParam ?
+                             <FixVis param={recParam!} bodyVis={lambdaVis} lookfor={varopt} /> :
+                             lambdaVis
+                        }
+                    </Paren>
+                </Group>
+            </ContVis>
+        }
+
+        case "appLC": {
+            const argVis = <ExpressionVis level={level} expr={frame.arg} context={"appR"} />;
+
+            return <ContVis
+                cont={cont.rest()}
+                level={level}
+                childKind={"application"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <AppVis funcVis={children} argVis={argVis} />
+                </Group>
+            </ContVis>
+        }
+
+        case "appRC": {
+            const funcVis = <ExpressionVis level={level} expr={frame.func} context={"appL"} />;
+
+            return <ContVis
+                cont={cont.rest()}
+                level={level}
+                childKind={"application"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <AppVis funcVis={funcVis} argVis={children} />
+                </Group>
+            </ContVis>
+        }
+
+        case "primC": {
+            let x;
+            if (frame.op === "neg") {
+                x = <UniOpVis op={frame.op} argVis={children} />
+            } else {
+                if (frame.done.isEmpty()) {
+                    const rightVis = <ExpressionVis
+                        level={level}
+                        expr={frame.rest.first()!}
+                        context={"primitive"}
+                    />;
+
+                    x = <BinOpVis
+                        op={frame.op}
+                        leftVis={children}
+                        rightVis={rightVis}
+                    />;
+                } else {
+                    const leftVis = <ExpressionVis
+                        level={level}
+                        expr={frame.done.first()!}
+                        context={"primitive"}
+                    />;
+
+                    x = <BinOpVis
+                        op={frame.op}
+                        leftVis={leftVis}
+                        rightVis={children}
+                    />;
+                }
+            }
+
+            return <ContVis
+                cont={cont.rest()}
+                level={level}
+                childKind={"primitive"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <Paren cond={true}>
+                        {x}
+                    </Paren>
+                </Group>
+            </ContVis>
+        }
+
+        case "shortCircuitLC": {
+            const right = <ExpressionVis level={level} expr={frame.right} context={"shortCircuit"} />;
+
+            return <ContVis
+                cont={cont.rest()}
+                level={level}
+                childKind={"shortCircuit"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <Paren cond={true}>
+                        <BinOpVis op={frame.op} leftVis={children} rightVis={right} />
+                    </Paren>
+                </Group>
+            </ContVis>
+        }
+
+        case "shortCircuitRC": {
+            const left = <ExpressionVis level={level} expr={frame.left} context={"shortCircuit"} />;
+
+            return <ContVis
+                cont={cont.rest()}
+                level={level}
+                childKind={"shortCircuit"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <Paren cond={true}>
+                        <BinOpVis op={frame.op} leftVis={left} rightVis={children} />
+                    </Paren>
+                </Group>
+            </ContVis>
+        }
+
+        case "ifCC": {
+            const then = <ExpressionVis level={level} expr={frame.then} context={"if"} />;
+            const else_ = <ExpressionVis level={level} expr={frame.else_} context={"if"} />;
+            return <ContVis
+                cont={cont.rest()}
+                level={level}
+                childKind={"if"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <Paren cond={true}>
+                        <IfVis condVis={children} thenVis={then} elseVis={else_} />
+                    </Paren>
+                </Group>
+            </ContVis>
+        }
+
+        case "ifTC": {
+            const cond = <ExpressionVis level={level} expr={frame.cond} context={"if"} />;
+            const else_ = <ExpressionVis level={level} expr={frame.else_} context={"if"} />;
+            return <ContVis
+                cont={cont.rest()}
+                level={level}
+                childKind={"if"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <Paren cond={true}>
+                        <IfVis condVis={cond} thenVis={children} elseVis={else_} />
+                    </Paren>
+                </Group>
+            </ContVis>
+        }
+
+        case "ifEC": {
+            const cond = <ExpressionVis level={level} expr={frame.cond} context={"if"} />;
+            const then = <ExpressionVis level={level} expr={frame.then} context={"if"} />;
+            return <ContVis
+                cont={cont.rest()}
+                level={level}
+                childKind={"if"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <Paren cond={true}>
+                        <IfVis condVis={cond} thenVis={then} elseVis={children} />
+                    </Paren>
+                </Group>
+            </ContVis>
+        }
+
+        case "spliceC": {
+            return <ContVis
+                cont={cont.rest()}
+                level={level + frame.shift}
+                childKind={"splice"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <Paren cond={true}>
+                        <SpliceVis shift={frame.shift} exprVis={children} />
+                    </Paren>
+                </Group>
+            </ContVis>
+        }
+
+        case "quoteC": {
+            let x;
+            if (level === 1) {
+                x = <>
+                    <Token>《</Token>
+                    <CodeLevel>
+                        {children}
+                    </CodeLevel>
+                    <Token>》</Token>
+                </>
+            } else {
+                x = <QuoteVis exprVis={children} />
+            }
+
+            return <ContVis
+                cont={cont.rest()}
+                level={level - 1}
+                childKind={"quote"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    {x}
+                </Group>
+            </ContVis>;
+        }
+
         default: throw unreachable(frame);
     }
 }
@@ -435,7 +972,7 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
     switch (state.kind) {
         case "eval": {
             let varopt = null;
-            if (state.expr.kind === "variable") {
+            if (state.level === 0 && state.expr.kind === "variable") {
                 const ident = state.expr.ident;
                 const renv = state.renv;
                 const renamed = RenamingEnv.lookup(renv, ident);
@@ -447,6 +984,7 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
             return <Box sx={{ lineBreak: "anywhere" }}>
                 <ContVis
                     cont={state.cont}
+                    level={state.level}
                     childKind={state.expr.kind}
                     varopt={varopt}
                 >
@@ -455,6 +993,7 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
                         display: "inline"
                     }}>
                         <ExpressionVis underEvaluation
+                            level={state.level}
                             expr={state.expr}
                             context={state.cont.first()?.kind ?? "toplevel"}
                         />
@@ -463,10 +1002,11 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
             </Box>
         }
 
-        case "applyCont":
+        case "applyCont0":
             return <Box sx={{ lineBreak: "anywhere" }}>
                 <ContVis
                     cont={state.cont}
+                    level={0}
                     childKind={state.val.kind}
                     varopt={null}
                     redex
@@ -479,6 +1019,28 @@ export const CKStateVis: React.FC<CKStateVisProp> = ({ state }) => {
                     </Box>
                 </ContVis>
             </Box>
+
+        case "applyContF":
+            return <Box sx={{ lineBreak: "anywhere" }}>
+                <ContVis
+                    cont={state.cont}
+                    level={state.level}
+                    childKind={state.code.kind}
+                    varopt={null}
+                    redex
+                >
+                    <Box sx={{
+                        backgroundColor: "LightSkyBlue",
+                        display: "inline"
+                    }}>
+                        <ExpressionVis underEvaluation
+                            level={state.level}
+                            expr={state.code}
+                            context={state.cont.first()?.kind ?? "toplevel"}
+                        />
+                    </Box>
+                </ContVis>
+            </Box >
 
         default: throw unreachable(state);
     }

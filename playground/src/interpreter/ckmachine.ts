@@ -549,7 +549,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
 
                         case "code": {
                             if (Expression.hasFreeVariable(val.expr, frame.ident)) {
-                                return err(new Error(`Scope extrusion: ${frame.ident}`));
+                                return err(new Error(`Scope extrusion: ${JSON.stringify(frame.ident)}`));
                             }
                             return ok({
                                 kind: "applyCont0",
@@ -910,8 +910,20 @@ const initState = (expr: Expression): CKState => {
     };
 }
 
+const stateLevel = (state: CKState): number => {
+    switch (state.kind) {
+        case "eval":
+            return state.level;
+        case "applyCont0":
+            return 0;
+        case "applyContF":
+            return state.level;
+    }
+}
+
 export const CKMachine = {
     initState,
     execute,
     executeStep,
+    stateLevel,
 }
