@@ -1,10 +1,9 @@
 import { MouseEventHandler, ReactNode, useState } from "react"
-import { CKState, Cont, EnvRF, RuntimeFrame, RenamingEnv, Value } from "../interpreter/ckstate"
+import { CKState, Cont, EnvRF, RenamingEnv, Value } from "../interpreter/ckstate"
 import { Expression, Identifier, PrimitiveOp, ShortCircuitOp, UniOp } from "../interpreter/expression"
 import { Box } from "@mui/material";
 import { unreachable } from "../common/assertNever";
 import { List } from "immutable";
-import { Code } from "@mui/icons-material";
 
 const stringifyOp = (op: PrimitiveOp | ShortCircuitOp) => {
     switch (op) {
@@ -536,7 +535,7 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ level, expr, context, unde
     }
 }
 
-type ContextKind = "lambda" | "appL" | "appR" | "fixpoint" | "uniOp" | "binOp" | "ifC" | "ifT" | "ifE" | "quote" | "splice" | "env" | "toplevel";
+// type ContextKind = "lambda" | "appL" | "appR" | "fixpoint" | "uniOp" | "binOp" | "ifC" | "ifT" | "ifE" | "quote" | "splice" | "env" | "toplevel";
 
 type ExpressionKind = "variable" | "lambda" | "application" | "fixpoint" | "integer" | "primitive" | "boolean" | "shortCircuit" | "if" | "quote" | "splice";
 type IntermediateExpressionKind = "env"
@@ -552,7 +551,7 @@ interface ContVisProp {
     redex?: boolean
 }
 
-const ContVis: React.FC<ContVisProp> = ({ cont, level, childKind, children, varopt, redex }) => {
+const ContVis: React.FC<ContVisProp> = ({ cont, level, children, varopt, redex }) => {
     if (cont.isEmpty()) {
         return children
     }
