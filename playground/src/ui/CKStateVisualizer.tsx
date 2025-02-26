@@ -263,6 +263,23 @@ const SpliceVis: React.FC<SpliceVisProp> = ({ shift, exprVis }) => {
     </>
 }
 
+interface LetVisProp {
+    ident: Identifier,
+    valueVis: ReactNode,
+    bodyVis: ReactNode
+}
+
+const LetVis: React.FC<LetVisProp> = ({ ident, valueVis, bodyVis }) => {
+    return <>
+        <Token rightSpacing>let</Token>
+        <IdentVis ident={ident} />
+        <Token leftSpacing rightSpacing>=</Token>
+        {valueVis}
+        <Token leftSpacing rightSpacing>in</Token>
+        {bodyVis}
+    </>;
+}
+
 // Intermediate Expression Visualizer
 interface EsubVisProp {
     envs: List<EnvRF>,
@@ -530,6 +547,17 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ level, expr, context, unde
             }
         }
 
+        case "let": {
+            const { ident, value, body } = expr;
+
+            const valueVis = <ExpressionVis level={level} expr={value} context={"letVal"} />;
+            const bodyVis = <ExpressionVis level={level} expr={body} context={"letBody"} />;
+
+            return <Paren cond={context !== "letBody"}>
+                <LetVis ident={ident} valueVis={valueVis} bodyVis={bodyVis} />
+            </Paren>
+        }
+
         default:
             throw unreachable(expr);
     }
@@ -537,7 +565,7 @@ const ExpressionVis: React.FC<ExpressionVisProp> = ({ level, expr, context, unde
 
 // type ContextKind = "lambda" | "appL" | "appR" | "fixpoint" | "uniOp" | "binOp" | "ifC" | "ifT" | "ifE" | "quote" | "splice" | "env" | "toplevel";
 
-type ExpressionKind = "variable" | "lambda" | "application" | "fixpoint" | "integer" | "primitive" | "boolean" | "shortCircuit" | "if" | "quote" | "splice";
+type ExpressionKind = "variable" | "lambda" | "application" | "fixpoint" | "integer" | "primitive" | "boolean" | "shortCircuit" | "if" | "quote" | "splice" | "let";
 type IntermediateExpressionKind = "env"
 type ValueKind = "closure" | "integer" | "boolean" | "code";
 type ChildKind = ExpressionKind | IntermediateExpressionKind | ValueKind;
@@ -713,6 +741,24 @@ const ContVis: React.FC<ContVisProp> = ({ cont, level, children, varopt, redex }
             </ContVis>
         }
 
+        case "let": {
+            const { ident, expr } = frame;
+            const bodyVis = <ExpressionVis level={level} expr={expr} context={"letBody"} />;
+
+            return <ContVis
+                cont={cont.rest()}
+                level={level}
+                childKind={"let"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <Paren>
+                        <LetVis ident={ident} valueVis={children} bodyVis={bodyVis} />
+                    </Paren>
+                </Group>
+            </ContVis>;
+        }
+
         // Code Frames
         case "lamC":
         case "fixC": {
@@ -749,8 +795,8 @@ const ContVis: React.FC<ContVisProp> = ({ cont, level, children, varopt, redex }
                 <Group redex={redex}>
                     <Paren>
                         {recParam ?
-                             <FixVis param={recParam!} bodyVis={lambdaVis} lookfor={varopt} /> :
-                             lambdaVis
+                            <FixVis param={recParam!} bodyVis={lambdaVis} lookfor={varopt} /> :
+                            lambdaVis
                         }
                     </Paren>
                 </Group>
@@ -955,6 +1001,39 @@ const ContVis: React.FC<ContVisProp> = ({ cont, level, children, varopt, redex }
             >
                 <Group redex={redex}>
                     {x}
+                </Group>
+            </ContVis>;
+        }
+
+        case "letValC": {
+            const { ident, expr } = frame;
+            const bodyVis = <ExpressionVis level={level} expr={expr} context={"letVal"} />;
+
+            return <ContVis
+                cont={cont.rest()}
+                level={level}
+                childKind={"let"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <LetVis ident={ident} valueVis={children} bodyVis={bodyVis} />
+                </Group>
+            </ContVis>;
+        }
+
+        case "letBodyC": {
+            const { ident, val } = frame;
+
+            const valVis = <ExpressionVis level={level} expr={val} context={"letVal"} />;
+
+            return <ContVis
+                cont={cont.rest()}
+                level={level}
+                childKind={"let"}
+                varopt={varopt}
+            >
+                <Group redex={redex}>
+                    <LetVis ident={ident} valueVis={valVis} bodyVis={children} />
                 </Group>
             </ContVis>;
         }

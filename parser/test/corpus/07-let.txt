@@ -1,0 +1,49 @@
+==================
+Let
+==================
+
+let x = 1 in x
+
+---
+
+(source_file
+  (let
+    (identifier)
+    (number)
+    (identifier)))
+
+==================
+Nested Let
+==================
+
+let x = 1 in let y = 1 in x + y
+
+---
+
+(source_file
+  (let
+    (identifier)
+    (number)
+    (let
+      (identifier)
+      (number)
+      (add
+        (identifier)
+        (identifier)))))
+
+==================
+Nested Let 2
+==================
+
+let x = let y = 1 in y in x
+
+---
+
+(source_file
+  (let
+    (identifier)
+    (let
+      (identifier)
+      (number)
+      (identifier))
+    (identifier)))

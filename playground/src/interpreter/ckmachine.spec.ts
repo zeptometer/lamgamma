@@ -143,6 +143,21 @@ describe("CKMachine", () => {
         ))
     });
 
+    it("let", () => {
+        const subject = initState(parse(`
+            let x = 1 in x
+        `));
+
+        const actual = execute(subject);
+
+        expect(actual).toEqual(ok(
+            {
+                kind: "integer",
+                value: 1
+            }
+        ))
+    });
+
     it("quote", () => {
         const subject = initState(parse(`
             \`{ x }
@@ -225,6 +240,21 @@ describe("CKMachine", () => {
             {
                 kind: "integer",
                 value: 32
+            }
+        ))
+    });
+
+    it("quoting let", () => {
+        const subject = initState(parse(`
+            ~0{ \`{let x = 1 in x} }
+        `));
+
+        const actual = execute(subject);
+
+        expect(actual).toEqual(ok(
+            {
+                kind: "integer",
+                value: 1
             }
         ))
     });

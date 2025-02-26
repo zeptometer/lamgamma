@@ -63,6 +63,8 @@ module.exports = grammar({
       $.and,
       $.or,
       $.neg,
+      // let
+      $.let
     ),
 
     // Expressions that can be used as an argument as-is
@@ -196,6 +198,11 @@ module.exports = grammar({
         seq('~{', field("body", $._expression), '}'),
         seq('~', field("shift", $.number), '{', field("body", $._expression), '}')
       )
+    ),
+
+    // let
+    let: $ => prec.right(PREC.assign,
+      seq('let', $.identifier, '=', $._expression, 'in', $._expression)
     )
   }
 });

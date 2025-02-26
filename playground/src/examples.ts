@@ -25,16 +25,17 @@ const fib = `
 `.trim();
 
 const spow = `
-(fn spower_ ->
-  (fn spower ->
-    ~0{spower 3} 2
-  )
-  (fn n -> \`{fn x -> ~{ spower_ n \`{x}}})
-)
-(fix spower_ -> (fn n x ->
-  if n == 0 then x
-  else \`{ ~{ x } * ~{ spower_ (n-1) x } }
-))
-`
+let sqr = (fn y -> y * y) in
+let spower_ = (fix self -> fn n x ->
+  if n == 0 then \`{ 1 }
+  else if (n mod 2) == 0 then
+    \`{sqr ~{self (n / 2)  x}}
+  else
+    \`{~{x} * ~{self (n-1) x}}
+) in
+let spower = (fn n -> \`{fn x -> ~{ spower_ n \`{ x } }}) in
+let pow11 = ~0{ spower 11 } in
+pow11 2
+`.trim();
 
 export const ExamplePrograms = { ski, churchnum, fib, spow };

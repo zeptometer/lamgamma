@@ -23,9 +23,9 @@ export type Code = {
     expr: Expression;
 }
 
-export type RuntimeFrame = AppLRF | AppRRF | EnvRF | PrimRF | IfCRF | ShortCircuitRF | SpliceRF;
+export type RuntimeFrame = AppLRF | AppRRF | EnvRF | PrimRF | IfCRF | ShortCircuitRF | SpliceRF | LetRF;
 export type CodeFrame = LamCF | AppLCF | AppRCF | FixCF | PrimCF | IfCCF | IfTCF | IFECF |
-    ShortCircuitLCF | ShortCircuitRCF | QuoteCF | SpliceCF;
+    ShortCircuitLCF | ShortCircuitRCF | QuoteCF | SpliceCF | LetValCF | LetBodyCF;
 export type Cont = List<RuntimeFrame | CodeFrame>;
 
 /* Runtime Frames */
@@ -71,6 +71,13 @@ export type ShortCircuitRF = {
 export type SpliceRF = {
     kind: "splice";
     shift: number;
+}
+
+export type LetRF = {
+    kind: "let",
+    ident: Identifier,
+    renv: RenamingEnv,
+    expr: Expression
 }
 
 /* Code Frames */
@@ -144,6 +151,19 @@ export type QuoteCF = {
 export type SpliceCF = {
     kind: "spliceC",
     shift: number
+}
+
+export type LetValCF = {
+    kind: "letValC",
+    ident: Identifier,
+    renv: RenamingEnv,
+    expr: Expression
+}
+
+export type LetBodyCF = {
+    kind: "letBodyC",
+    ident: Identifier,
+    val: Expression
 }
 
 export const Cont = {

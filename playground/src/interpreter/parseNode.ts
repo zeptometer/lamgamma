@@ -475,6 +475,28 @@ export const parseNode = (node: Parser.SyntaxNode): Result<Expression, SyntaxErr
                 })
             });
 
+    } else if (node.type == "let") {
+        const nameNode = node.namedChild(0);
+        const valueNode = node.namedChild(1);
+        const bodyNode = node.namedChild(2);
+        if (nameNode == null || valueNode == null || bodyNode == null) {
+            return err(new SyntaxError(
+                "Expected unreachable: name or value or body is missing in let",
+                node
+            ));
+        }
+
+        return Result.combine([parseIdentifier(nameNode), parseNode(valueNode), parseNode(bodyNode)]).andThen(
+            ([name, value, body]) => {
+                return ok({
+                    kind: "let" as const,
+                    ident: name,
+                    value: value,
+                    body: body
+                })
+            }
+        )
+
     } else {
         return err(new SyntaxError(`${stringifyPosition(node)}: Got unexpected node: ${node.type}`, node));
     }

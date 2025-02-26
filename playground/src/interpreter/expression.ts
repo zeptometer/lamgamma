@@ -87,7 +87,8 @@ const resetIdentifierCounter = () => {
 
 export const Identifier = { color, reset: resetIdentifierCounter, stringify: stringifyIdentifier, eq: eqIdentifier };
 
-export type Expression = Variable | Lambda | Application | Integer | Primitive | Boolean | ShortCircuit | If | Fixpoint | Quote | Splice;
+export type Expression = Variable | Lambda | Application | Integer | Primitive | Boolean
+    | ShortCircuit | If | Fixpoint | Quote | Splice | Let;
 
 export type BinOp = "add" | "sub" | "mul" | "div" | "mod" | "eq" | "ne" | "lt" | "le" | "gt" | "ge";
 export const BinOp = {
@@ -173,6 +174,13 @@ export type Splice = {
     expr: Expression;
 }
 
+export type Let = {
+    kind: "let";
+    ident: Identifier;
+    value: Expression;
+    body: Expression;
+}
+
 /** TODO: Add utility function for general-purpose AST traversal */
 const hasFreeVariable = (expr: Expression, ident: Identifier): boolean => {
     switch (expr.kind) {
@@ -223,6 +231,10 @@ const hasFreeVariable = (expr: Expression, ident: Identifier): boolean => {
 
         case "splice":
             return hasFreeVariable(expr.expr, ident);
+
+        case "let":
+            return hasFreeVariable(expr.value, ident) ||
+                (!Identifier.eq(expr.ident, ident) && hasFreeVariable(expr.body, ident));
 
         default: throw unreachable(expr)
     }

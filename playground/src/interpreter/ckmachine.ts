@@ -283,6 +283,22 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                         })
                     }
 
+                    case "let": {
+                        const { ident, value, body } = expr;
+                        return ok({
+                            kind: "eval",
+                            level: 0,
+                            renv: renv,
+                            expr: value,
+                            cont: cont.unshift({
+                                kind: "let",
+                                ident: ident,
+                                renv: renv,
+                                expr: body
+                            })
+                        });
+                    }
+
                     default: throw (unreachable(expr));
                 }
             } else {
@@ -451,6 +467,26 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                                 shift: shift
                             })
                         })
+                    }
+
+                    case "let": {
+                        const { ident, value, body } = expr;
+
+                        const renamed = Identifier.color(ident);
+                        const newRenv = renv.unshift({ from: ident, to: renamed });
+
+                        return ok({
+                            kind: "eval",
+                            level: level,
+                            renv: renv,
+                            expr: value,
+                            cont: cont.unshift({
+                                kind: "letValC",
+                                ident: renamed,
+                                renv: newRenv,
+                                expr: body
+                            })
+                        });
                     }
 
                     default: throw (unreachable(expr));
@@ -673,6 +709,25 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     }
                 }
 
+                case "let": {
+                    const { ident, renv, expr } = frame;
+
+                    const renamed = Identifier.color(ident);
+                    const newRenv = renv.unshift({ from: ident, to: renamed });
+
+                    return ok({
+                        kind: "eval",
+                        level: 0,
+                        renv: newRenv,
+                        expr: expr,
+                        cont: rest.unshift({
+                            kind: "env",
+                            ident: renamed,
+                            val: val
+                        })
+                    });
+                }
+
                 default:
                     throw unreachable(frame);
             }
@@ -874,6 +929,38 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                         },
                         cont: rest
                     })
+
+                case "letValC": {
+                    const { ident, renv, expr } = frame;
+
+                    return ok({
+                        kind: "eval",
+                        level: level,
+                        renv: renv,
+                        expr: expr,
+                        cont: rest.unshift({
+                            kind: "letBodyC",
+                            ident: ident,
+                            val: code
+                        })
+                    });
+                }
+
+                case "letBodyC": {
+                    const { ident, val } = frame;
+
+                    return ok({
+                        kind: "applyContF",
+                        level: level,
+                        code: {
+                            "kind": "let",
+                            "ident": ident,
+                            "value": val,
+                            "body": code
+                        },
+                        cont: rest
+                    });
+                }
 
                 default: throw unreachable(frame)
             }

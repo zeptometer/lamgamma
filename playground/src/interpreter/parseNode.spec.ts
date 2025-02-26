@@ -288,6 +288,19 @@ describe('Tree Parser, success cases', () => {
         .toEqual(ok(expectedOutput));
     });
   });
+  describe('let', () => {
+    it('parse let', () => {
+      const input = 'let x = 1 in x';
+      const expectedOutput = {
+        kind: 'let',
+        ident: { kind: 'raw', name: 'x' },
+        value: { kind: 'integer', value: 1 },
+        body: { kind: 'variable', ident: { kind: 'raw', name: 'x' } }
+      };
+      expect(parseNode((parser.parse(input)).rootNode))
+        .toEqual(ok(expectedOutput));
+    });
+  });
 });
 
 
