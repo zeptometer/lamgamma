@@ -110,32 +110,35 @@ let spower = fn n ->
 
 const gibonacci = `
 let nil = 0 in
-let emptytbl = fn n fail _ -> fail nil in
-let ext = fn tbl newidx newval ->
+let empty_memo = fn idx fail ok -> fail nil in
+let ext_memo = fn memo newidx newval ->
   fn idx fail ok ->
-    let fallback = fn _ ->
-      if idx == newidx
-        then (ok newval)
-        else (fail nil) in
-    tbl idx fallback ok in
-let staged_gibonacci = fix self ->
-  fn tbl n m1 m2 k ->
-    tbl n
+    if idx == newidx
+    then (ok newval)
+    else (memo idx fail ok) in
+let gibonacci_st_ = fix self ->
+  fn memo n m1 m2 k ->
+    memo n
       (fn _ ->
-        if n == 0 then k (ext tbl 0 m1) m1
-        else if n == 1 then k (ext tbl 1 m2) m2
+        if n == 0 then k (ext_memo memo 0 m1) m1
+        else if n == 1 then k (ext_memo memo 1 m2) m2
         else
-        self tbl (n - 1) m1 m2
-          (fn tbl1 v1 ->
-            self tbl1 (n - 2) m1 m2
-              (fn tbl2 v2 ->
+        self memo (n - 1) m1 m2
+          (fn memo1 v1 ->
+            self memo1 (n - 2) m1 m2
+              (fn memo2 v2 ->
               \`{
                 let x3 = ~{ v1 } + ~{ v2 } in
-                ~{ k (ext tbl2 n \`{ x3 }) \`{ x3 } }
+                ~{ k (ext_memo memo2 n \`{ x3 }) \`{ x3 } }
               })))
-      (fn v -> k tbl v) in
-staged_gibonacci emptytbl 10 \`{ 2 } \`{ 3 }
-  (fn tbl x -> x)
+      (fn v -> k memo v) in
+let gibonacci_st = fn n -> \`{ fn x y ->
+  ~{ gibonacci_st_ empty_memo n \`{ x } \`{ y } (fn memo x -> x) }
+} in
+\`{
+  let gibonacci_10 = ~{ gibonacci_st 10 } in
+  gibonacci_10 1 1
+}
 `.trim();
 
 export type Example = "quasiquote" | "runtime_evaluation" | "runtime_evaluation_csp" |
