@@ -5,10 +5,11 @@ import Parser from "web-tree-sitter";
 import { parseNode } from '../interpreter/parseNode';
 import { CKMachine } from "../interpreter/ckmachine";
 import { CKState } from "../interpreter/ckstate";
-import { Result } from "neverthrow";
+import { ok, Result } from "neverthrow";
 import { CKStateVis, RenamingEnvVis } from "./CKStateVisualizer";
 import { List } from "immutable";
 import { Identifier } from "../interpreter/expression";
+import { unreachable } from "../common/assertNever";
 
 const MAX_STATES = 100;
 const MAX_EVAL_STEPS = 1000000;
@@ -19,6 +20,8 @@ interface Props {
     treeSitterParser: Parser
 }
 
+type EvalState = "running" | "complete" | "error" | "readyForNextStage";
+
 export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) => {
 
     const tree = treeSitterParser.parse(code)
@@ -26,7 +29,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
     const initialState = exprResult.map((expr) => CKMachine.initState(expr))
 
     const [states, setStates] = useState<List<Result<CKState, Error>>>(List.of(initialState));
-    const [isComplete, setComplete] = useState(false);
+    const [evalState, setEvalState] = useState<EvalState>("running");
 
     const resetState = () => {
         Identifier.reset();
@@ -34,25 +37,56 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
         const exprResult = parseNode(tree.rootNode)
 
         setStates(List.of(exprResult.map(expr => CKMachine.initState(expr))))
-        setComplete(false)
+        setEvalState(exprResult.isOk() ? "running" : "error");
     }
 
     useEffect(resetState, [code, treeSitterParser])
 
-    const evaluate = () => {
-        const state = states.last()!;
+    const getEvalState = (state: Result<CKState, Error>): EvalState => {
         if (state.isErr()) {
-            return;
+            return "error";
         }
+        const okstate = state.value;
+        if (okstate.kind === "applyCont0" && okstate.cont.isEmpty()) {
+            if (okstate.val.kind === "code") {
+                return "readyForNextStage";
+            } else {
+                return "complete";
+            }
+        }
+        return "running";
+    }
 
-        const nextState = CKMachine.executeStep(state.value);
+    const evaluate = () => {
+        switch (evalState) {
+            case "running": {
+                const state = states.last()!;
+                if (state.isErr()) { throw (new Error("expected unreachable: evaluate step from error state")) }
 
-        setStates(states.takeLast(MAX_STATES).push(nextState));
-        if (nextState.isOk() &&
-            nextState.value.kind === "applyCont0"
-            && nextState.value.cont.isEmpty()) {
-            setComplete(true);
-            return;
+                const nextState = CKMachine.executeStep(state.value);
+
+                setStates(states.takeLast(MAX_STATES).push(nextState));
+                setEvalState(getEvalState(nextState));
+                break;
+            }
+
+            case "readyForNextStage": {
+                const state = states.last()!;
+                if (state.isErr()) { throw (new Error("expected unreachable: evaluate step from error state")) }
+
+                const okstate = state.value;
+                if (okstate.kind !== "applyCont0" ||
+                    !okstate.cont.isEmpty() ||
+                    okstate.val.kind !== "code") {
+                    throw (new Error("expected unreachable: state is not ready for next stage"))
+                }
+
+                const nextStageExpr = okstate.val.expr;
+                const nextState = ok(CKMachine.initState(nextStageExpr));
+
+                setStates(states.takeLast(MAX_STATES).push(nextState));
+                setEvalState("running");
+            }
         }
     }
 
@@ -61,6 +95,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
         for (let i = 0; i < MAX_EVAL_STEPS; i++) {
             const state = newStates.last()!;
             if (state.isErr()) {
+                setEvalState("error");
                 break;
             }
             const nextState = CKMachine.executeStep(state.value);
@@ -69,7 +104,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
             if (nextState.isOk() &&
                 nextState.value.kind === "applyCont0"
                 && nextState.value.cont.isEmpty()) {
-                setComplete(true);
+                setEvalState(getEvalState(nextState));
                 break;
             }
         }
@@ -77,8 +112,9 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
     }
 
     const undo = () => {
-        setStates(states.pop());
-        setComplete(false);
+        const newstates = states.pop();
+        setStates(newstates);
+        setEvalState(getEvalState(newstates.last()!));
     }
 
     return <Box sx={{
@@ -111,8 +147,16 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
             <Toolbar>
                 <Button variant="contained"
                     onClick={evaluate}
-                    disabled={isComplete}>
-                    {isComplete ? "Completed" : "Eval Step"}
+                    disabled={["error", "complete"].includes(evalState)}>
+                    {((state) => {
+                        switch (state) {
+                            case "running": return "Eval Step";
+                            case "readyForNextStage": return "Next Stage";
+                            case "complete": return "Complete";
+                            case "error": return "Error";
+                            default: throw unreachable(state);
+                        }
+                    })(evalState)}
                 </Button>
 
                 <Button variant="contained"
@@ -130,7 +174,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
 
                 <Button variant="contained"
                     onClick={evaluateAll}
-                    disabled={isComplete}>
+                    disabled={evalState !== "running"}>
                     Eval All
                 </Button>
             </Toolbar>
