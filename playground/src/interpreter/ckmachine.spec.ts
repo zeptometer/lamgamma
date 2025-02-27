@@ -258,4 +258,26 @@ describe("CKMachine", () => {
             }
         ))
     });
+
+    it("nested quote", () => {
+        const subject = initState(parse(`
+            let x = \`{1} in
+            \`{\`{~2{x}}}
+        `));
+
+        const actual = execute(subject);
+
+        expect(actual).toEqual(ok(
+            {
+                kind: "code",
+                expr: {
+                    kind: "quote",
+                    expr: {
+                        kind: "integer",
+                        value: 1
+                    }
+                }
+            }
+        ))
+    });
 });

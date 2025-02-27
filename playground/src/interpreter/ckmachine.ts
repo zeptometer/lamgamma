@@ -437,7 +437,7 @@ const executeStep = (state: CKState): Result<CKState, Error> => {
                     case "quote": {
                         return ok({
                             kind: "eval",
-                            level: level,
+                            level: level+1,
                             renv: renv,
                             expr: expr.expr,
                             cont: cont.unshift({

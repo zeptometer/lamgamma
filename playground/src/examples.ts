@@ -26,6 +26,12 @@ let y = \`{ 1 + x } in
 ~0{ y }
 `.trim();
 
+const nested_quote =
+`
+let x = \`{1} in
+\`{\`{~2{x}}}
+`.trim();
+
 const ill_staged_variable = `
 \`{
   let y = 1 in
@@ -133,12 +139,13 @@ staged_gibonacci emptytbl 10 \`{ 2 } \`{ 3 }
 `.trim();
 
 export type Example = "quasiquote" | "runtime_evaluation" | "runtime_evaluation_csp" |
- "ill_staged_variable" |  "scope_extrusion" | "spower" | "spower_sqr" | "spower_cont" |
+ "nested_quote" | "ill_staged_variable" |  "scope_extrusion" | "spower" | "spower_sqr" | "spower_cont" |
  "gibonacci";
 export const ExamplePrograms = {
   quasiquote,
   runtime_evaluation,
   runtime_evaluation_csp,
+  nested_quote,
   scope_extrusion,
   ill_staged_variable,
   fib,

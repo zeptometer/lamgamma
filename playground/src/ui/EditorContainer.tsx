@@ -28,6 +28,7 @@ export const EditorContainer: React.FC<Props> = ({ code, example, onExampleUpdat
                     <MenuItem value={"quasiquote"}>quasiquote</MenuItem>
                     <MenuItem value={"runtime_evaluation"}>Runtime Evaluation</MenuItem>
                     <MenuItem value={"runtime_evaluation_csp"}>Runtime Evaluation with cross-stage persistence</MenuItem>
+                    <MenuItem value={"nested_quote"}>Nested quotes</MenuItem>
                     <MenuItem value={"ill_staged_variable"}>(ERROR) Ill-staged variable</MenuItem>
                     <MenuItem value={"scope_extrusion"}>(ERROR) Scope Extrusion</MenuItem>
                     <MenuItem value={"spower"}>Specialized power</MenuItem>
