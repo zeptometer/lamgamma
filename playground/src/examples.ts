@@ -49,18 +49,24 @@ let spower = fn n ->
 spower 10
 `.trim();
 
-const spower_csp = `
-let sqr = (fn y -> y * y) in
-let spower_ = (fix self -> fn n x ->
-  if n == 0 then \`{ 1 }
-  else if (n mod 2) == 0 then
-    \`{sqr ~{self (n / 2)  x}}
-  else
-    \`{~{x} * ~{self (n-1) x}}
-) in
-let spower = (fn n -> \`{fn x -> ~{ spower_ n \`{ x } }}) in
-let pow11 = ~0{ spower 11 } in
-pow11 2
+const spower_sqr = `
+\`{
+  let sqr = (fn y -> y * y) in ~{
+    let spower_ = (fix self -> fn n x ->
+    if n == 0 then \`{ 1 }
+    else if (n mod 2) == 0 then
+        \`{sqr ~{self (n / 2)  x}}
+    else
+        \`{~{x} * ~{self (n-1) x}}
+    ) in
+    let spower = (fn n -> \`{fn x -> ~{ spower_ n \`{ x } }}) in
+    \`{
+      let power11 = ~{ spower 11 } in
+      power11 2
+    }
+  }
+}
+
 `.trim();
 
 const spower_cont = `
@@ -94,7 +100,7 @@ let spower = fn n ->
 `.trim()
 
 export type Example = "quasiquote" | "runtime_evaluation" | "runtime_evaluation_csp" |
- "ill_staged_variable" |  "scope_extrusion" | "spower" | "spower_csp" | "spower_cont";
+ "ill_staged_variable" |  "scope_extrusion" | "spower" | "spower_sqr" | "spower_cont";
 export const ExamplePrograms = {
   quasiquote,
   runtime_evaluation,
@@ -103,6 +109,6 @@ export const ExamplePrograms = {
   ill_staged_variable,
   fib,
   spower,
-  spower_csp,
+  spower_sqr,
   spower_cont
 };

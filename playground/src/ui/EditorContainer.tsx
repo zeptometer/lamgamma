@@ -31,7 +31,7 @@ export const EditorContainer: React.FC<Props> = ({ code, example, onExampleUpdat
                     <MenuItem value={"ill_staged_variable"}>(ERROR) Ill-staged variable</MenuItem>
                     <MenuItem value={"scope_extrusion"}>(ERROR) Scope Extrusion</MenuItem>
                     <MenuItem value={"spower"}>Specialized power</MenuItem>
-                    <MenuItem value={"spower_csp"}>Specialized power with cross-stage persistence</MenuItem>
+                    <MenuItem value={"spower_sqr"}>Specialized power with external function</MenuItem>
                     <MenuItem value={"spower_cont"}>Specialized power with let-insertion</MenuItem>
                 </Select>
                 <Box sx={{ flexGrow: 1 }} />
