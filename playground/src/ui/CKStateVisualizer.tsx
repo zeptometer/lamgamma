@@ -619,11 +619,11 @@ const ContVis: React.FC<ContVisProp> = ({ cont, level, children, varopt, redex }
 
         case "env": {
             /* Take all sequential envs */
-            const envs: EnvRF[] = [];
+            let envs: List<EnvRF> = List.of();
             let rest: Cont = cont;
             while (!rest.isEmpty() && rest.first()!.kind === "env") {
                 const env = rest.first() as EnvRF;
-                envs.push(env)
+                envs = envs.unshift(env)
                 rest = rest.rest();
             }
 
@@ -637,7 +637,7 @@ const ContVis: React.FC<ContVisProp> = ({ cont, level, children, varopt, redex }
                 childKind={"env"}
                 varopt={varopt}
             >
-                <EsubVis envs={List(envs)} exprVis={exprVis} lookfor={varopt} />
+                <EsubVis envs={envs} exprVis={exprVis} lookfor={varopt} />
             </ContVis>;
         }
 
