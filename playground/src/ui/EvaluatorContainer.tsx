@@ -112,7 +112,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
                 <Button variant="contained"
                     onClick={evaluate}
                     disabled={isComplete}>
-                    {isComplete ? "Eval Completed" : "Eval Step"}
+                    {isComplete ? "Completed" : "Eval Step"}
                 </Button>
 
                 <Button variant="contained"
@@ -121,18 +121,17 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
                     Undo
                 </Button>
 
+                <Box sx={{ flexGrow: 1 }} />
+
                 <Button variant="contained"
                     onClick={resetState}>
                     Reset
                 </Button>
 
-                <Box sx={{ flexGrow: 1 }} />
-
                 <Button variant="contained"
                     onClick={evaluateAll}
-                    disabled={isComplete}
-                    sx={{ mr: "4em" }}>
-                    EVal All
+                    disabled={isComplete}>
+                    Eval All
                 </Button>
             </Toolbar>
         </AppBar>
