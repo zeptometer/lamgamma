@@ -46,7 +46,10 @@ let spower_ = (fix self -> fn n x ->
   else \`{ ~{ x } * ~{ self (n-1) x } }) in
 let spower = fn n ->
   \`{ fn x -> ~{ spower_ n \`{ x } } } in
-spower 10
+\`{
+  let power11 = ~{ spower 11 } in
+  power11 2
+}
 `.trim();
 
 const spower_sqr = `
@@ -99,8 +102,39 @@ let spower = fn n ->
 }
 `.trim()
 
+const gibonacci = `
+let nil = 0 in
+let emptytbl = fn n fail _ -> fail nil in
+let ext = fn tbl newidx newval ->
+  fn idx fail ok ->
+    let fallback = fn _ ->
+      if idx == newidx
+        then (ok newval)
+        else (fail nil) in
+    tbl idx fallback ok in
+let staged_gibonacci = fix self ->
+  fn tbl n m1 m2 k ->
+    tbl n
+      (fn _ ->
+        if n == 0 then k (ext tbl 0 m1) m1
+        else if n == 1 then k (ext tbl 1 m2) m2
+        else
+        self tbl (n - 1) m1 m2
+          (fn tbl1 v1 ->
+            self tbl1 (n - 2) m1 m2
+              (fn tbl2 v2 ->
+              \`{
+                let x3 = ~{ v1 } + ~{ v2 } in
+                ~{ k (ext tbl2 n \`{ x3 }) \`{ x3 } }
+              })))
+      (fn v -> k tbl v) in
+staged_gibonacci emptytbl 10 \`{ 2 } \`{ 3 }
+  (fn tbl x -> x)
+`.trim();
+
 export type Example = "quasiquote" | "runtime_evaluation" | "runtime_evaluation_csp" |
- "ill_staged_variable" |  "scope_extrusion" | "spower" | "spower_sqr" | "spower_cont";
+ "ill_staged_variable" |  "scope_extrusion" | "spower" | "spower_sqr" | "spower_cont" |
+ "gibonacci";
 export const ExamplePrograms = {
   quasiquote,
   runtime_evaluation,
@@ -110,5 +144,6 @@ export const ExamplePrograms = {
   fib,
   spower,
   spower_sqr,
-  spower_cont
+  spower_cont,
+  gibonacci
 };

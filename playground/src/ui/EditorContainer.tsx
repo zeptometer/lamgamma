@@ -33,6 +33,7 @@ export const EditorContainer: React.FC<Props> = ({ code, example, onExampleUpdat
                     <MenuItem value={"spower"}>Specialized power</MenuItem>
                     <MenuItem value={"spower_sqr"}>Specialized power with external function</MenuItem>
                     <MenuItem value={"spower_cont"}>Specialized power with let-insertion</MenuItem>
+                    <MenuItem value={"gibonacci"}>Gibonacci</MenuItem>
                 </Select>
                 <Box sx={{ flexGrow: 1 }} />
                 <Link
