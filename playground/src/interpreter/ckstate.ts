@@ -171,11 +171,12 @@ export const Cont = {
         const frame = cont.find((frame) => {
             return (frame.kind === "env" && frame.ident === ident) ||
             (frame.kind === "lamC" && frame.param === ident) ||
-            (frame.kind === "fixC" && (frame.recParam === ident || frame.funcParam === ident));
+            (frame.kind === "fixC" && (frame.recParam === ident || frame.funcParam === ident)) ||
+            (frame.kind === "letBodyC" && frame.ident === ident);
         });
         if (!frame) {
             return "NotFound";
-        } else if (["lamC", "fixC"].includes(frame.kind)) {
+        } else if (["lamC", "fixC", "letBodyC"].includes(frame.kind)) {
             return "FutureBinding";
         }
         return (frame as EnvRF).val;

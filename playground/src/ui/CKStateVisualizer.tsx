@@ -266,13 +266,14 @@ const SpliceVis: React.FC<SpliceVisProp> = ({ shift, exprVis }) => {
 interface LetVisProp {
     ident: Identifier,
     valueVis: ReactNode,
-    bodyVis: ReactNode
+    bodyVis: ReactNode,
+    lookfor?: Identifier | null
 }
 
-const LetVis: React.FC<LetVisProp> = ({ ident, valueVis, bodyVis }) => {
+const LetVis: React.FC<LetVisProp> = ({ ident, valueVis, bodyVis, lookfor }) => {
     return <>
         <Token rightSpacing>let</Token>
-        <IdentVis ident={ident} />
+        <IdentVis ident={ident} matched={!!lookfor && Identifier.eq(ident, lookfor)} />
         <Token leftSpacing rightSpacing>=</Token>
         {valueVis}
         <Token leftSpacing rightSpacing>in</Token>
@@ -1033,7 +1034,7 @@ const ContVis: React.FC<ContVisProp> = ({ cont, level, children, varopt, redex }
                 varopt={varopt}
             >
                 <Group redex={redex}>
-                    <LetVis ident={ident} valueVis={valVis} bodyVis={children} />
+                    <LetVis ident={ident} valueVis={valVis} bodyVis={children} lookfor={varopt} />
                 </Group>
             </ContVis>;
         }
