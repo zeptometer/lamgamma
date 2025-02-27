@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Parser from 'web-tree-sitter';
-import { OnChange } from '@monaco-editor/react';
+import { OnChange, useMonaco } from '@monaco-editor/react';
 
 import { EditorContainer } from './ui/EditorContainer';
 import { Grid2 } from '@mui/material';
@@ -9,7 +9,23 @@ import { ExamplePrograms } from './examples';
 
 const App: React.FC = () => {
   const [treeSitterParser, setTreeSitterParser] = useState<Parser | null>(null);
-  const [code, setCode] = useState(ExamplePrograms.spow);
+  const [code, setCode] = useState(ExamplePrograms.quasiquote);
+  const [example, setExample] = useState<Example>("quasiquote");
+
+  const monaco = useMonaco();
+
+  useEffect(() => {
+    if (monaco) {
+      monaco.languages.register({ id: 'lamgamma' });
+      monaco.languages.setMonarchTokensProvider('lamgamma', {
+        tokenizer: {
+          root: [
+            [/\b(?:let|in|fn|if|then|else|->|fix)\b/, "keyword"],
+          ]
+        }
+      });
+    }
+  }, [monaco]);
 
   useEffect(() => {
     (async () => {
