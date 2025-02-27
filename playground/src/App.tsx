@@ -3,9 +3,9 @@ import Parser from 'web-tree-sitter';
 import { OnChange, useMonaco } from '@monaco-editor/react';
 
 import { EditorContainer } from './ui/EditorContainer';
-import { Grid2 } from '@mui/material';
+import { Grid2, SelectChangeEvent } from '@mui/material';
 import { EvaluatorContainer } from './ui/EvaluatorContainer';
-import { ExamplePrograms } from './examples';
+import { Example, ExamplePrograms } from './examples';
 
 const App: React.FC = () => {
   const [treeSitterParser, setTreeSitterParser] = useState<Parser | null>(null);
@@ -42,6 +42,13 @@ const App: React.FC = () => {
     setCode(code);
   }
 
+  const onExampleUpdate = (event: SelectChangeEvent<Example>) => {
+    const example = event.target.value as Example;
+
+    setCode(ExamplePrograms[example]);
+    setExample(example);
+  };
+
   return <Grid2
     container
     spacing={0}
@@ -52,8 +59,10 @@ const App: React.FC = () => {
       height={{ xs: "50vh", md: "100%" }}
       minWidth={0}>
       <EditorContainer
-        code={code}
         onChange={onEditorChange}
+        onExampleUpdate={onExampleUpdate}
+        example={example}
+        code={code}
       />
     </Grid2>
     <Grid2
