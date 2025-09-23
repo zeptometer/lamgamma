@@ -27,3 +27,6 @@ dist-ssr
 /lib/
 .bsb.lock
 .merlin
+
+# intermediate files
+*.mjs
