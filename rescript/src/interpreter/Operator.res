@@ -1,10 +1,16 @@
 module BinOp = {
-    type t =
-        | Add
-        | Sub
-        | Mul
-        | Div
-        | Eq
-        | Lt
-        | Gt
+  type t =
+    // Arithmetic
+    | Add
+    | Sub
+    | Mul
+    | Div
+    | Mod
+    // Comparison
+    | Eq
+    | Ne
+    | Lt
+    | Le
+    | Gt
+    | Ge
 }

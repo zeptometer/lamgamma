@@ -30,3 +30,7 @@ dist-ssr
 
 # intermediate files
 *.mjs
+
+# web tree sitter
+public/tree-sitter.wasm
+public/tree-sitter-lamgamma_parser.wasm

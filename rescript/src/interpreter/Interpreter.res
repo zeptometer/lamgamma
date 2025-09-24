@@ -23,6 +23,7 @@ let rec eval = (e: Expr.t): Belt.Result.t<Runtime.val, evalError> => {
     eval(left)->flatMap(leftVal =>
       eval(right)->flatMap(rightVal =>
         switch op {
+        // Arithmetic
         | Operator.BinOp.Add =>
           switch (leftVal, rightVal) {
           | (IntVal(l), IntVal(r)) => return(IntVal(l + r))
@@ -44,10 +45,23 @@ let rec eval = (e: Expr.t): Belt.Result.t<Runtime.val, evalError> => {
           | (IntVal(l), IntVal(r)) => return(IntVal(l / r))
           | _ => raise(TypeMismatch)
           }
+        | Operator.BinOp.Mod =>
+          switch (leftVal, rightVal) {
+          | (IntVal(_), IntVal(0)) => raise(ZeroDivision)
+          | (IntVal(l), IntVal(r)) => return(IntVal(Int.mod(l, r)))
+          | _ => raise(TypeMismatch)
+          }
+        // Comparison
         | Operator.BinOp.Eq =>
           switch (leftVal, rightVal) {
           | (IntVal(l), IntVal(r)) => return(BoolVal(l == r))
           | (BoolVal(l), BoolVal(r)) => return(BoolVal(l == r))
+          | _ => raise(TypeMismatch)
+          }
+        | Operator.BinOp.Ne =>
+          switch (leftVal, rightVal) {
+          | (IntVal(l), IntVal(r)) => return(BoolVal(l != r))
+          | (BoolVal(l), BoolVal(r)) => return(BoolVal(l != r))
           | _ => raise(TypeMismatch)
           }
         | Operator.BinOp.Lt =>
@@ -55,9 +69,19 @@ let rec eval = (e: Expr.t): Belt.Result.t<Runtime.val, evalError> => {
           | (IntVal(l), IntVal(r)) => return(BoolVal(l < r))
           | _ => raise(TypeMismatch)
           }
+        | Operator.BinOp.Le =>
+          switch (leftVal, rightVal) {
+          | (IntVal(l), IntVal(r)) => return(BoolVal(l <= r))
+          | _ => raise(TypeMismatch)
+          }
         | Operator.BinOp.Gt =>
           switch (leftVal, rightVal) {
           | (IntVal(l), IntVal(r)) => return(BoolVal(l > r))
+          | _ => raise(TypeMismatch)
+          }
+        | Operator.BinOp.Ge =>
+          switch (leftVal, rightVal) {
+          | (IntVal(l), IntVal(r)) => return(BoolVal(l >= r))
           | _ => raise(TypeMismatch)
           }
         }
