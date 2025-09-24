@@ -22,19 +22,6 @@ exception NotImplemented
 let ok = (x: TypedExpr.t) => Belt.Result.Ok(x)
 let fail = (x: parseError) => Belt.Result.Error(x)
 
-let getOrErr = (x: option<'a>, err: 'e): result<'a, 'e> =>
-  switch x {
-  | Some(v) => Belt.Result.Ok(v)
-  | None => Belt.Result.Error(err)
-  }
-
-let pos = (node: syntaxNode): string => {
-  let {startPosition: {row: sr, column: sc}, endPosition: {row: er, column: ec}} = node
-
-  open Int
-  `(${toString(sr + 1)},${toString(sc)})-(${toString(er + 1)}-${toString(ec)})`
-}
-
 let rec parseSyntaxNode = (node: syntaxNode): result<TypedExpr.t, parseError> => {
   if node.isError {
     fail(SyntaxError({start: node.startPosition, end: node.endPosition}))
