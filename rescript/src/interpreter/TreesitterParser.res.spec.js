@@ -304,4 +304,26 @@ describe('TreesitterParser', () => {
                 .toEqual(expectedOutput);
         });
     });
+
+    describe('for parens', () => {
+        it('parse (1 + 2) * 3', () => {
+            const input = '(1 + 2) * 3';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: {
+                    TAG: "BinOp",
+                    op: "Mul",
+                    left: {
+                        TAG: "BinOp",
+                        op: "Add",
+                        left: { TAG: "IntLit", _0: 1 },
+                        right: { TAG: "IntLit", _0: 2 }
+                    },
+                    right: { TAG: "IntLit", _0: 3 }
+                }
+            };
+            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        });
+    });
 });
