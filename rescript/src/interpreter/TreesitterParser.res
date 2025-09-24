@@ -19,10 +19,10 @@ exception NodeCountMismatch({expected: int, actual: int, node: syntaxNode})
 exception UnexpectedText({text: option<string>})
 exception NotImplemented
 
-let ok = (x: TypedExpr.t) => Belt.Result.Ok(x)
+let ok = (x: TypeAnnotExpr.t) => Belt.Result.Ok(x)
 let fail = (x: parseError) => Belt.Result.Error(x)
 
-let rec parseSyntaxNode = (node: syntaxNode): result<TypedExpr.t, parseError> => {
+let rec parseSyntaxNode = (node: syntaxNode): result<TypeAnnotExpr.t, parseError> => {
   if node.isError {
     fail(SyntaxError({start: node.startPosition, end: node.endPosition}))
   } else if node.isMissing {
@@ -43,13 +43,13 @@ let rec parseSyntaxNode = (node: syntaxNode): result<TypedExpr.t, parseError> =>
       ->Option.getExn(~message="Number node has no text")
       ->Int.fromString
       ->Option.getExn(~message="Failed to parse int from string")
-      ->TypedExpr.IntLit
+      ->TypeAnnotExpr.IntLit
       ->ok
 
     | "boolean" =>
       switch node.text {
-      | Some("true") => TypedExpr.BoolLit(true)
-      | Some("false") => TypedExpr.BoolLit(false)
+      | Some("true") => TypeAnnotExpr.BoolLit(true)
+      | Some("false") => TypeAnnotExpr.BoolLit(false)
       | _ => raise(UnexpectedText({text: node.text}))
       } -> ok
 
@@ -99,7 +99,7 @@ let rec parseSyntaxNode = (node: syntaxNode): result<TypedExpr.t, parseError> =>
           ->Dict.get(node.type_)
           ->Option.getExn(~message="Operator not found in mapping")
 
-        left->Result.flatMap(l => right->Result.map(r => TypedExpr.BinOp({op, left: l, right: r})))
+        left->Result.flatMap(l => right->Result.map(r => TypeAnnotExpr.BinOp({op, left: l, right: r})))
       }
     | _ => raise(NotImplemented)
     }
