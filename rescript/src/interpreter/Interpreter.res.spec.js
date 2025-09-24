@@ -20,6 +20,29 @@ beforeAll(
     }
 )
 
+describe('Literal evaluation', () => {
+    it('evaluates integer literal 123', () => {
+        expect($$eval(parse('123'))).toEqual({
+            TAG: "Ok",
+            _0: { TAG: "IntVal", _0: 123 }
+        });
+    });
+
+    it('evaluates boolean literal true', () => {
+        expect($$eval(parse('true'))).toEqual({
+            TAG: "Ok",
+            _0: { TAG: "BoolVal", _0: true }
+        });
+    });
+
+    it('evaluates boolean literal false', () => {
+        expect($$eval(parse('false'))).toEqual({
+            TAG: "Ok",
+            _0: { TAG: "BoolVal", _0: false }
+        });
+    });
+});
+
 describe('Binary operations with', () => {
     describe('Arithmetic', () => {
         describe('successfully', () => {

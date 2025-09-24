@@ -16,6 +16,7 @@ type parseError =
   | MissingNodeError(syntaxNode)
 
 exception NodeCountMismatch({expected: int, actual: int, node: syntaxNode})
+exception UnexpectedText({text: option<string>})
 exception NotImplemented
 
 let ok = (x: TypedExpr.t) => Belt.Result.Ok(x)
@@ -57,6 +58,13 @@ let rec parseSyntaxNode = (node: syntaxNode): result<TypedExpr.t, parseError> =>
       ->Option.getExn(~message="Failed to parse int from string")
       ->TypedExpr.IntLit
       ->ok
+
+    | "boolean" =>
+      switch node.text {
+      | Some("true") => TypedExpr.BoolLit(true)
+      | Some("false") => TypedExpr.BoolLit(false)
+      | _ => raise(UnexpectedText({text: node.text}))
+      } -> ok
 
     | "add"
     | "sub"

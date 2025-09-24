@@ -49,6 +49,28 @@ describe('TreesitterParser', () => {
 
     });
 
+    describe('for boolean', () => {
+        it('parse true', () => {
+            const input = 'true';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: { TAG: "BoolLit", _0: true }
+            };
+            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        });
+
+        it('parse false', () => {
+            const input = 'false';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: { TAG: "BoolLit", _0: false }
+            };
+            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        });
+    });
+
     describe('for arithmetic', () => {
         it('parse addition', () => {
             const input = '1 + 2';
