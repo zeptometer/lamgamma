@@ -1,3 +1,4 @@
+@genType
 type rec t =
     // basic syntax
     // | Var(Var.t)

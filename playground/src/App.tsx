@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import Parser from 'web-tree-sitter';
+import { Parser, Language } from 'web-tree-sitter';
 import { OnChange, useMonaco } from '@monaco-editor/react';
 
 import { EditorContainer } from './ui/EditorContainer';
-import { Grid2, SelectChangeEvent } from '@mui/material';
+import { Grid, SelectChangeEvent } from '@mui/material';
 import { EvaluatorContainer } from './ui/EvaluatorContainer';
 import { Example, ExamplePrograms } from './examples';
 
@@ -29,9 +29,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      await Parser.init();
+      await Parser.init({
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locateFile(scriptName: string, _scriptDirectory: string) {
+          return import.meta.env.BASE_URL + scriptName;
+        },
+      });
       const parser = new Parser();
-      const Lang = await Parser.Language.load(import.meta.env.BASE_URL + 'tree-sitter-lamgamma_parser.wasm');
+      const Lang = await Language.load(import.meta.env.BASE_URL + 'tree-sitter-lamgamma_parser.wasm');
       parser.setLanguage(Lang);
       setTreeSitterParser(parser);
     })();
@@ -49,12 +54,12 @@ const App: React.FC = () => {
     setExample(example);
   };
 
-  return <Grid2
+  return <Grid
     container
     spacing={0}
     height="100vh"
   >
-    <Grid2
+    <Grid
       size={{ xs: 12, md: 6 }}
       height={{ xs: "50vh", md: "100%" }}
       minWidth={0}>
@@ -64,8 +69,8 @@ const App: React.FC = () => {
         example={example}
         code={code}
       />
-    </Grid2>
-    <Grid2
+    </Grid>
+    <Grid
       size={{ xs: 12, md: 6 }}
       height={{ xs: "auto", md: "100%" }}
       minWidth={0}>
@@ -76,8 +81,8 @@ const App: React.FC = () => {
             treeSitterParser={treeSitterParser}
           /> : null
       }
-    </Grid2>
-  </Grid2 >;
+    </Grid>
+  </Grid >;
 };
 
 export default App;

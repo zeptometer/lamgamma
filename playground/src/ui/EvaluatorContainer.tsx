@@ -1,6 +1,6 @@
 import { AppBar, Box, Button, Container, Toolbar } from "@mui/material"
 import React, { useState } from "react"
-import Parser from "web-tree-sitter";
+import { Parser } from "web-tree-sitter";
 
 import { evaluate } from '../interpreter/Frontend.gen';
 
