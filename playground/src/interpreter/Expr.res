@@ -2,6 +2,7 @@
 //   type t = {var: Var.t, cls: Classifier.t, typ: Typ.t}
 // }
 
+@genType
 type rec t =
   // // basic syntax
   // | Var(Var.t)

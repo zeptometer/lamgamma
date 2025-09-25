@@ -2,7 +2,7 @@ import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
 import { parseSyntaxNode } from './TreesitterParser.res.mjs';
 import { stripTypeInfo } from './Expr.res.mjs';
-import { $$eval } from './Interpreter.res.mjs';
+import { evaluate } from './Interpreter.res.mjs';
 
 let parser;
 
@@ -23,21 +23,21 @@ beforeAll(
 
 describe('Literal evaluation', () => {
     it('evaluates integer literal 123', () => {
-        expect($$eval(parse('123'))).toEqual({
+        expect(evaluate(parse('123'))).toEqual({
             TAG: "Ok",
             _0: { TAG: "IntVal", _0: 123 }
         });
     });
 
     it('evaluates boolean literal true', () => {
-        expect($$eval(parse('true'))).toEqual({
+        expect(evaluate(parse('true'))).toEqual({
             TAG: "Ok",
             _0: { TAG: "BoolVal", _0: true }
         });
     });
 
     it('evaluates boolean literal false', () => {
-        expect($$eval(parse('false'))).toEqual({
+        expect(evaluate(parse('false'))).toEqual({
             TAG: "Ok",
             _0: { TAG: "BoolVal", _0: false }
         });
@@ -48,35 +48,35 @@ describe('Binary operations with', () => {
     describe('Arithmetic', () => {
         describe('successfully', () => {
             it('adds 1 + 2 to equal 3', () => {
-                expect($$eval(parse('1 + 2'))).toEqual({
+                expect(evaluate(parse('1 + 2'))).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "IntVal", _0: 3 }
                 });
             });
 
             it('subtract 5 - 2 = 3', () => {
-                expect($$eval(parse('5 - 2'))).toEqual({
+                expect(evaluate(parse('5 - 2'))).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "IntVal", _0: 3 }
                 });
             });
 
             it('multiply 3 * 4 = 12', () => {
-                expect($$eval(parse('3 * 4'))).toEqual({
+                expect(evaluate(parse('3 * 4'))).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "IntVal", _0: 12 }
                 });
             });
 
             it('divide 8 / 2 = 4', () => {
-                expect($$eval(parse('8 / 2'))).toEqual({
+                expect(evaluate(parse('8 / 2'))).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "IntVal", _0: 4 }
                 });
             });
 
             it('modulo 8 mod 3 = 2', () => {
-                expect($$eval(parse('8 mod 3'))).toEqual({
+                expect(evaluate(parse('8 mod 3'))).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "IntVal", _0: 2 }
                 });
@@ -85,7 +85,7 @@ describe('Binary operations with', () => {
 
         describe('fail', () => {
             it('due to non-integer values', () => {
-                expect($$eval({
+                expect(evaluate({
                     TAG: "BinOp",
                     op: "Add",
                     left: { TAG: "BoolLit", _0: true },
@@ -97,7 +97,7 @@ describe('Binary operations with', () => {
             });
 
             it('due to zero division', () => {
-                expect($$eval({
+                expect(evaluate({
                     TAG: "BinOp",
                     op: "Div",
                     left: { TAG: "IntLit", _0: 1 },
@@ -113,7 +113,7 @@ describe('Binary operations with', () => {
     describe('Equality', () => {
         describe('successfully', () => {
             it('eq 3 == 3 => true', () => {
-                expect($$eval({
+                expect(evaluate({
                     TAG: "BinOp",
                     op: "Eq",
                     left: { TAG: "IntLit", _0: 3 },
@@ -125,7 +125,7 @@ describe('Binary operations with', () => {
             });
 
             it('eq 3 == 4 => false', () => {
-                expect($$eval({
+                expect(evaluate({
                     TAG: "BinOp",
                     op: "Eq",
                     left: { TAG: "IntLit", _0: 3 },
@@ -137,7 +137,7 @@ describe('Binary operations with', () => {
             });
 
             it('eq true == true => true', () => {
-                expect($$eval({
+                expect(evaluate({
                     TAG: "BinOp",
                     op: "Eq",
                     left: { TAG: "BoolLit", _0: true },
@@ -151,7 +151,7 @@ describe('Binary operations with', () => {
 
         describe('fail', () => {
             it('due to type mismatch', () => {
-                expect($$eval({
+                expect(evaluate({
                     TAG: "BinOp",
                     op: "Eq",
                     left: { TAG: "IntLit", _0: 1 },
@@ -167,7 +167,7 @@ describe('Binary operations with', () => {
     describe('Ordering', () => {
         describe('successfully', () => {
             it('lt 2 < 3 => true', () => {
-                expect($$eval({
+                expect(evaluate({
                     TAG: "BinOp",
                     op: "Lt",
                     left: { TAG: "IntLit", _0: 2 },
@@ -179,7 +179,7 @@ describe('Binary operations with', () => {
             });
 
             it('lt 3 < 2 => false', () => {
-                expect($$eval({
+                expect(evaluate({
                     TAG: "BinOp",
                     op: "Lt",
                     left: { TAG: "IntLit", _0: 3 },
@@ -191,7 +191,7 @@ describe('Binary operations with', () => {
             });
 
             it('gt 5 > 2 => true', () => {
-                expect($$eval({
+                expect(evaluate({
                     TAG: "BinOp",
                     op: "Gt",
                     left: { TAG: "IntLit", _0: 5 },
@@ -203,7 +203,7 @@ describe('Binary operations with', () => {
             });
 
             it('gt 2 > 5 => false', () => {
-                expect($$eval({
+                expect(evaluate({
                     TAG: "BinOp",
                     op: "Gt",
                     left: { TAG: "IntLit", _0: 2 },
@@ -217,7 +217,7 @@ describe('Binary operations with', () => {
 
         describe('fail', () => {
             it('due to type mismatch', () => {
-                expect($$eval({
+                expect(evaluate({
                     TAG: "BinOp",
                     op: "Gt",
                     left: { TAG: "IntLit", _0: 1 },

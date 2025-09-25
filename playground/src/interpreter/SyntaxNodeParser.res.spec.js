@@ -1,6 +1,6 @@
 import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
-import { parseSyntaxNode } from './TreesitterParser.res.mjs';
+import { parseSyntaxNode } from './SyntaxNodeParser.res.mjs';
 
 let parser;
 
@@ -14,7 +14,7 @@ beforeAll(
     }
 )
 
-describe('TreesitterParser', () => {
+describe('SyntaxNodeParser', () => {
     describe('for integer', () => {
         it('parse zero', () => {
             const input = '0';

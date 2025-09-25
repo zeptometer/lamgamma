@@ -22,6 +22,7 @@ exception NotImplemented
 let ok = (x: Expr.t) => Belt.Result.Ok(x)
 let fail = (x: parseError) => Belt.Result.Error(x)
 
+@genType
 let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, parseError> => {
   if node.isError {
     fail(SyntaxError({start: node.startPosition, end: node.endPosition}))

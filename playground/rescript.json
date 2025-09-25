@@ -1,25 +1,34 @@
 {
-  "name": "lamgamma",
-  "sources": [
-    {
-      "dir": "src",
-      "subdirs": true
+    "name": "lamgamma",
+    "sources": [
+        {
+            "dir": "src",
+            "subdirs": true
+        }
+    ],
+    "package-specs": [
+        {
+            "module": "esmodule",
+            "in-source": true
+        }
+    ],
+    "suffix": ".res.mjs",
+    "bs-dependencies": [
+        "@rescript/core"
+    ],
+    "bsc-flags": [
+        "-open RescriptCore"
+    ],
+    "jsx": {
+        "version": 4
+    },
+    "gentypeconfig": {
+        "module": "esmodule",
+        "moduleResolution": "node",
+        "generatedFileExtension": ".gen.tsx",
+        "debug": {
+            "all": false,
+            "basic": false
+        }
     }
-  ],
-  "package-specs": [
-    {
-      "module": "esmodule",
-      "in-source": true
-    }
-  ],
-  "suffix": ".res.mjs",
-  "bs-dependencies": [
-    "@rescript/core"
-  ],
-  "bsc-flags": [
-    "-open RescriptCore"
-  ],
-  "jsx": {
-    "version": 4
-  }
 }

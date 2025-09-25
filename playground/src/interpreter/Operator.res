@@ -1,3 +1,4 @@
+@genType
 module BinOp = {
   type t =
     // Arithmetic

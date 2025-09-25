@@ -1,7 +1,15 @@
 module Runtime = {
+  @genType
   type val =
     | IntVal(int)
     | BoolVal(bool)
+
+  @genType
+  let toString = (v: val): string =>
+    switch v {
+    | IntVal(i) => Int.toString(i)
+    | BoolVal(b) => if b { "true" } else { "false" }
+    }
 }
 
 type evalError =
@@ -11,17 +19,17 @@ type evalError =
 let return = (x: Runtime.val) => Belt.Result.Ok(x)
 let raise = (x: evalError) => Belt.Result.Error(x)
 
-let rec eval = (e: RawExpr.t): Belt.Result.t<Runtime.val, evalError> => {
+@genType
+let rec evaluate = (e: RawExpr.t): result<Runtime.val, evalError> => {
   open Runtime
   open RawExpr
-  open Belt.Result
 
   switch e {
   | IntLit(i) => return(IntVal(i))
   | BoolLit(b) => return(BoolVal(b))
   | BinOp({op, left, right}) =>
-    eval(left)->flatMap(leftVal =>
-      eval(right)->flatMap(rightVal =>
+    evaluate(left)->Result.flatMap(leftVal =>
+      evaluate(right)->Result.flatMap(rightVal =>
         switch op {
         // Arithmetic
         | Operator.BinOp.Add =>
