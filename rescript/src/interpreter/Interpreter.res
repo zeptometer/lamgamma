@@ -11,9 +11,9 @@ type evalError =
 let return = (x: Runtime.val) => Belt.Result.Ok(x)
 let raise = (x: evalError) => Belt.Result.Error(x)
 
-let rec eval = (e: Expr.t): Belt.Result.t<Runtime.val, evalError> => {
+let rec eval = (e: RawExpr.t): Belt.Result.t<Runtime.val, evalError> => {
   open Runtime
-  open Expr
+  open RawExpr
   open Belt.Result
 
   switch e {

@@ -3,8 +3,8 @@ type typeError = TypeMismatch(string)
 let ok = (x: Typ.t) => Belt.Result.Ok(x)
 let fail = (x: typeError) => Belt.Result.Error(x)
 
-let rec inferType = (expr: TypeAnnotExpr.t): result<Typ.t, typeError> => {
-  open TypeAnnotExpr
+let rec inferType = (expr: Expr.t): result<Typ.t, typeError> => {
+  open Expr
   open Typ
 
   switch expr {

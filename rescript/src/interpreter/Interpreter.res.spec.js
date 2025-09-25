@@ -1,13 +1,14 @@
 import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
 import { parseSyntaxNode } from './TreesitterParser.res.mjs';
+import { stripTypeInfo } from './Expr.res.mjs';
 import { $$eval } from './Interpreter.res.mjs';
 
 let parser;
 
 let parse = (input) => {
     // Assume that parse always succeeds
-    return parseSyntaxNode((parser.parse(input)).rootNode)._0;
+    return stripTypeInfo(parseSyntaxNode((parser.parse(input)).rootNode)._0);
 }
 
 beforeAll(
