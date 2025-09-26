@@ -22,6 +22,7 @@ type rec t =
 // | LetRecCs({ param: Param.t, expr: t, body: t })
 // | Serialize(t)
 
+@genType
 let rec stripTypeInfo = (expr: t): RawExpr.t => {
   switch expr {
   | IntLit(i) => RawExpr.IntLit(i)

@@ -1,6 +1,6 @@
 import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
-import { parseSyntaxNode } from './SyntaxNodeParser.res.mjs';
+import { parseSyntaxNode } from './SyntaxNodeParser.gen.tsx';
 
 let parser;
 

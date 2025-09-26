@@ -25,7 +25,7 @@
     "gentypeconfig": {
         "module": "esmodule",
         "moduleResolution": "node",
-        "generatedFileExtension": ".gen.tsx",
+        "generatedFileExtension": ".gen.ts",
         "debug": {
             "all": false,
             "basic": false

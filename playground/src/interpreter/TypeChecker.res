@@ -3,6 +3,7 @@ type typeError = TypeMismatch(string)
 let ok = (x: Typ.t) => Belt.Result.Ok(x)
 let fail = (x: typeError) => Belt.Result.Error(x)
 
+@genType
 let rec typeCheck = (expr: Expr.t): result<Typ.t, typeError> => {
   open Expr
   open Typ

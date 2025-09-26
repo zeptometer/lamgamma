@@ -1,13 +1,14 @@
 import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
-import { parseSyntaxNode } from './TreesitterParser.res.mjs';
-import { typeCheck } from './TypeChecker.res.mjs';
+import { parseSyntaxNode } from './SyntaxNodeParser.gen.ts';
+import { typeCheck } from './TypeChecker.gen.ts';
+import { t as Expr_t } from './Expr.gen.ts'
 
 let parser;
 
-let parse = (input) => {
+const parse = (input) => {
     // Assume that parse always succeeds
-    return parseSyntaxNode((parser.parse(input)).rootNode)._0;
+    return parseSyntaxNode((parser.parse(input)).rootNode)._0 as Expr_t;
 }
 
 beforeAll(
