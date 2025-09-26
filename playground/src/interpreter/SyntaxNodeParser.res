@@ -11,16 +11,19 @@ type rec syntaxNode = {
   endPosition: loc,
 }
 
-type parseError =
+module ParseError = {
+type t =
   | SyntaxError({start: loc, end: loc})
   | MissingNodeError(syntaxNode)
+}
+
 
 exception NodeCountMismatch({expected: int, actual: int, node: syntaxNode})
 exception UnexpectedText({text: option<string>})
 exception NotImplemented
 
 let ok = (x: Expr.t) => Belt.Result.Ok(x)
-let fail = (x: parseError) => Belt.Result.Error(x)
+let fail = (x: ParseError.t) => Belt.Result.Error(x)
 
 let extractMetadata = (node: syntaxNode): Expr.MetaData.t => {
   {
@@ -36,7 +39,7 @@ let extractMetadata = (node: syntaxNode): Expr.MetaData.t => {
 }
 
 @genType
-let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, parseError> => {
+let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
   if node.isError {
     fail(SyntaxError({start: node.startPosition, end: node.endPosition}))
   } else if node.isMissing {

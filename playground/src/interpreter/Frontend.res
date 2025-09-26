@@ -1,5 +1,5 @@
 type evalError =
-  | ParseError(SyntaxNodeParser.parseError)
+  | ParseError(SyntaxNodeParser.ParseError.t)
   | EvalError(Interpreter.evalError)
 
 @genType
@@ -20,23 +20,44 @@ let evaluate = (input: string, treeSitterParser: 'a): string => {
   }
 }
 
-type typeCheckError =
-  | ParseError(SyntaxNodeParser.parseError)
-  | TypeError(TypeChecker.typeError)
+module TypeError = {
+  type t =
+    | ParseError(SyntaxNodeParser.ParseError.t)
+    | TypeError(TypeChecker.TypeError.t)
+
+  let typeError2string = (e: TypeChecker.TypeError.t): string => {
+    open TypeChecker.TypeError
+    switch e {
+    | TypeMismatch({ metaData, expected, actual }) =>
+      let { start: { row: sr, col: sc }, end: { row: er, col: ec } } = metaData
+      let locstring = `(${sr->Int.toString},${sc->Int.toString})-(${er->Int.toString},${ec->Int.toString})`
+
+      `${locstring} Type error: expected ${Typ.toString(expected)}, but got ${Typ.toString(actual)}`
+    }
+  }
+
+  let toString = (e: t): string =>
+    switch e {
+    | ParseError(_) => "parse error"
+    | TypeError(e) => typeError2string(e)
+    }
+}
 
 @genType
 let typeCheck = (input: string, treeSitterParser: 'a): string => {
-  let doit = (): result<Typ.t, typeCheckError> => {
+  let doit = (): result<Typ.t, TypeError.t> => {
     let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` treeSitterParser.parse(input).rootNode `)
 
     SyntaxNodeParser.parseSyntaxNode(syntaxNode)
-    ->Result.mapError(x => ParseError(x))
-    ->Result.flatMap(expr => TypeChecker.typeCheck(expr)->Result.mapError(x => TypeError(x)))
+    ->Result.mapError(x => TypeError.ParseError(x))
+    ->Result.flatMap(expr =>
+      TypeChecker.typeCheck(expr)->Result.mapError(x => TypeError.TypeError(x))
+    )
   }
 
   switch doit() {
   | Ok(value) => value->Typ.toString
-  | Error(_) => "error"
+  | Error(e) => TypeError.toString(e)
   | exception _ => "error"
   }
 }
