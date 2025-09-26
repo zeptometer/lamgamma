@@ -2,10 +2,14 @@ let parseError2string = (e: SyntaxNodeParser.ParseError.t): string => {
   open SyntaxNodeParser.ParseError
   switch e {
   | SyntaxError({start: {row: sr, column: sc}, end: {row: er, column: ec}}) =>
-    let locstring = `(${sr->Int.toString},${sc->Int.toString})-(${er->Int.toString},${ec->Int.toString})`
+    let locstring =
+      `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
+      `(${(er + 1)->Int.toString},${ec->Int.toString})`
     `${locstring} Syntax error`
   | MissingNodeError({start: {row: sr, column: sc}, end: {row: er, column: ec}, missing}) =>
-    let locstring = `(${sr->Int.toString},${sc->Int.toString})-(${er->Int.toString},${ec->Int.toString})`
+    let locstring =
+      `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
+      `(${(er + 1)->Int.toString},${ec->Int.toString})`
     `${locstring} Missing node: ${missing}`
   }
 }
@@ -42,7 +46,9 @@ module TypeError = {
     switch e {
     | TypeMismatch({metaData, expected, actual}) =>
       let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
-      let locstring = `(${sr->Int.toString},${sc->Int.toString})-(${er->Int.toString},${ec->Int.toString})`
+      let locstring =
+        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
+        `(${(er + 1)->Int.toString},${ec->Int.toString})`
 
       `${locstring} Type error: expected ${Typ.toString(expected)}, but got ${Typ.toString(actual)}`
     }
@@ -70,6 +76,8 @@ let typeCheck = (input: string, treeSitterParser: 'a): string => {
   switch doit() {
   | Ok(value) => value->Typ.toString
   | Error(e) => TypeError.toString(e)
-  | exception _ => "error"
+  | exception e =>
+    Console.log(e)
+    "error"
   }
 }
