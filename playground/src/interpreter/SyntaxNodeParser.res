@@ -9,12 +9,13 @@ type rec syntaxNode = {
   namedChild: int => option<syntaxNode>,
   startPosition: loc,
   endPosition: loc,
+  grammarType: unit => string,
 }
 
 module ParseError = {
 type t =
   | SyntaxError({start: loc, end: loc})
-  | MissingNodeError(syntaxNode)
+  | MissingNodeError({ start: loc, end: loc, missing: string })
 }
 
 
@@ -43,7 +44,7 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
   if node.isError {
     fail(SyntaxError({start: node.startPosition, end: node.endPosition}))
   } else if node.isMissing {
-    fail(MissingNodeError(node))
+    fail(MissingNodeError({ start: node.startPosition, end: node.endPosition, missing: node.grammarType() }))
   } else {
     switch node.type_ {
     | "source_file" =>

@@ -19,10 +19,10 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
         setEvalResult(result);
     }
 
-    const launchTypeCheck = () => {
+    React.useEffect(() => {
         const result = typeCheck(code, treeSitterParser);
         setTypeCheckResult(result);
-    }
+    }, [code, treeSitterParser])
 
     return <Box sx={{
         height: "100%"
@@ -40,10 +40,6 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
         </Container>
         <AppBar position="sticky" sx={{ top: 'auto', bottom: 0 }}>
             <Toolbar>
-                <Button variant="contained"
-                    onClick={launchTypeCheck} >
-                    TypeCheck
-                </Button>
                 <Button variant="contained"
                     onClick={launchEval} >
                     Run
