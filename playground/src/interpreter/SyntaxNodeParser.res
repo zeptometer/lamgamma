@@ -135,6 +135,36 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
           })
         )
       }
+    | "ctrl_if" =>
+      if node.namedChildCount != 3 {
+        raise(NodeCountMismatch({expected: 3, actual: node.namedChildCount, node}))
+      } else {
+        let cond =
+          node.namedChild(0)
+          ->Option.getExn(~message="condition does not exist in ctrl_if node")
+          ->parseSyntaxNode
+
+        let thenBranch =
+          node.namedChild(1)
+          ->Option.getExn(~message="then branch does not exist in ctrl_if node")
+          ->parseSyntaxNode
+
+        let elseBranch =
+          node.namedChild(2)
+          ->Option.getExn(~message="else branch does not exist in ctrl_if node")
+          ->parseSyntaxNode
+
+        cond->Result.flatMap(c =>
+          thenBranch->Result.flatMap(t =>
+            elseBranch->Result.map(e => {
+              {
+              Expr.metaData: extractMetadata(node),
+                raw: Expr.If({cond: c, thenBranch: t, elseBranch: e}),
+              }
+            })
+          )
+        )
+      }
     | _ => raise(NotImplemented)
     }
   }

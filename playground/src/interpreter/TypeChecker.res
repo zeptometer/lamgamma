@@ -48,5 +48,29 @@ let rec typeCheck = (expr: Expr.t): result<Typ.t, TypeError.t> => {
         }
       })
     })
+  | If({cond, thenBranch, elseBranch}) =>
+    typeCheck(cond)->Result.flatMap(condType => {
+      if condType != BoolType {
+        fail(TypeMismatch({metaData: cond.metaData, expected: BoolType, actual: condType}))
+      } else {
+        typeCheck(thenBranch)->Result.flatMap(thenType => {
+          typeCheck(elseBranch)->Result.flatMap(
+            elseType => {
+              if thenType != elseType {
+                fail(
+                  TypeMismatch({
+                    metaData: elseBranch.metaData,
+                    expected: thenType,
+                    actual: elseType,
+                  }),
+                )
+              } else {
+                ok(thenType)
+              }
+            },
+          )
+        })
+      }
+    })
   }
 }

@@ -460,6 +460,38 @@ describe('SyntaxNodeParser', () => {
         });
     });
 
+    describe('for if expressions', () => {
+        it('parse if true then 1 else 2', () => {
+            const input = 'if true then 1 else 2';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: {
+                    metaData: {
+                        start: { row: 0, col: 0 },
+                        end: { row: 0, col: 21 },
+                    },
+                    raw: {
+                        TAG: "If",
+                        cond: {
+                            metaData: { start: { row: 0, col: 3 }, end: { row: 0, col: 7 } },
+                            raw: { TAG: "BoolLit", _0: true }
+                        },
+                        thenBranch: {
+                            metaData: { start: { row: 0, col: 13 }, end: { row: 0, col: 14 } },
+                            raw: { TAG: "IntLit", _0: 1 }
+                        },
+                        elseBranch: {
+                            metaData: { start: { row: 0, col: 20 }, end: { row: 0, col: 21 } },
+                            raw: { TAG: "IntLit", _0: 2 }
+                        }
+                    }
+                }
+            };
+            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        });
+    });
+
     describe('for combined expressions', () => {
         it('parse (1 + 2) * 3 == 9 - 6 / 2', () => {
             const input = '(1 + 2) * 3 == 9 - 6 / 2';

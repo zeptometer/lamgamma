@@ -10,7 +10,7 @@ type rec t =
     | IntLit(int)
     | BoolLit(bool)
     | BinOp({ op: Operator.BinOp.t, left: t, right: t })
-    // | If({ cond: t, then_branch: t, else_branch: t })
+    | If({ cond: t, thenBranch: t, elseBranch: t })
     // staging constructs
     // | Quote(t)
     // | Unquote({ shift: int, expr: t })

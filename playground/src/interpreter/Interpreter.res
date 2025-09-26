@@ -8,7 +8,12 @@ module Runtime = {
   let toString = (v: val): string =>
     switch v {
     | IntVal(i) => Int.toString(i)
-    | BoolVal(b) => if b { "true" } else { "false" }
+    | BoolVal(b) =>
+      if b {
+        "true"
+      } else {
+        "false"
+      }
     }
 }
 
@@ -94,6 +99,14 @@ let rec evaluate = (e: RawExpr.t): result<Runtime.val, evalError> => {
           }
         }
       )
+    )
+  | If({cond, thenBranch, elseBranch}) =>
+    evaluate(cond)->Result.flatMap(condVal =>
+      switch condVal {
+      | BoolVal(true) => evaluate(thenBranch)
+      | BoolVal(false) => evaluate(elseBranch)
+      | _ => raise(TypeMismatch)
+      }
     )
   }
 }

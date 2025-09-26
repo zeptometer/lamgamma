@@ -4,18 +4,18 @@
 
 module MetaData = {
   module Position = {
-    type t = { row: int, col: int }
+    type t = {row: int, col: int}
 
     let toString = (pos: t): string => {
       `(${pos.row->Int.toString},${pos.col->Int.toString})`
     }
   }
 
-  type t = { start: Position.t, end: Position.t }
+  type t = {start: Position.t, end: Position.t}
 }
 
 @genType
-type rec t = { metaData: MetaData.t, raw: raw_t }
+type rec t = {metaData: MetaData.t, raw: raw_t}
 and raw_t =
   // // basic syntax
   // | Var(Var.t)
@@ -27,7 +27,7 @@ and raw_t =
   | IntLit(int)
   | BoolLit(bool)
   | BinOp({op: Operator.BinOp.t, left: t, right: t})
-// | If({ cond: t, then_branch: t, else_branch: t })
+  | If({cond: t, thenBranch: t, elseBranch: t})
 // // staging constructs
 // | Quote(t)
 // | Unquote({ shift: int, expr: t })
@@ -42,5 +42,11 @@ let rec stripTypeInfo = (expr: t): RawExpr.t => {
   | BoolLit(b) => RawExpr.BoolLit(b)
   | BinOp({op, left, right}) =>
     RawExpr.BinOp({op, left: stripTypeInfo(left), right: stripTypeInfo(right)})
+  | If({cond, thenBranch, elseBranch}) =>
+    RawExpr.If({
+      cond: stripTypeInfo(cond),
+      thenBranch: stripTypeInfo(thenBranch),
+      elseBranch: stripTypeInfo(elseBranch),
+    })
   }
 }

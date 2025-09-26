@@ -230,4 +230,52 @@ describe('Typechecker', () => {
             });
         });
     });
+
+    describe('for if expressions', () => {
+        describe('successfully', () => {
+            it('infer type of if 1 < 2 then 3 + 4 else 5 * 6 as IntType', () => {
+                expect(typeCheck(parse('if 1 < 2 then 3 + 4 else 5 * 6'))).toEqual({
+                    TAG: "Ok",
+                    _0: "IntType"
+                });
+            });
+            it('infer type of if false then false else true as BoolType', () => {
+                expect(typeCheck(parse('if false then false else true'))).toEqual({
+                    TAG: "Ok",
+                    _0: "BoolType"
+                });
+            });
+        });
+
+        describe('fails typecheck', () => {
+            it('infer type of if 1 then 2 else 3 as Error', () => {
+                expect(typeCheck(parse('if 1 then 2 else 3'))).toEqual({
+                    TAG: "Error",
+                    _0: {
+                        TAG: "TypeMismatch",
+                        expected: "BoolType",
+                        actual: "IntType",
+                        metaData: {
+                            start: { row: 0, col: 3 },
+                            end: { row: 0, col: 4 },
+                        },
+                    }
+                });
+            });
+            it('infer type of if true then 1 else false as Error', () => {
+                expect(typeCheck(parse('if true then 1 else false'))).toEqual({
+                    TAG: "Error",
+                    _0: {
+                        TAG: "TypeMismatch",
+                        actual: "BoolType",
+                        expected: "IntType",
+                        metaData: {
+                            start: { row: 0, col: 20 },
+                            end: { row: 0, col: 25 },
+                        },
+                    }
+                });
+            });
+        });
+    });
 });
