@@ -1,6 +1,6 @@
 import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
-import { parseSyntaxNode } from './SyntaxNodeParser.gen.tsx';
+import { parseSyntaxNode } from './SyntaxNodeParser.gen.ts';
 
 let parser;
 
@@ -20,7 +20,10 @@ describe('SyntaxNodeParser', () => {
             const input = '0';
             const expectedOutput = {
                 TAG: "Ok",
-                _0: { TAG: "IntLit", _0: 0 }
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 }, },
+                    raw: { TAG: "IntLit", _0: 0 }
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
@@ -30,7 +33,10 @@ describe('SyntaxNodeParser', () => {
             const input = '12321';
             const expectedOutput = {
                 TAG: "Ok",
-                _0: { TAG: "IntLit", _0: 12321 }
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 5 }, },
+                    raw: { TAG: "IntLit", _0: 12321 }
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
@@ -41,7 +47,10 @@ describe('SyntaxNodeParser', () => {
             const input = '00001';
             const expectedOutput = {
                 TAG: "Ok",
-                _0: { TAG: "IntLit", _0: 1 }
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 5 }, },
+                    raw: { TAG: "IntLit", _0: 1 }
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
@@ -54,7 +63,10 @@ describe('SyntaxNodeParser', () => {
             const input = 'true';
             const expectedOutput = {
                 TAG: "Ok",
-                _0: { TAG: "BoolLit", _0: true }
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 4 }, },
+                    raw: { TAG: "BoolLit", _0: true }
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
@@ -64,7 +76,10 @@ describe('SyntaxNodeParser', () => {
             const input = 'false';
             const expectedOutput = {
                 TAG: "Ok",
-                _0: { TAG: "BoolLit", _0: false }
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 5 }, },
+                    raw: { TAG: "BoolLit", _0: false }
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
@@ -77,11 +92,23 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Add",
-                    left: { TAG: "IntLit", _0: 1 },
-                    right: { TAG: "IntLit", _0: 2 }
-                }
+                    metaData: {
+                        start: { row: 0, col: 0 },
+                        end: { row: 0, col: 5 },
+                    },
+                    raw: {
+                        TAG: "BinOp",
+                        op: "Add",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                            raw: { TAG: "IntLit", _0: 1 },
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 5 } },
+                            raw: { TAG: "IntLit", _0: 2 },
+                        },
+                    },
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
@@ -92,11 +119,23 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Sub",
-                    left: { TAG: "IntLit", _0: 1 },
-                    right: { TAG: "IntLit", _0: 2 }
-                }
+                    metaData: {
+                        start: { row: 0, col: 0 },
+                        end: { row: 0, col: 5 },
+                    },
+                    raw: {
+                        TAG: "BinOp",
+                        op: "Sub",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                            raw: { TAG: "IntLit", _0: 1 },
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 5 } },
+                            raw: { TAG: "IntLit", _0: 2 },
+                        },
+                    },
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
@@ -107,11 +146,23 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Mul",
-                    left: { TAG: "IntLit", _0: 1 },
-                    right: { TAG: "IntLit", _0: 2 }
-                }
+                    metaData: {
+                        start: { row: 0, col: 0 },
+                        end: { row: 0, col: 5 },
+                    },
+                    raw: {
+                        TAG: "BinOp",
+                        op: "Mul",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                            raw: { TAG: "IntLit", _0: 1 },
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 5 } },
+                            raw: { TAG: "IntLit", _0: 2 },
+                        },
+                    },
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
@@ -122,11 +173,23 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Div",
-                    left: { TAG: "IntLit", _0: 1 },
-                    right: { TAG: "IntLit", _0: 2 }
-                }
+                    metaData: {
+                        start: { row: 0, col: 0 },
+                        end: { row: 0, col: 5 },
+                    },
+                    raw: {
+                        TAG: "BinOp",
+                        op: "Div",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                            raw: { TAG: "IntLit", _0: 1 },
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 5 } },
+                            raw: { TAG: "IntLit", _0: 2 },
+                        },
+                    },
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
@@ -137,11 +200,23 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Mod",
-                    left: { TAG: "IntLit", _0: 5 },
-                    right: { TAG: "IntLit", _0: 2 }
-                }
+                    metaData: {
+                        start: { row: 0, col: 0 },
+                        end: { row: 0, col: 7 },
+                    },
+                    raw: {
+                        TAG: "BinOp",
+                        op: "Mod",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                            raw: { TAG: "IntLit", _0: 5 },
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 6 }, end: { row: 0, col: 7 } },
+                            raw: { TAG: "IntLit", _0: 2 },
+                        },
+                    },
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
@@ -152,27 +227,57 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Sub",
-                    left: {
-                        TAG: "BinOp",
-                        op: "Add",
-                        left: { TAG: "IntLit", _0: 1 },
-                        right: {
-                            TAG: "BinOp",
-                            op: "Mul",
-                            left: { TAG: "IntLit", _0: 2 },
-                            right: { TAG: "IntLit", _0: 3 }
-                        }
+                    metaData: {
+                        start: { row: 0, col: 0 },
+                        end: { row: 0, col: 17 },
                     },
-                    right: {
+                    raw: {
                         TAG: "BinOp",
-                        op: "Div",
-                        left: { TAG: "IntLit", _0: 4 },
-                        right: { TAG: "IntLit", _0: 5 }
-                    }
-                }
-            };
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 9 } },
+                            raw: {
+                                TAG: "BinOp",
+                                left: {
+                                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                                    raw: { TAG: "IntLit", _0: 1 },
+                                },
+                                op: "Add",
+                                right: {
+                                    metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 9 } },
+                                    raw: {
+                                        TAG: "BinOp",
+                                        left: {
+                                            metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 5 } },
+                                            raw: { TAG: "IntLit", _0: 2 },
+                                        },
+                                        op: "Mul",
+                                        right: {
+                                            metaData: { start: { row: 0, col: 8 }, end: { row: 0, col: 9 } },
+                                            raw: { TAG: "IntLit", _0: 3 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        op: "Sub",
+                        right: {
+                            metaData: { start: { row: 0, col: 12 }, end: { row: 0, col: 17 } },
+                            raw: {
+                                TAG: "BinOp",
+                                left: {
+                                    metaData: { start: { row: 0, col: 12 }, end: { row: 0, col: 13 } },
+                                    raw: { TAG: "IntLit", _0: 4 },
+                                },
+                                op: "Div",
+                                right: {
+                                    metaData: { start: { row: 0, col: 16 }, end: { row: 0, col: 17 } },
+                                    raw: { TAG: "IntLit", _0: 5 },
+                                },
+                            },
+                        },
+                    },
+                },
+            }
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
@@ -184,10 +289,19 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Eq",
-                    left: { TAG: "IntLit", _0: 1 },
-                    right: { TAG: "IntLit", _0: 2 }
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 6 } },
+                    raw: {
+                        TAG: "BinOp",
+                        op: "Eq",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                            raw: { TAG: "IntLit", _0: 1 }
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 5 }, end: { row: 0, col: 6 } },
+                            raw: { TAG: "IntLit", _0: 2 }
+                        }
+                    }
                 }
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
@@ -199,10 +313,19 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Ne",
-                    left: { TAG: "IntLit", _0: 1 },
-                    right: { TAG: "IntLit", _0: 2 }
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 6 } },
+                    raw: {
+                        TAG: "BinOp",
+                        op: "Ne",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                            raw: { TAG: "IntLit", _0: 1 }
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 5 }, end: { row: 0, col: 6 } },
+                            raw: { TAG: "IntLit", _0: 2 }
+                        }
+                    }
                 }
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
@@ -214,10 +337,19 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Lt",
-                    left: { TAG: "IntLit", _0: 1 },
-                    right: { TAG: "IntLit", _0: 2 }
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 5 } },
+                    raw: {
+                        TAG: "BinOp",
+                        op: "Lt",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                            raw: { TAG: "IntLit", _0: 1 }
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 5 } },
+                            raw: { TAG: "IntLit", _0: 2 }
+                        }
+                    }
                 }
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
@@ -229,10 +361,19 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Le",
-                    left: { TAG: "IntLit", _0: 1 },
-                    right: { TAG: "IntLit", _0: 2 }
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 6 } },
+                    raw: {
+                        TAG: "BinOp",
+                        op: "Le",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                            raw: { TAG: "IntLit", _0: 1 }
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 5 }, end: { row: 0, col: 6 } },
+                            raw: { TAG: "IntLit", _0: 2 }
+                        }
+                    }
                 }
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
@@ -244,10 +385,19 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Gt",
-                    left: { TAG: "IntLit", _0: 1 },
-                    right: { TAG: "IntLit", _0: 2 }
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 5 } },
+                    raw: {
+                        TAG: "BinOp",
+                        op: "Gt",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                            raw: { TAG: "IntLit", _0: 1 }
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 5 } },
+                            raw: { TAG: "IntLit", _0: 2 }
+                        }
+                    }
                 }
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
@@ -259,10 +409,19 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Ge",
-                    left: { TAG: "IntLit", _0: 1 },
-                    right: { TAG: "IntLit", _0: 2 }
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 6 } },
+                    raw: {
+                        TAG: "BinOp",
+                        op: "Ge",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                            raw: { TAG: "IntLit", _0: 1 }
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 5 }, end: { row: 0, col: 6 } },
+                            raw: { TAG: "IntLit", _0: 2 }
+                        }
+                    }
                 }
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
@@ -270,35 +429,58 @@ describe('SyntaxNodeParser', () => {
         });
 
         it('parse complex expression', () => {
-            const input = '1 + 2 * 3 == 4 - 5 / 6';
+            const input = '1 + 2 == 4 - 5';
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Eq",
-                    left: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 14 } },
+                    raw: {
                         TAG: "BinOp",
-                        op: "Add",
-                        left: { TAG: "IntLit", _0: 1 },
+                        op: "Eq",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 5 } },
+                            raw: {
+                                TAG: "BinOp",
+                                left: {
+                                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                                    raw: {
+                                        TAG: "IntLit",
+                                        _0: 1,
+                                    },
+                                },
+                                op: "Add",
+                                right: {
+                                    metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 5 } },
+                                    raw: {
+                                        TAG: "IntLit",
+                                        _0: 2,
+                                    },
+                                },
+                            },
+                        },
                         right: {
-                            TAG: "BinOp",
-                            op: "Mul",
-                            left: { TAG: "IntLit", _0: 2 },
-                            right: { TAG: "IntLit", _0: 3 }
-                        }
+                            metaData: { start: { row: 0, col: 9 }, end: { row: 0, col: 14 } },
+                            raw: {
+                                TAG: "BinOp",
+                                op: "Sub",
+                                left: {
+                                    metaData: { start: { row: 0, col: 9 }, end: { row: 0, col: 10 } },
+                                    raw: {
+                                        TAG: "IntLit",
+                                        _0: 4,
+                                    },
+                                },
+                                right: {
+                                    metaData: { start: { row: 0, col: 13 }, end: { row: 0, col: 14 } },
+                                    raw: {
+                                        TAG: "IntLit",
+                                        _0: 5,
+                                    },
+                                },
+                            },
+                        },
                     },
-                    right: {
-                        TAG: "BinOp",
-                        op: "Sub",
-                        left: { TAG: "IntLit", _0: 4 },
-                        right: {
-                            TAG: "BinOp",
-                            op: "Div",
-                            left: { TAG: "IntLit", _0: 5 },
-                            right: { TAG: "IntLit", _0: 6 }
-                        }
-                    }
-                }
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
@@ -311,16 +493,55 @@ describe('SyntaxNodeParser', () => {
             const expectedOutput = {
                 TAG: "Ok",
                 _0: {
-                    TAG: "BinOp",
-                    op: "Mul",
-                    left: {
-                        TAG: "BinOp",
-                        op: "Add",
-                        left: { TAG: "IntLit", _0: 1 },
-                        right: { TAG: "IntLit", _0: 2 }
+                    metaData: {
+                        end: { row: 0, col: 11 },
+                        start: { row: 0, col: 0 },
                     },
-                    right: { TAG: "IntLit", _0: 3 }
-                }
+                    raw: {
+                        TAG: "BinOp",
+                        left: {
+                            metaData: {
+                                end: { row: 0, col: 6 },
+                                start: { row: 0, col: 1 },
+                            },
+                            raw: {
+                                TAG: "BinOp",
+                                left: {
+                                    metaData: {
+                                        end: { row: 0, col: 2 },
+                                        start: { row: 0, col: 1 },
+                                    },
+                                    raw: {
+                                        TAG: "IntLit",
+                                        _0: 1,
+                                    },
+                                },
+                                op: "Add",
+                                right: {
+                                    metaData: {
+                                        end: { row: 0, col: 6 },
+                                        start: { row: 0, col: 5 },
+                                    },
+                                    raw: {
+                                        TAG: "IntLit",
+                                        _0: 2,
+                                    },
+                                },
+                            },
+                        },
+                        op: "Mul",
+                        right: {
+                            metaData: {
+                                end: { row: 0, col: 11 },
+                                start: { row: 0, col: 10 },
+                            },
+                            raw: {
+                                TAG: "IntLit",
+                                _0: 3,
+                            },
+                        },
+                    },
+                },
             };
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);

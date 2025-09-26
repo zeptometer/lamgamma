@@ -85,7 +85,12 @@ describe('Typechecker', () => {
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        _0: "Right operand is not an integer"
+                        expected: "IntType",
+                        actual: "BoolType",
+                        metaData: {
+                            start: { row: 0, col: 4 },
+                            end: { row: 0, col: 8 },
+                        },
                     }
                 });
             });
@@ -94,7 +99,12 @@ describe('Typechecker', () => {
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        _0: "Left operand is not an integer"
+                        expected: "IntType",
+                        actual: "BoolType",
+                        metaData: {
+                            start: { row: 0, col: 0 },
+                            end: { row: 0, col: 5 },
+                        },
                     }
                 });
             });
@@ -166,16 +176,27 @@ describe('Typechecker', () => {
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        _0: "Equality operations require operands of the same type"
+                        expected: "IntType",
+                        actual: "BoolType",
+                        metaData: {
+                            start: { row: 0, col: 5 },
+                            end: { row: 0, col: 9 },
+                        },
                     }
                 });
             });
+
             it('infer type of false != 2 as Error', () => {
                 expect(typeCheck(parse('false != 2'))).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        _0: "Equality operations require operands of the same type"
+                        expected: "BoolType",
+                        actual: "IntType",
+                        metaData: {
+                            start: { row: 0, col: 9 },
+                            end: { row: 0, col: 10 },
+                        },
                     }
                 });
             });
@@ -184,7 +205,12 @@ describe('Typechecker', () => {
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        _0: "Right operand is not an integer"
+                        expected: "IntType",
+                        actual: "BoolType",
+                        metaData: {
+                            start: { row: 0, col: 4 },
+                            end: { row: 0, col: 8 },
+                        },
                     }
                 });
             });
@@ -193,7 +219,12 @@ describe('Typechecker', () => {
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        _0: "Left operand is not an integer"
+                        expected: "IntType",
+                        actual: "BoolType",
+                        metaData: {
+                            start: { row: 0, col: 0 },
+                            end: { row: 0, col: 5 },
+                        },
                     }
                 });
             });

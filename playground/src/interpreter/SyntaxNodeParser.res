@@ -22,6 +22,19 @@ exception NotImplemented
 let ok = (x: Expr.t) => Belt.Result.Ok(x)
 let fail = (x: parseError) => Belt.Result.Error(x)
 
+let extractMetadata = (node: syntaxNode): Expr.MetaData.t => {
+  {
+    Expr.MetaData.start: {
+      Expr.MetaData.Position.col: node.startPosition.column,
+      row: node.startPosition.row,
+    },
+    end: {
+      Expr.MetaData.Position.col: node.endPosition.column,
+      row: node.endPosition.row,
+    },
+  }
+}
+
 @genType
 let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, parseError> => {
   if node.isError {
@@ -40,19 +53,28 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, parseError> => {
       }
 
     | "number" =>
-      node.text
-      ->Option.getExn(~message="Number node has no text")
-      ->Int.fromString
-      ->Option.getExn(~message="Failed to parse int from string")
-      ->Expr.IntLit
-      ->ok
+      let intval =
+        node.text
+        ->Option.getExn(~message="Number node has no text")
+        ->Int.fromString
+        ->Option.getExn(~message="Failed to parse int from string")
+
+      ok({
+        Expr.metaData: extractMetadata(node),
+        raw: Expr.IntLit(intval),
+      })
 
     | "boolean" =>
-      switch node.text {
-      | Some("true") => Expr.BoolLit(true)
-      | Some("false") => Expr.BoolLit(false)
+      let boolval = switch node.text {
+      | Some("true") => true
+      | Some("false") => false
       | _ => raise(UnexpectedText({text: node.text}))
-      } -> ok
+      }
+
+      ok({
+        Expr.metaData: extractMetadata(node),
+        raw: Expr.BoolLit(boolval),
+      })
 
     | "add"
     | "sub"
@@ -100,7 +122,14 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, parseError> => {
           ->Dict.get(node.type_)
           ->Option.getExn(~message="Operator not found in mapping")
 
-        left->Result.flatMap(l => right->Result.map(r => Expr.BinOp({op, left: l, right: r})))
+        left->Result.flatMap(l =>
+          right->Result.map(r => {
+            {
+              Expr.metaData: extractMetadata(node),
+              raw: Expr.BinOp({op, left: l, right: r}),
+            }
+          })
+        )
       }
     | _ => raise(NotImplemented)
     }

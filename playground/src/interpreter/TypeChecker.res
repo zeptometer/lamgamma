@@ -1,14 +1,16 @@
-type typeError = TypeMismatch(string)
+module TypeError = {
+  type t = TypeMismatch({metaData: Expr.MetaData.t, expected: Typ.t, actual: Typ.t})
+}
 
 let ok = (x: Typ.t) => Belt.Result.Ok(x)
-let fail = (x: typeError) => Belt.Result.Error(x)
+let fail = (x: TypeError.t) => Belt.Result.Error(x)
 
 @genType
-let rec typeCheck = (expr: Expr.t): result<Typ.t, typeError> => {
+let rec typeCheck = (expr: Expr.t): result<Typ.t, TypeError.t> => {
   open Expr
   open Typ
 
-  switch expr {
+  switch expr.raw {
   | IntLit(_) => ok(IntType)
   | BoolLit(_) => ok(BoolType)
   | BinOp({op, left, right}) =>
@@ -19,9 +21,9 @@ let rec typeCheck = (expr: Expr.t): result<Typ.t, typeError> => {
         // Arithmetic operations require both operands to be integers and return an integer.
         | Add | Sub | Mul | Div | Mod =>
           if leftType != IntType {
-            fail(TypeMismatch("Left operand is not an integer"))
+            fail(TypeMismatch({metaData: left.metaData, expected: IntType, actual: leftType}))
           } else if rightType != IntType {
-            fail(TypeMismatch("Right operand is not an integer"))
+            fail(TypeMismatch({metaData: right.metaData, expected: IntType, actual: rightType}))
           } else {
             ok(IntType)
           }
@@ -31,15 +33,15 @@ let rec typeCheck = (expr: Expr.t): result<Typ.t, typeError> => {
           if leftType == rightType {
             ok(BoolType)
           } else {
-            fail(TypeMismatch("Equality operations require operands of the same type"))
+            fail(TypeMismatch({metaData: right.metaData, expected: leftType, actual: rightType}))
           }
 
         // Relational comparisons require both operands to be integers and return a boolean.
         | Lt | Le | Gt | Ge =>
           if leftType != IntType {
-            fail(TypeMismatch("Left operand is not an integer"))
+            fail(TypeMismatch({metaData: left.metaData, expected: IntType, actual: leftType}))
           } else if rightType != IntType {
-            fail(TypeMismatch("Right operand is not an integer"))
+            fail(TypeMismatch({metaData: right.metaData, expected: IntType, actual: rightType}))
           } else {
             ok(BoolType)
           }
