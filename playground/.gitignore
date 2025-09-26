@@ -26,3 +26,4 @@ dist-ssr
 # rescript tmp files
 lib/bs/*
 *.res.mjs
+*.gen.tsx

@@ -2,7 +2,7 @@ import { AppBar, Box, Button, Container, Toolbar } from "@mui/material"
 import React, { useState } from "react"
 import { Parser } from "web-tree-sitter";
 
-import { evaluate } from '../interpreter/Frontend.gen';
+import { evaluate, typeCheck } from '../interpreter/Frontend.gen';
 
 interface Props {
     code: string,
@@ -11,11 +11,17 @@ interface Props {
 
 export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) => {
 
-    const [result, setResult] = useState<string | null>(null);
+    const [evalResult, setEvalResult] = useState<string | null>(null);
+    const [typeCheckResult, setTypeCheckResult] = useState<string | null>(null);
 
     const launchEval = () => {
         const result = evaluate(code, treeSitterParser);
-        setResult(result)
+        setEvalResult(result);
+    }
+
+    const launchTypeCheck = () => {
+        const result = typeCheck(code, treeSitterParser);
+        setTypeCheckResult(result);
     }
 
     return <Box sx={{
@@ -26,12 +32,18 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
             paddingTop: "1em",
             height: "100%"
         }}>
-            <h1>Result</h1>
-            <code>{result}</code>
+            <h1>TypeCheck Result</h1>
+            <code>{typeCheckResult}</code>
 
+            <h1>Eval Result</h1>
+            <code>{evalResult}</code>
         </Container>
         <AppBar position="sticky" sx={{ top: 'auto', bottom: 0 }}>
             <Toolbar>
+                <Button variant="contained"
+                    onClick={launchTypeCheck} >
+                    TypeCheck
+                </Button>
                 <Button variant="contained"
                     onClick={launchEval} >
                     Run

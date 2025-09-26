@@ -3,7 +3,7 @@ type typeError = TypeMismatch(string)
 let ok = (x: Typ.t) => Belt.Result.Ok(x)
 let fail = (x: typeError) => Belt.Result.Error(x)
 
-let rec inferType = (expr: Expr.t): result<Typ.t, typeError> => {
+let rec typeCheck = (expr: Expr.t): result<Typ.t, typeError> => {
   open Expr
   open Typ
 
@@ -11,8 +11,8 @@ let rec inferType = (expr: Expr.t): result<Typ.t, typeError> => {
   | IntLit(_) => ok(IntType)
   | BoolLit(_) => ok(BoolType)
   | BinOp({op, left, right}) =>
-    inferType(left)->Result.flatMap(leftType => {
-      inferType(right)->Result.flatMap(rightType => {
+    typeCheck(left)->Result.flatMap(leftType => {
+      typeCheck(right)->Result.flatMap(rightType => {
         open Operator.BinOp
         switch op {
         // Arithmetic operations require both operands to be integers and return an integer.
