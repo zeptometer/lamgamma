@@ -1,0 +1,183 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SyntaxNodeParser > for combined expressions > parse (1 + 2) * 3 == 9 - 6 / 2 1`] = `
+{
+  "TAG": "Ok",
+  "_0": {
+    "metaData": {
+      "end": {
+        "col": 24,
+        "row": 0,
+      },
+      "start": {
+        "col": 0,
+        "row": 0,
+      },
+    },
+    "raw": {
+      "TAG": "BinOp",
+      "left": {
+        "metaData": {
+          "end": {
+            "col": 11,
+            "row": 0,
+          },
+          "start": {
+            "col": 0,
+            "row": 0,
+          },
+        },
+        "raw": {
+          "TAG": "BinOp",
+          "left": {
+            "metaData": {
+              "end": {
+                "col": 6,
+                "row": 0,
+              },
+              "start": {
+                "col": 1,
+                "row": 0,
+              },
+            },
+            "raw": {
+              "TAG": "BinOp",
+              "left": {
+                "metaData": {
+                  "end": {
+                    "col": 2,
+                    "row": 0,
+                  },
+                  "start": {
+                    "col": 1,
+                    "row": 0,
+                  },
+                },
+                "raw": {
+                  "TAG": "IntLit",
+                  "_0": 1,
+                },
+              },
+              "op": "Add",
+              "right": {
+                "metaData": {
+                  "end": {
+                    "col": 6,
+                    "row": 0,
+                  },
+                  "start": {
+                    "col": 5,
+                    "row": 0,
+                  },
+                },
+                "raw": {
+                  "TAG": "IntLit",
+                  "_0": 2,
+                },
+              },
+            },
+          },
+          "op": "Mul",
+          "right": {
+            "metaData": {
+              "end": {
+                "col": 11,
+                "row": 0,
+              },
+              "start": {
+                "col": 10,
+                "row": 0,
+              },
+            },
+            "raw": {
+              "TAG": "IntLit",
+              "_0": 3,
+            },
+          },
+        },
+      },
+      "op": "Eq",
+      "right": {
+        "metaData": {
+          "end": {
+            "col": 24,
+            "row": 0,
+          },
+          "start": {
+            "col": 15,
+            "row": 0,
+          },
+        },
+        "raw": {
+          "TAG": "BinOp",
+          "left": {
+            "metaData": {
+              "end": {
+                "col": 16,
+                "row": 0,
+              },
+              "start": {
+                "col": 15,
+                "row": 0,
+              },
+            },
+            "raw": {
+              "TAG": "IntLit",
+              "_0": 9,
+            },
+          },
+          "op": "Sub",
+          "right": {
+            "metaData": {
+              "end": {
+                "col": 24,
+                "row": 0,
+              },
+              "start": {
+                "col": 19,
+                "row": 0,
+              },
+            },
+            "raw": {
+              "TAG": "BinOp",
+              "left": {
+                "metaData": {
+                  "end": {
+                    "col": 20,
+                    "row": 0,
+                  },
+                  "start": {
+                    "col": 19,
+                    "row": 0,
+                  },
+                },
+                "raw": {
+                  "TAG": "IntLit",
+                  "_0": 6,
+                },
+              },
+              "op": "Div",
+              "right": {
+                "metaData": {
+                  "end": {
+                    "col": 24,
+                    "row": 0,
+                  },
+                  "start": {
+                    "col": 23,
+                    "row": 0,
+                  },
+                },
+                "raw": {
+                  "TAG": "IntLit",
+                  "_0": 2,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+`;

@@ -221,66 +221,6 @@ describe('SyntaxNodeParser', () => {
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
-
-        it('parse complex expression', () => {
-            const input = '1 + 2 * 3 - 4 / 5';
-            const expectedOutput = {
-                TAG: "Ok",
-                _0: {
-                    metaData: {
-                        start: { row: 0, col: 0 },
-                        end: { row: 0, col: 17 },
-                    },
-                    raw: {
-                        TAG: "BinOp",
-                        left: {
-                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 9 } },
-                            raw: {
-                                TAG: "BinOp",
-                                left: {
-                                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
-                                    raw: { TAG: "IntLit", _0: 1 },
-                                },
-                                op: "Add",
-                                right: {
-                                    metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 9 } },
-                                    raw: {
-                                        TAG: "BinOp",
-                                        left: {
-                                            metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 5 } },
-                                            raw: { TAG: "IntLit", _0: 2 },
-                                        },
-                                        op: "Mul",
-                                        right: {
-                                            metaData: { start: { row: 0, col: 8 }, end: { row: 0, col: 9 } },
-                                            raw: { TAG: "IntLit", _0: 3 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                        op: "Sub",
-                        right: {
-                            metaData: { start: { row: 0, col: 12 }, end: { row: 0, col: 17 } },
-                            raw: {
-                                TAG: "BinOp",
-                                left: {
-                                    metaData: { start: { row: 0, col: 12 }, end: { row: 0, col: 13 } },
-                                    raw: { TAG: "IntLit", _0: 4 },
-                                },
-                                op: "Div",
-                                right: {
-                                    metaData: { start: { row: 0, col: 16 }, end: { row: 0, col: 17 } },
-                                    raw: { TAG: "IntLit", _0: 5 },
-                                },
-                            },
-                        },
-                    },
-                },
-            }
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
-                .toEqual(expectedOutput);
-        });
     });
 
     describe('for comparison', () => {
@@ -427,124 +367,103 @@ describe('SyntaxNodeParser', () => {
             expect(parseSyntaxNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
-
-        it('parse complex expression', () => {
-            const input = '1 + 2 == 4 - 5';
-            const expectedOutput = {
-                TAG: "Ok",
-                _0: {
-                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 14 } },
-                    raw: {
-                        TAG: "BinOp",
-                        op: "Eq",
-                        left: {
-                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 5 } },
-                            raw: {
-                                TAG: "BinOp",
-                                left: {
-                                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
-                                    raw: {
-                                        TAG: "IntLit",
-                                        _0: 1,
-                                    },
-                                },
-                                op: "Add",
-                                right: {
-                                    metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 5 } },
-                                    raw: {
-                                        TAG: "IntLit",
-                                        _0: 2,
-                                    },
-                                },
-                            },
-                        },
-                        right: {
-                            metaData: { start: { row: 0, col: 9 }, end: { row: 0, col: 14 } },
-                            raw: {
-                                TAG: "BinOp",
-                                op: "Sub",
-                                left: {
-                                    metaData: { start: { row: 0, col: 9 }, end: { row: 0, col: 10 } },
-                                    raw: {
-                                        TAG: "IntLit",
-                                        _0: 4,
-                                    },
-                                },
-                                right: {
-                                    metaData: { start: { row: 0, col: 13 }, end: { row: 0, col: 14 } },
-                                    raw: {
-                                        TAG: "IntLit",
-                                        _0: 5,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
-                .toEqual(expectedOutput);
-        });
     });
 
     describe('for parens', () => {
         it('parse (1 + 2) * 3', () => {
             const input = '(1 + 2) * 3';
-            const expectedOutput = {
-                TAG: "Ok",
-                _0: {
-                    metaData: {
-                        end: { row: 0, col: 11 },
-                        start: { row: 0, col: 0 },
+            expect(parseSyntaxNode((parser.parse(input)).rootNode)).toMatchInlineSnapshot(`
+              {
+                "TAG": "Ok",
+                "_0": {
+                  "metaData": {
+                    "end": {
+                      "col": 11,
+                      "row": 0,
                     },
-                    raw: {
-                        TAG: "BinOp",
-                        left: {
-                            metaData: {
-                                end: { row: 0, col: 6 },
-                                start: { row: 0, col: 1 },
-                            },
-                            raw: {
-                                TAG: "BinOp",
-                                left: {
-                                    metaData: {
-                                        end: { row: 0, col: 2 },
-                                        start: { row: 0, col: 1 },
-                                    },
-                                    raw: {
-                                        TAG: "IntLit",
-                                        _0: 1,
-                                    },
-                                },
-                                op: "Add",
-                                right: {
-                                    metaData: {
-                                        end: { row: 0, col: 6 },
-                                        start: { row: 0, col: 5 },
-                                    },
-                                    raw: {
-                                        TAG: "IntLit",
-                                        _0: 2,
-                                    },
-                                },
-                            },
-                        },
-                        op: "Mul",
-                        right: {
-                            metaData: {
-                                end: { row: 0, col: 11 },
-                                start: { row: 0, col: 10 },
-                            },
-                            raw: {
-                                TAG: "IntLit",
-                                _0: 3,
-                            },
-                        },
+                    "start": {
+                      "col": 0,
+                      "row": 0,
                     },
+                  },
+                  "raw": {
+                    "TAG": "BinOp",
+                    "left": {
+                      "metaData": {
+                        "end": {
+                          "col": 6,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 1,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "BinOp",
+                        "left": {
+                          "metaData": {
+                            "end": {
+                              "col": 2,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 1,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "IntLit",
+                            "_0": 1,
+                          },
+                        },
+                        "op": "Add",
+                        "right": {
+                          "metaData": {
+                            "end": {
+                              "col": 6,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 5,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "IntLit",
+                            "_0": 2,
+                          },
+                        },
+                      },
+                    },
+                    "op": "Mul",
+                    "right": {
+                      "metaData": {
+                        "end": {
+                          "col": 11,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 10,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "IntLit",
+                        "_0": 3,
+                      },
+                    },
+                  },
                 },
-            };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
-                .toEqual(expectedOutput);
+              }
+            `)
+        });
+    });
+
+    describe('for combined expressions', () => {
+        it('parse (1 + 2) * 3 == 9 - 6 / 2', () => {
+            const input = '(1 + 2) * 3 == 9 - 6 / 2';
+            expect(parseSyntaxNode((parser.parse(input)).rootNode)).toMatchSnapshot();
         });
     });
 });
