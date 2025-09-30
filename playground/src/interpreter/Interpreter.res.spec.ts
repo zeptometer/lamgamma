@@ -231,3 +231,138 @@ describe('Binary operations with', () => {
         });
     });
 });
+
+describe('Logical operations with', () => {
+    describe('And', () => {
+        describe('successfully', () => {
+            it('true && true => true', () => {
+                expect(evaluate(parse('true && true'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: true }
+                });
+            });
+
+            it('true && false => false', () => {
+                expect(evaluate(parse('true && false'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: false }
+                });
+            });
+
+            it('false && true => false', () => {
+                expect(evaluate(parse('false && true'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: false }
+                });
+            });
+
+            it('false && false => false', () => {
+                expect(evaluate(parse('false && false'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: false }
+                });
+            });
+
+            it('short-circuits evaluation when left is false', () => {
+                expect(evaluate(parse('false && (1 / 0)'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: false }
+                });
+            });
+        });
+
+        describe('fail', () => {
+            it('due to type mismatch', () => {
+                expect(evaluate({
+                    TAG: "ShortCircuitOp",
+                    op: "And",
+                    left: { TAG: "IntLit", _0: 1 },
+                    right: { TAG: "BoolLit", _0: true }
+                })).toEqual({
+                    TAG: "Error",
+                    _0: "TypeMismatch"
+                });
+            });
+        });
+    });
+
+    describe('Or', () => {
+        describe('successfully', () => {
+            it('true || true => true', () => {
+                expect(evaluate(parse('true || true'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: true }
+                });
+            });
+
+            it('true || false => true', () => {
+                expect(evaluate(parse('true || false'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: true }
+                });
+            });
+
+            it('false || true => true', () => {
+                expect(evaluate(parse('false || true'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: true }
+                });
+            });
+
+            it('false || false => false', () => {
+                expect(evaluate(parse('false || false'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: false }
+                });
+            });
+
+            it('short-circuits evaluation when left is true', () => {
+                expect(evaluate(parse('true || (1 / 0)'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: true }
+                });
+            });
+        });
+
+        describe('fail', () => {
+            it('due to type mismatch', () => {
+                expect(evaluate({
+                    TAG: "ShortCircuitOp",
+                    op: "Or",
+                    left: { TAG: "IntLit", _0: 1 },
+                    right: { TAG: "BoolLit", _0: true }
+                })).toEqual({
+                    TAG: "Error",
+                    _0: "TypeMismatch"
+                });
+            });
+        });
+    });
+
+    describe('Logical Negation', () => {
+        describe('successfully', () => {
+            it('!true => false', () => {
+                expect(evaluate(parse('!true'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: false }
+                });
+            });
+
+            it('!false => true', () => {
+                expect(evaluate(parse('!false'))).toEqual({
+                    TAG: "Ok",
+                    _0: { TAG: "BoolVal", _0: true }
+                });
+            });
+        });
+
+        describe('fail', () => {
+            it('due to type mismatch', () => {
+                expect(evaluate(parse('!1'))).toEqual({
+                    TAG: "Error",
+                    _0: "TypeMismatch"
+                });
+            });
+        });
+    });
+});

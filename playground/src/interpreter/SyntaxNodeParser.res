@@ -13,11 +13,10 @@ type rec syntaxNode = {
 }
 
 module ParseError = {
-type t =
-  | SyntaxError({start: loc, end: loc})
-  | MissingNodeError({ start: loc, end: loc, missing: string })
+  type t =
+    | SyntaxError({start: loc, end: loc})
+    | MissingNodeError({start: loc, end: loc, missing: string})
 }
-
 
 exception NodeCountMismatch({expected: int, actual: int, node: syntaxNode})
 exception UnexpectedText({text: option<string>})
@@ -44,7 +43,13 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
   if node.isError {
     fail(SyntaxError({start: node.startPosition, end: node.endPosition}))
   } else if node.isMissing {
-    fail(MissingNodeError({ start: node.startPosition, end: node.endPosition, missing: node.grammarType }))
+    fail(
+      MissingNodeError({
+        start: node.startPosition,
+        end: node.endPosition,
+        missing: node.grammarType,
+      }),
+    )
   } else {
     switch node.type_ {
     | "source_file" =>
@@ -135,6 +140,59 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
           })
         )
       }
+
+    | "and"
+    | "or" =>
+      let shortCircuitOpMapping = {
+        open Operator.ShortCircuitOp
+        Dict.fromArray([("and", And), ("or", Or)])
+      }
+
+      if node.namedChildCount != 2 {
+        raise(NodeCountMismatch({expected: 2, actual: node.namedChildCount, node}))
+      } else {
+        let left =
+          node.namedChild(0)
+          ->Option.getExn(~message="namedChild(0) does not exist")
+          ->parseSyntaxNode
+
+        let right =
+          node.namedChild(1)
+          ->Option.getExn(~message="namedChild(1) does not exist")
+          ->parseSyntaxNode
+
+        let op =
+          shortCircuitOpMapping
+          ->Dict.get(node.type_)
+          ->Option.getExn(~message="Operator not found in mapping")
+
+        left->Result.flatMap(l =>
+          right->Result.map(r => {
+            {
+              Expr.metaData: extractMetadata(node),
+              raw: Expr.ShortCircuitOp({op, left: l, right: r}),
+            }
+          })
+        )
+      }
+
+    | "not" =>
+      if node.namedChildCount != 1 {
+        raise(NodeCountMismatch({expected: 1, actual: node.namedChildCount, node}))
+      } else {
+        let expr =
+          node.namedChild(0)
+          ->Option.getExn(~message="namedChild(0) does not exist")
+          ->parseSyntaxNode
+
+        expr->Result.map(e => {
+          {
+            Expr.metaData: extractMetadata(node),
+            raw: Expr.UniOp({op: Operator.UniOp.Not, expr: e}),
+          }
+        })
+      }
+
     | "ctrl_if" =>
       if node.namedChildCount != 3 {
         raise(NodeCountMismatch({expected: 3, actual: node.namedChildCount, node}))
@@ -156,12 +214,14 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
 
         cond->Result.flatMap(c =>
           thenBranch->Result.flatMap(t =>
-            elseBranch->Result.map(e => {
-              {
-              Expr.metaData: extractMetadata(node),
-                raw: Expr.If({cond: c, thenBranch: t, elseBranch: e}),
-              }
-            })
+            elseBranch->Result.map(
+              e => {
+                {
+                  Expr.metaData: extractMetadata(node),
+                  raw: Expr.If({cond: c, thenBranch: t, elseBranch: e}),
+                }
+              },
+            )
           )
         )
       }

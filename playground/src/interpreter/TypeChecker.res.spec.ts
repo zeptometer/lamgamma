@@ -231,6 +231,88 @@ describe('Typechecker', () => {
         });
     });
 
+    describe('for logical operations', () => {
+        describe('successfully', () => {
+            it('infer type of true && false as BoolType', () => {
+                expect(typeCheck(parse('true && false'))).toEqual({
+                    TAG: "Ok",
+                    _0: "BoolType"
+                });
+            });
+            it('infer type of false || true as BoolType', () => {
+                expect(typeCheck(parse('false || true'))).toEqual({
+                    TAG: "Ok",
+                    _0: "BoolType"
+                });
+            });
+            it('infer type of true && false || true as BoolType', () => {
+                expect(typeCheck(parse('true && false || true'))).toEqual({
+                    TAG: "Ok",
+                    _0: "BoolType"
+                });
+            });
+            it('infer type of true || false && true as BoolType', () => {
+                expect(typeCheck(parse('true || false && true'))).toEqual({
+                    TAG: "Ok",
+                    _0: "BoolType"
+                });
+            });
+            it('infer type of !true as BoolType', () => {
+                expect(typeCheck(parse('!true'))).toEqual({
+                    TAG: "Ok",
+                    _0: "BoolType"
+                });
+            });
+        });
+
+        describe('fails typecheck', () => {
+            it('infer type of true && 1 as Error', () => {
+                expect(typeCheck(parse('true && 1'))).toEqual({
+                    TAG: "Error",
+                    _0: {
+                        TAG: "TypeMismatch",
+                        expected: "BoolType",
+                        actual: "IntType",
+                        metaData: {
+                            start: { row: 0, col: 8 },
+                            end: { row: 0, col: 9 },
+                        },
+                    }
+                });
+            });
+
+            it('infer type of false || 2 as Error', () => {
+                expect(typeCheck(parse('false || 2'))).toEqual({
+                    TAG: "Error",
+                    _0: {
+                        TAG: "TypeMismatch",
+                        expected: "BoolType",
+                        actual: "IntType",
+                        metaData: {
+                            start: { row: 0, col: 9 },
+                            end: { row: 0, col: 10 },
+                        },
+                    }
+                });
+            });
+
+            it('inter type of !1 as Error', () => {
+                expect(typeCheck(parse('!1'))).toEqual({
+                    TAG: "Error",
+                    _0: {
+                        TAG: "TypeMismatch",
+                        expected: "BoolType",
+                        actual: "IntType",
+                        metaData: {
+                            start: { row: 0, col: 1 },
+                            end: { row: 0, col: 2 },
+                        },
+                    }
+                });
+            });
+        });
+    });
+
     describe('for if expressions', () => {
         describe('successfully', () => {
             it('infer type of if 1 < 2 then 3 + 4 else 5 * 6 as IntType', () => {

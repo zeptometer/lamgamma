@@ -100,6 +100,29 @@ let rec evaluate = (e: RawExpr.t): result<Runtime.val, evalError> => {
         }
       )
     )
+  | ShortCircuitOp({op, left, right}) =>
+    evaluate(left)->Result.flatMap(leftVal =>
+      switch (op, leftVal) {
+      | (Operator.ShortCircuitOp.And, BoolVal(false)) => return(BoolVal(false)) // short-circuit
+      | (Operator.ShortCircuitOp.Or, BoolVal(true)) => return(BoolVal(true)) // short-circuit
+      | (Operator.ShortCircuitOp.And, BoolVal(true))
+      | (Operator.ShortCircuitOp.Or, BoolVal(false)) =>
+        evaluate(right)->Result.flatMap(rightVal =>
+          switch rightVal {
+          | BoolVal(b) => return(BoolVal(b))
+          | _ => raise(TypeMismatch)
+          }
+        )
+      | _ => raise(TypeMismatch)
+      }
+    )
+  | UniOp({op, expr}) =>
+    evaluate(expr)->Result.flatMap(exprVal =>
+      switch (op, exprVal) {
+      | (Operator.UniOp.Not, BoolVal(b)) => return(BoolVal(!b))
+      | _ => raise(TypeMismatch)
+      }
+    )
   | If({cond, thenBranch, elseBranch}) =>
     evaluate(cond)->Result.flatMap(condVal =>
       switch condVal {

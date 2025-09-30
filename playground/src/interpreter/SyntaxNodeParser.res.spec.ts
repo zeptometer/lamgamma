@@ -460,6 +460,66 @@ describe('SyntaxNodeParser', () => {
         });
     });
 
+     describe('for logical operators', () => {
+        it('parse true && false || true', () => {
+            const input = 'true && false || true';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: {
+                    metaData: {
+                        start: { row: 0, col: 0 },
+                        end: { row: 0, col: 21 },
+                    },
+                    raw: {
+                        TAG: "ShortCircuitOp",
+                        op: "Or",
+                        left: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 13 } },
+                            raw: {
+                                TAG: "ShortCircuitOp",
+                                op: "And",
+                                left: {
+                                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 4 } },
+                                    raw: { TAG: "BoolLit", _0: true }
+                                },
+                                right: {
+                                    metaData: { start: { row: 0, col: 8 }, end: { row: 0, col: 13 } },
+                                    raw: { TAG: "BoolLit", _0: false }
+                                }
+                            }
+                        },
+                        right: {
+                            metaData: { start: { row: 0, col: 17 }, end: { row: 0, col: 21 } },
+                            raw: { TAG: "BoolLit", _0: true }
+                        }
+                    }
+                }
+            };
+            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        });
+
+        it('parse !true', () => {
+            const input = '!true';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 5 } },
+                    raw: {
+                        TAG: "UniOp",
+                        op: "Not",
+                        expr: {
+                            metaData: { start: { row: 0, col: 1 }, end: { row: 0, col: 5 } },
+                            raw: { TAG: "BoolLit", _0: true }
+                        }
+                    }
+                }
+            };
+            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        });
+    });
+
     describe('for if expressions', () => {
         it('parse if true then 1 else 2', () => {
             const input = 'if true then 1 else 2';

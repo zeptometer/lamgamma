@@ -48,6 +48,34 @@ let rec typeCheck = (expr: Expr.t): result<Typ.t, TypeError.t> => {
         }
       })
     })
+  | ShortCircuitOp({op, left, right}) =>
+    typeCheck(left)->Result.flatMap(leftType => {
+      typeCheck(right)->Result.flatMap(rightType => {
+        open Operator.ShortCircuitOp
+        switch op {
+        | And | Or =>
+          if leftType != BoolType {
+            fail(TypeMismatch({metaData: left.metaData, expected: BoolType, actual: leftType}))
+          } else if rightType != BoolType {
+            fail(TypeMismatch({metaData: right.metaData, expected: BoolType, actual: rightType}))
+          } else {
+            ok(BoolType)
+          }
+        }
+      })
+    })
+  | UniOp({op, expr}) =>
+    typeCheck(expr)->Result.flatMap(exprType => {
+      open Operator.UniOp
+      switch op {
+      | Not =>
+        if exprType != BoolType {
+          fail(TypeMismatch({metaData: expr.metaData, expected: BoolType, actual: exprType}))
+        } else {
+          ok(BoolType)
+        }
+      }
+    })
   | If({cond, thenBranch, elseBranch}) =>
     typeCheck(cond)->Result.flatMap(condType => {
       if condType != BoolType {

@@ -15,3 +15,14 @@ module BinOp = {
     | Gt
     | Ge
 }
+
+module ShortCircuitOp = {
+  type t =
+    | And
+    | Or
+}
+
+module UniOp = {
+  type t =
+    | Not  // boolean negation
+}

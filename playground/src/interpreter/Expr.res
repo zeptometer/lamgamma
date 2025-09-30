@@ -27,6 +27,8 @@ and raw_t =
   | IntLit(int)
   | BoolLit(bool)
   | BinOp({op: Operator.BinOp.t, left: t, right: t})
+  | ShortCircuitOp({op: Operator.ShortCircuitOp.t, left: t, right: t})
+  | UniOp({op: Operator.UniOp.t, expr: t})
   | If({cond: t, thenBranch: t, elseBranch: t})
 // // staging constructs
 // | Quote(t)
@@ -42,6 +44,9 @@ let rec stripTypeInfo = (expr: t): RawExpr.t => {
   | BoolLit(b) => RawExpr.BoolLit(b)
   | BinOp({op, left, right}) =>
     RawExpr.BinOp({op, left: stripTypeInfo(left), right: stripTypeInfo(right)})
+  | ShortCircuitOp({op, left, right}) =>
+    RawExpr.ShortCircuitOp({op, left: stripTypeInfo(left), right: stripTypeInfo(right)})
+  | UniOp({op, expr}) => RawExpr.UniOp({op, expr: stripTypeInfo(expr)})
   | If({cond, thenBranch, elseBranch}) =>
     RawExpr.If({
       cond: stripTypeInfo(cond),
