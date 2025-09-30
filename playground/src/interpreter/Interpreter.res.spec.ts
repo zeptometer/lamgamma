@@ -366,3 +366,30 @@ describe('Logical operations with', () => {
         });
     });
 });
+
+describe('If expressions', () => {
+    describe('successfully', () => {
+        it('if true then 1 else 1/0 => 1', () => {
+            expect(evaluate(parse('if true then 1 else 1/0'))).toEqual({
+                TAG: "Ok",
+                _0: { TAG: "IntVal", _0: 1 }
+            });
+        });
+
+        it('if false then 1/0 else 2 => 2', () => {
+            expect(evaluate(parse('if false then 1/0 else 2'))).toEqual({
+                TAG: "Ok",
+                _0: { TAG: "IntVal", _0: 2 }
+            });
+        });
+    });
+
+    describe('fail', () => {
+        it('due to non-boolean condition', () => {
+            expect(evaluate(parse('if 1 then 2 else 3'))).toEqual({
+                TAG: "Error",
+                _0: "TypeMismatch"
+            });
+        });
+    });
+});
