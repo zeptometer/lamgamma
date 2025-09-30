@@ -62,7 +62,7 @@ module.exports = grammar({
       $.ge,
       $.and,
       $.or,
-      $.neg,
+      $.not,
       // let
       $.let
     ),
@@ -127,7 +127,7 @@ module.exports = grammar({
         'mod',
         field("right", $._expression))),
 
-    // boolean
+    // boolean:
     boolean: $ => choice('true', 'false'),
 
     ctrl_if: $ => prec.right(PREC.match,
@@ -186,7 +186,7 @@ module.exports = grammar({
         '||',
         field("right", $._expression))),
 
-    neg: $ => prec.right(PREC.unary,
+    not: $ => prec.right(PREC.unary,
       seq('!', $._expression)),
 
     // staging
@@ -201,8 +201,20 @@ module.exports = grammar({
     ),
 
     // let
+    param: $ => choice($.identifier, seq($.identifier, ':', $._type)),
+
     let: $ => prec.right(PREC.assign,
-      seq('let', $.identifier, '=', $._expression, 'in', $._expression)
-    )
+      seq('let', $.param, '=', $._expression, 'in', $._expression)
+    ),
+
+    _type: $ => choice(
+      $.int_type,
+      $.bool_type
+    ),
+
+    int_type: $ => 'int',
+
+    bool_type: $ => 'bool',
+
   }
 });

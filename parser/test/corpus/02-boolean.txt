@@ -1,5 +1,5 @@
 ==================
-boolean
+Boolean
 ==================
 
 true && false
@@ -12,7 +12,7 @@ true && false
     (boolean)))
 
 ==================
-if statement
+If statement
 ==================
 
 if x then y else x z
@@ -28,7 +28,7 @@ if x then y else x z
       (identifier))))
 
 ==================
-nested if statement
+Nested if statement
 ==================
 
 if x then if y then z else w else v
@@ -45,7 +45,7 @@ if x then if y then z else w else v
     (identifier)))
 
 ==================
-comparison and logical operators
+Comparison and logical operators
 ==================
 
 x == y || x != y && x < y && x <= y || x > y || x >= y
@@ -78,7 +78,7 @@ x == y || x != y && x < y && x <= y || x > y || x >= y
       (identifier))))
 
 ==================
-negation
+Logical Negation
 ==================
 
 !x
@@ -86,5 +86,5 @@ negation
 ---
 
 (source_file
-  (neg
+  (not
     (identifier)))

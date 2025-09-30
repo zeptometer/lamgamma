@@ -1,0 +1,66 @@
+==================
+Let without types
+==================
+
+let x = 1 in
+let y = 2 in
+x + y
+
+---
+
+(source_file
+  (let
+    (param
+      (identifier))
+    (number)
+    (let
+      (param
+        (identifier))
+      (number)
+      (add
+        (identifier)
+        (identifier)))))
+
+==================
+Let with types
+==================
+
+let x:int = 1 in x + 1
+
+---
+
+(source_file
+  (let
+    (param
+      (identifier)
+      (int_type))
+    (number)
+    (add
+      (identifier)
+      (number))))
+
+==================
+Let without types
+==================
+
+let x:int = let y:int = true in y + 2 in
+x + 10
+
+---
+
+(source_file
+  (let
+    (param
+      (identifier)
+      (int_type))
+    (let
+      (param
+        (identifier)
+        (int_type))
+      (boolean)
+      (add
+        (identifier)
+        (number)))
+    (add
+      (identifier)
+      (number))))

@@ -1,0 +1,50 @@
+==================
+Integer
+==================
+
+10
+
+---
+
+(source_file
+  (number))
+
+==================
+Arithmetic Operations
+==================
+
+1 + 2 * 3 + 1 * 2 - 10 / 2 mod 10
+
+---
+
+(source_file
+  (sub
+    (add
+      (add
+        (number)
+        (mult
+          (number)
+          (number)))
+      (mult
+        (number)
+        (number)))
+    (mod
+      (div
+        (number)
+        (number))
+      (number))))
+
+==================
+Add, Mult and Paren
+==================
+
+(1 + 2) * 3
+
+---
+
+(source_file
+  (mult
+    (add
+      (number)
+      (number))
+    (number)))

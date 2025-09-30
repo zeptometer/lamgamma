@@ -84,7 +84,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "neg"
+          "name": "not"
         },
         {
           "type": "SYMBOL",
@@ -651,7 +651,7 @@
         ]
       }
     },
-    "neg": {
+    "not": {
       "type": "PREC_RIGHT",
       "value": 10,
       "content": {
@@ -752,6 +752,32 @@
         ]
       }
     },
+    "param": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "identifier"
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "identifier"
+            },
+            {
+              "type": "STRING",
+              "value": ":"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_type"
+            }
+          ]
+        }
+      ]
+    },
     "let": {
       "type": "PREC_RIGHT",
       "value": 3,
@@ -764,7 +790,7 @@
           },
           {
             "type": "SYMBOL",
-            "name": "identifier"
+            "name": "param"
           },
           {
             "type": "STRING",
@@ -784,6 +810,27 @@
           }
         ]
       }
+    },
+    "_type": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "int_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "bool_type"
+        }
+      ]
+    },
+    "int_type": {
+      "type": "STRING",
+      "value": "int"
+    },
+    "bool_type": {
+      "type": "STRING",
+      "value": "bool"
     }
   },
   "extras": [
