@@ -19,11 +19,11 @@ type evalError =
   | EvalError(Interpreter.evalError)
 
 @genType
-let evaluate = (input: string, treeSitterParser: 'a): string => {
+let evaluate = (_input: string, _treeSitterParser: 'a): string => {
   let doit = (): result<Interpreter.Runtime.val, evalError> => {
-    let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` treeSitterParser.parse(input).rootNode `)
+    let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` _treeSitterParser.parse(_input).rootNode `)
 
-    SyntaxNodeParser.parseSyntaxNode(syntaxNode)
+    SyntaxNodeParser.parseExprNode(syntaxNode)
     ->Result.mapError(x => ParseError(x))
     ->Result.map(Expr.stripTypeInfo)
     ->Result.flatMap(expr => Interpreter.evaluate(expr)->Result.mapError(x => EvalError(x)))
@@ -51,6 +51,13 @@ module TypeError = {
         `(${(er + 1)->Int.toString},${ec->Int.toString})`
 
       `${locstring} Type error: expected ${Typ.toString(expected)}, but got ${Typ.toString(actual)}`
+    | UndefinedVariable({metaData, var: Var.Raw({name})}) =>
+      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
+      let locstring =
+        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
+        `(${(er + 1)->Int.toString},${ec->Int.toString})`
+
+      `${locstring} Undefined variable: ${name}`
     }
   }
 
@@ -62,14 +69,14 @@ module TypeError = {
 }
 
 @genType
-let typeCheck = (input: string, treeSitterParser: 'a): string => {
+let typeCheck = (_input: string, _treeSitterParser: 'a): string => {
   let doit = (): result<Typ.t, TypeError.t> => {
-    let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` treeSitterParser.parse(input).rootNode `)
+    let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` _treeSitterParser.parse(_input).rootNode `)
 
-    SyntaxNodeParser.parseSyntaxNode(syntaxNode)
+    SyntaxNodeParser.parseExprNode(syntaxNode)
     ->Result.mapError(x => TypeError.ParseError(x))
     ->Result.flatMap(expr =>
-      TypeChecker.typeCheck(expr)->Result.mapError(x => TypeError.TypeError(x))
+      TypeChecker.typeCheck(expr, Belt.Map.make(~id=module(TypeChecker.TypeEnv.VarCmp)))->Result.mapError(x => TypeError.TypeError(x))
     )
   }
 

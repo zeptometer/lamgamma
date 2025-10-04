@@ -1,12 +1,13 @@
+@genType
 type rec t =
-    | IntType
-    | BoolType
+    | Int
+    | Bool
     // | CodeType(Classifier.t, t)
     // | FuncType(list<Classifier.Decl.t>, list<t>, t)
 
 let toString = (typ: t): string => {
   switch typ {
-  | IntType => "Int"
-  | BoolType => "Bool"
+  | Int => "Int"
+  | Bool => "Bool"
   }
 }

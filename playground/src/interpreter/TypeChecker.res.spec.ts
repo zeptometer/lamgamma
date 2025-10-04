@@ -1,14 +1,14 @@
 import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
-import { parseSyntaxNode } from './SyntaxNodeParser.gen.ts';
-import { typeCheck } from './TypeChecker.gen.ts';
+import { parseExprNode } from './SyntaxNodeParser.gen.ts';
+import { typeCheck, TypeEnv_make } from './TypeChecker.gen.ts';
 import { t as Expr_t } from './Expr.gen.ts'
 
 let parser;
 
 const parse = (input) => {
     // Assume that parse always succeeds
-    return parseSyntaxNode((parser.parse(input)).rootNode)._0 as Expr_t;
+    return parseExprNode((parser.parse(input)).rootNode)._0 as Expr_t;
 }
 
 beforeAll(
@@ -21,72 +21,74 @@ beforeAll(
     }
 )
 
+const emptyEnv = TypeEnv_make();
+
 describe('Typechecker', () => {
     describe('for literals', () => {
         it('infer type of 123', () => {
-            expect(typeCheck(parse('123'))).toEqual({
+            expect(typeCheck(parse('123'), emptyEnv)).toEqual({
                 TAG: "Ok",
-                _0: "IntType"
+                _0: "Int"
             });
         });
 
         it('infer type of true', () => {
-            expect(typeCheck(parse('true'))).toEqual({
+            expect(typeCheck(parse('true'), emptyEnv)).toEqual({
                 TAG: "Ok",
-                _0: "BoolType"
+                _0: "Bool"
             });
         });
 
         it('infer type of false', () => {
-            expect(typeCheck(parse('false'))).toEqual({
+            expect(typeCheck(parse('false'), emptyEnv)).toEqual({
                 TAG: "Ok",
-                _0: "BoolType"
+                _0: "Bool"
             });
         });
     });
 
     describe('for arithmetic', () => {
         describe('successfully', () => {
-            it('infer type of 1 + 2 as IntType', () => {
-                expect(typeCheck(parse('1 + 2'))).toEqual({
+            it('infer type of 1 + 2 as Int', () => {
+                expect(typeCheck(parse('1 + 2'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "IntType"
+                    _0: "Int"
                 });
             });
-            it('infer type of 5 - 2 as IntType', () => {
-                expect(typeCheck(parse('5 - 2'))).toEqual({
+            it('infer type of 5 - 2 as Int', () => {
+                expect(typeCheck(parse('5 - 2'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "IntType"
+                    _0: "Int"
                 });
             });
-            it('infer type of 3 * 4 as IntType', () => {
-                expect(typeCheck(parse('3 * 4'))).toEqual({
+            it('infer type of 3 * 4 as Int', () => {
+                expect(typeCheck(parse('3 * 4'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "IntType"
+                    _0: "Int"
                 });
             });
-            it('infer type of 8 / 2 as IntType', () => {
-                expect(typeCheck(parse('8 / 2'))).toEqual({
+            it('infer type of 8 / 2 as Int', () => {
+                expect(typeCheck(parse('8 / 2'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "IntType"
+                    _0: "Int"
                 });
             });
-            it('infer type of 7 mod 3 as IntType', () => {
-                expect(typeCheck(parse('7 mod 3'))).toEqual({
+            it('infer type of 7 mod 3 as Int', () => {
+                expect(typeCheck(parse('7 mod 3'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "IntType"
+                    _0: "Int"
                 });
             });
         });
 
         describe('fails typecheck', () => {
             it('infer type of 1 + true as Error', () => {
-                expect(typeCheck(parse('1 + true'))).toEqual({
+                expect(typeCheck(parse('1 + true'), emptyEnv)).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        expected: "IntType",
-                        actual: "BoolType",
+                        expected: "Int",
+                        actual: "Bool",
                         metaData: {
                             start: { row: 0, col: 4 },
                             end: { row: 0, col: 8 },
@@ -95,12 +97,12 @@ describe('Typechecker', () => {
                 });
             });
             it('infer type of false - 2 as Error', () => {
-                expect(typeCheck(parse('false - 2'))).toEqual({
+                expect(typeCheck(parse('false - 2'), emptyEnv)).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        expected: "IntType",
-                        actual: "BoolType",
+                        expected: "Int",
+                        actual: "Bool",
                         metaData: {
                             start: { row: 0, col: 0 },
                             end: { row: 0, col: 5 },
@@ -111,73 +113,73 @@ describe('Typechecker', () => {
         });
 
         it('infer a type for complex expression', () => {
-            expect(typeCheck(parse('(1 + 2) * (3 - 4) / (5 + 6 mod 2)'))).toEqual({
+            expect(typeCheck(parse('(1 + 2) * (3 - 4) / (5 + 6 mod 2)'), emptyEnv)).toEqual({
                 TAG: "Ok",
-                _0: "IntType"
+                _0: "Int"
             });
         });
     });
 
     describe('for comparison', () => {
         describe('successfully', () => {
-            it('infer type of 1 == 2 as BoolType', () => {
-                expect(typeCheck(parse('1 == 2'))).toEqual({
+            it('infer type of 1 == 2 as Bool', () => {
+                expect(typeCheck(parse('1 == 2'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
-            it('infer type of true == false as BoolType', () => {
-                expect(typeCheck(parse('true == false'))).toEqual({
+            it('infer type of true == false as Bool', () => {
+                expect(typeCheck(parse('true == false'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
-            it('infer type of 3 != 4 as BoolType', () => {
-                expect(typeCheck(parse('3 != 4'))).toEqual({
+            it('infer type of 3 != 4 as Bool', () => {
+                expect(typeCheck(parse('3 != 4'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
-            it('infer type of true != true as BoolType', () => {
-                expect(typeCheck(parse('true != true'))).toEqual({
+            it('infer type of true != true as Bool', () => {
+                expect(typeCheck(parse('true != true'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
-            it('infer type of 5 < 6 as BoolType', () => {
-                expect(typeCheck(parse('5 < 6'))).toEqual({
+            it('infer type of 5 < 6 as Bool', () => {
+                expect(typeCheck(parse('5 < 6'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
-            it('infer type of 7 <= 8 as BoolType', () => {
-                expect(typeCheck(parse('7 <= 8'))).toEqual({
+            it('infer type of 7 <= 8 as Bool', () => {
+                expect(typeCheck(parse('7 <= 8'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
-            it('infer type of 9 > 10 as BoolType', () => {
-                expect(typeCheck(parse('9 > 10'))).toEqual({
+            it('infer type of 9 > 10 as Bool', () => {
+                expect(typeCheck(parse('9 > 10'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
-            it('infer type of 11 >= 12 as BoolType', () => {
-                expect(typeCheck(parse('11 >= 12'))).toEqual({
+            it('infer type of 11 >= 12 as Bool', () => {
+                expect(typeCheck(parse('11 >= 12'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
         });
 
         describe('fails typecheck', () => {
             it('infer type of 1 == true as Error', () => {
-                expect(typeCheck(parse('1 == true'))).toEqual({
+                expect(typeCheck(parse('1 == true'), emptyEnv)).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        expected: "IntType",
-                        actual: "BoolType",
+                        expected: "Int",
+                        actual: "Bool",
                         metaData: {
                             start: { row: 0, col: 5 },
                             end: { row: 0, col: 9 },
@@ -187,12 +189,12 @@ describe('Typechecker', () => {
             });
 
             it('infer type of false != 2 as Error', () => {
-                expect(typeCheck(parse('false != 2'))).toEqual({
+                expect(typeCheck(parse('false != 2'), emptyEnv)).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        expected: "BoolType",
-                        actual: "IntType",
+                        expected: "Bool",
+                        actual: "Int",
                         metaData: {
                             start: { row: 0, col: 9 },
                             end: { row: 0, col: 10 },
@@ -201,12 +203,12 @@ describe('Typechecker', () => {
                 });
             });
             it('infer type of 3 < true as Error', () => {
-                expect(typeCheck(parse('3 < true'))).toEqual({
+                expect(typeCheck(parse('3 < true'), emptyEnv)).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        expected: "IntType",
-                        actual: "BoolType",
+                        expected: "Int",
+                        actual: "Bool",
                         metaData: {
                             start: { row: 0, col: 4 },
                             end: { row: 0, col: 8 },
@@ -215,12 +217,12 @@ describe('Typechecker', () => {
                 });
             });
             it('infer type of false <= 4 as Error', () => {
-                expect(typeCheck(parse('false <= 4'))).toEqual({
+                expect(typeCheck(parse('false <= 4'), emptyEnv)).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        expected: "IntType",
-                        actual: "BoolType",
+                        expected: "Int",
+                        actual: "Bool",
                         metaData: {
                             start: { row: 0, col: 0 },
                             end: { row: 0, col: 5 },
@@ -233,46 +235,46 @@ describe('Typechecker', () => {
 
     describe('for logical operations', () => {
         describe('successfully', () => {
-            it('infer type of true && false as BoolType', () => {
-                expect(typeCheck(parse('true && false'))).toEqual({
+            it('infer type of true && false as Bool', () => {
+                expect(typeCheck(parse('true && false'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
-            it('infer type of false || true as BoolType', () => {
-                expect(typeCheck(parse('false || true'))).toEqual({
+            it('infer type of false || true as Bool', () => {
+                expect(typeCheck(parse('false || true'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
-            it('infer type of true && false || true as BoolType', () => {
-                expect(typeCheck(parse('true && false || true'))).toEqual({
+            it('infer type of true && false || true as Bool', () => {
+                expect(typeCheck(parse('true && false || true'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
-            it('infer type of true || false && true as BoolType', () => {
-                expect(typeCheck(parse('true || false && true'))).toEqual({
+            it('infer type of true || false && true as Bool', () => {
+                expect(typeCheck(parse('true || false && true'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
-            it('infer type of !true as BoolType', () => {
-                expect(typeCheck(parse('!true'))).toEqual({
+            it('infer type of !true as Bool', () => {
+                expect(typeCheck(parse('!true'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
         });
 
         describe('fails typecheck', () => {
             it('infer type of true && 1 as Error', () => {
-                expect(typeCheck(parse('true && 1'))).toEqual({
+                expect(typeCheck(parse('true && 1'), emptyEnv)).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        expected: "BoolType",
-                        actual: "IntType",
+                        expected: "Bool",
+                        actual: "Int",
                         metaData: {
                             start: { row: 0, col: 8 },
                             end: { row: 0, col: 9 },
@@ -282,12 +284,12 @@ describe('Typechecker', () => {
             });
 
             it('infer type of false || 2 as Error', () => {
-                expect(typeCheck(parse('false || 2'))).toEqual({
+                expect(typeCheck(parse('false || 2'), emptyEnv)).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        expected: "BoolType",
-                        actual: "IntType",
+                        expected: "Bool",
+                        actual: "Int",
                         metaData: {
                             start: { row: 0, col: 9 },
                             end: { row: 0, col: 10 },
@@ -297,12 +299,12 @@ describe('Typechecker', () => {
             });
 
             it('inter type of !1 as Error', () => {
-                expect(typeCheck(parse('!1'))).toEqual({
+                expect(typeCheck(parse('!1'), emptyEnv)).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        expected: "BoolType",
-                        actual: "IntType",
+                        expected: "Bool",
+                        actual: "Int",
                         metaData: {
                             start: { row: 0, col: 1 },
                             end: { row: 0, col: 2 },
@@ -315,28 +317,28 @@ describe('Typechecker', () => {
 
     describe('for if expressions', () => {
         describe('successfully', () => {
-            it('infer type of if 1 < 2 then 3 + 4 else 5 * 6 as IntType', () => {
-                expect(typeCheck(parse('if 1 < 2 then 3 + 4 else 5 * 6'))).toEqual({
+            it('infer type of if 1 < 2 then 3 + 4 else 5 * 6 as Int', () => {
+                expect(typeCheck(parse('if 1 < 2 then 3 + 4 else 5 * 6'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "IntType"
+                    _0: "Int"
                 });
             });
-            it('infer type of if false then false else true as BoolType', () => {
-                expect(typeCheck(parse('if false then false else true'))).toEqual({
+            it('infer type of if false then false else true as Bool', () => {
+                expect(typeCheck(parse('if false then false else true'), emptyEnv)).toEqual({
                     TAG: "Ok",
-                    _0: "BoolType"
+                    _0: "Bool"
                 });
             });
         });
 
         describe('fails typecheck', () => {
             it('infer type of if 1 then 2 else 3 as Error', () => {
-                expect(typeCheck(parse('if 1 then 2 else 3'))).toEqual({
+                expect(typeCheck(parse('if 1 then 2 else 3'), emptyEnv)).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        expected: "BoolType",
-                        actual: "IntType",
+                        expected: "Bool",
+                        actual: "Int",
                         metaData: {
                             start: { row: 0, col: 3 },
                             end: { row: 0, col: 4 },
@@ -345,15 +347,55 @@ describe('Typechecker', () => {
                 });
             });
             it('infer type of if true then 1 else false as Error', () => {
-                expect(typeCheck(parse('if true then 1 else false'))).toEqual({
+                expect(typeCheck(parse('if true then 1 else false'), emptyEnv)).toEqual({
                     TAG: "Error",
                     _0: {
                         TAG: "TypeMismatch",
-                        actual: "BoolType",
-                        expected: "IntType",
+                        actual: "Bool",
+                        expected: "Int",
                         metaData: {
                             start: { row: 0, col: 20 },
                             end: { row: 0, col: 25 },
+                        },
+                    }
+                });
+            });
+        });
+    });
+
+    describe('for let expressions', () => {
+        describe('successfully', () => {
+            it('infer type of let x = 1 in x + 2 as Int', () => {
+                expect(typeCheck(parse('let x = 1 in x + 2'), emptyEnv)).toEqual({
+                    TAG: "Ok",
+                    _0: "Int"
+                });
+            });
+            it('infer type of let y = true in if y then false else true as Bool', () => {
+                expect(typeCheck(parse('let y = true in if y then false else true'), emptyEnv)).toEqual({
+                    TAG: "Ok",
+                    _0: "Bool"
+                });
+            });
+            it('infer type of let x = 1 in let y = 2 in x + y as Int', () => {
+                expect(typeCheck(parse('let x = 1 in let y = 2 in x + y'), emptyEnv)).toEqual({
+                    TAG: "Ok",
+                    _0: "Int"
+                });
+            });
+        });
+
+        describe('fails typecheck', () => {
+            it('infer type of let x:int = true in x as Error', () => {
+                expect(typeCheck(parse('let x:int = true in x'), emptyEnv)).toEqual({
+                    TAG: "Error",
+                    _0: {
+                        TAG: "TypeMismatch",
+                        expected: "Int",
+                        actual: "Bool",
+                        metaData: {
+                            start: { row: 0, col: 12 },
+                            end: { row: 0, col: 16 },
                         },
                     }
                 });

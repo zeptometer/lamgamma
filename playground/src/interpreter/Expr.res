@@ -14,14 +14,18 @@ module MetaData = {
   type t = {start: Position.t, end: Position.t}
 }
 
+module Param = {
+  type t = {var: Var.t, typ: option<Typ.t>}
+}
+
 @genType
 type rec t = {metaData: MetaData.t, raw: raw_t}
 and raw_t =
   // // basic syntax
-  // | Var(Var.t)
+  | Var(Var.t)
   // | Func({ clss: list<Typ.clsdecl>, params: list<Var.t>, body: t })
   // | App({ func: t, args: list<t> })
-  // | Let({ param: Param.t, expr: t, body: t})
+  | Let({ param: Param.t, expr: t, body: t})
   // | LetRec({ param: Param.t, expr: t, body: t})
   // // primitive operations
   | IntLit(int)
@@ -52,6 +56,13 @@ let rec stripTypeInfo = (expr: t): RawExpr.t => {
       cond: stripTypeInfo(cond),
       thenBranch: stripTypeInfo(thenBranch),
       elseBranch: stripTypeInfo(elseBranch),
+    })
+  | Var(v) => RawExpr.Var(v)
+  | Let({param, expr, body}) =>
+    RawExpr.Let({
+      param: param.var,
+      expr: stripTypeInfo(expr),
+      body: stripTypeInfo(body),
     })
   }
 }

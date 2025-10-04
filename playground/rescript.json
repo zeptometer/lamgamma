@@ -29,6 +29,9 @@
         "debug": {
             "all": false,
             "basic": false
+        },
+        "shims": {
+            "Belt": "Belt"
         }
     }
 }

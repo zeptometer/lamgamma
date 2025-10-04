@@ -20,9 +20,10 @@ module ParseError = {
 
 exception NodeCountMismatch({expected: int, actual: int, node: syntaxNode})
 exception UnexpectedText({text: option<string>})
+exception UnexpectedNodeType({expected: string, actual: string})
 exception NotImplemented
 
-let ok = (x: Expr.t) => Belt.Result.Ok(x)
+let ok = (x: 'a) => Belt.Result.Ok(x)
 let fail = (x: ParseError.t) => Belt.Result.Error(x)
 
 let extractMetadata = (node: syntaxNode): Expr.MetaData.t => {
@@ -38,8 +39,7 @@ let extractMetadata = (node: syntaxNode): Expr.MetaData.t => {
   }
 }
 
-@genType
-let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
+let validateNode = (node: syntaxNode): result<unit, ParseError.t> => {
   if node.isError {
     fail(SyntaxError({start: node.startPosition, end: node.endPosition}))
   } else if node.isMissing {
@@ -51,6 +51,63 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       }),
     )
   } else {
+    ok()
+  }
+}
+
+@genType
+let parseTypeNode = (node: syntaxNode): result<Typ.t, ParseError.t> => {
+  validateNode(node)->Result.map(_ => {
+    switch node.type_ {
+    | "int_type" => Typ.Int
+    | "bool_type" => Typ.Bool
+    | _ => raise(UnexpectedNodeType({expected: "int_type | bool_type", actual: node.type_}))
+    }
+  })
+}
+
+let parseIdentifierNode = (node: syntaxNode): result<Var.t, ParseError.t> => {
+  validateNode(node)->Result.map(_ => {
+    if node.type_ != "identifier" {
+      raise(UnexpectedNodeType({expected: "identifier", actual: node.type_}))
+    }
+    let varname = node.text->Option.getExn(~message="Identifier node has no text")
+    Var.Raw({name: varname})
+  })
+}
+
+let parseParamNode = (node: syntaxNode): result<Expr.Param.t, ParseError.t> => {
+  validateNode(node)->Result.flatMap(_ => {
+    if node.type_ != "param" {
+      raise(UnexpectedNodeType({expected: "param", actual: node.type_}))
+    }
+
+    if node.namedChildCount == 1 {
+      let varNode = node.namedChild(0)->Option.getExn(~message="namedChild(0) does not exist")
+
+      parseIdentifierNode(varNode)->Result.map(v => {
+        {Expr.Param.var: v, typ: None}
+      })
+    } else if node.namedChildCount == 2 {
+      let varNode = node.namedChild(0)->Option.getExn(~message="namedChild(0) does not exist")
+      let typeNode = node.namedChild(1)->Option.getExn(~message="namedChild(1) does not exist")
+
+      parseIdentifierNode(varNode)->Result.flatMap(v => {
+        parseTypeNode(typeNode)->Result.map(
+          typ => {
+            {Expr.Param.var: v, typ: Some(typ)}
+          },
+        )
+      })
+    } else {
+      raise(NodeCountMismatch({expected: 1, actual: node.namedChildCount, node}))
+    }
+  })
+}
+
+@genType
+let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
+  validateNode(node)->Result.flatMap(_ => {
     switch node.type_ {
     | "source_file" =>
       if node.namedChildCount != 1 {
@@ -58,7 +115,7 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       } else {
         node.namedChild(0)
         ->Option.getExn(~message="namedChild(0) does not exist")
-        ->parseSyntaxNode
+        ->parseExprNode
       }
 
     | "number" =>
@@ -119,12 +176,12 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
         let left =
           node.namedChild(0)
           ->Option.getExn(~message="namedChild(0) does not exist")
-          ->parseSyntaxNode
+          ->parseExprNode
 
         let right =
           node.namedChild(1)
           ->Option.getExn(~message="namedChild(1) does not exist")
-          ->parseSyntaxNode
+          ->parseExprNode
 
         let op =
           binOpMapping
@@ -132,12 +189,14 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
           ->Option.getExn(~message="Operator not found in mapping")
 
         left->Result.flatMap(l =>
-          right->Result.map(r => {
-            {
-              Expr.metaData: extractMetadata(node),
-              raw: Expr.BinOp({op, left: l, right: r}),
-            }
-          })
+          right->Result.map(
+            r => {
+              {
+                Expr.metaData: extractMetadata(node),
+                raw: Expr.BinOp({op, left: l, right: r}),
+              }
+            },
+          )
         )
       }
 
@@ -154,12 +213,12 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
         let left =
           node.namedChild(0)
           ->Option.getExn(~message="namedChild(0) does not exist")
-          ->parseSyntaxNode
+          ->parseExprNode
 
         let right =
           node.namedChild(1)
           ->Option.getExn(~message="namedChild(1) does not exist")
-          ->parseSyntaxNode
+          ->parseExprNode
 
         let op =
           shortCircuitOpMapping
@@ -167,12 +226,14 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
           ->Option.getExn(~message="Operator not found in mapping")
 
         left->Result.flatMap(l =>
-          right->Result.map(r => {
-            {
-              Expr.metaData: extractMetadata(node),
-              raw: Expr.ShortCircuitOp({op, left: l, right: r}),
-            }
-          })
+          right->Result.map(
+            r => {
+              {
+                Expr.metaData: extractMetadata(node),
+                raw: Expr.ShortCircuitOp({op, left: l, right: r}),
+              }
+            },
+          )
         )
       }
 
@@ -183,7 +244,7 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
         let expr =
           node.namedChild(0)
           ->Option.getExn(~message="namedChild(0) does not exist")
-          ->parseSyntaxNode
+          ->parseExprNode
 
         expr->Result.map(e => {
           {
@@ -200,32 +261,79 @@ let rec parseSyntaxNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
         let cond =
           node.namedChild(0)
           ->Option.getExn(~message="condition does not exist in ctrl_if node")
-          ->parseSyntaxNode
+          ->parseExprNode
 
         let thenBranch =
           node.namedChild(1)
           ->Option.getExn(~message="then branch does not exist in ctrl_if node")
-          ->parseSyntaxNode
+          ->parseExprNode
 
         let elseBranch =
           node.namedChild(2)
           ->Option.getExn(~message="else branch does not exist in ctrl_if node")
-          ->parseSyntaxNode
+          ->parseExprNode
 
         cond->Result.flatMap(c =>
-          thenBranch->Result.flatMap(t =>
-            elseBranch->Result.map(
-              e => {
-                {
-                  Expr.metaData: extractMetadata(node),
-                  raw: Expr.If({cond: c, thenBranch: t, elseBranch: e}),
-                }
-              },
-            )
+          thenBranch->Result.flatMap(
+            t =>
+              elseBranch->Result.map(
+                e => {
+                  {
+                    Expr.metaData: extractMetadata(node),
+                    raw: Expr.If({cond: c, thenBranch: t, elseBranch: e}),
+                  }
+                },
+              ),
           )
         )
       }
+    | "identifier" =>
+      parseIdentifierNode(node)->Result.map(v => {
+        {
+          Expr.metaData: extractMetadata(node),
+          raw: Expr.Var(v),
+        }
+      })
+
+    | "let" =>
+      if node.namedChildCount != 3 {
+        raise(NodeCountMismatch({expected: 3, actual: node.namedChildCount, node}))
+      } else {
+        let param =
+          node.namedChild(0)
+          ->Option.getExn(~message="namedChild(0) does not exist")
+          ->parseParamNode
+
+        let valueExpr =
+          node.namedChild(1)
+          ->Option.getExn(~message="namedChild(1) does not exist")
+          ->parseExprNode
+
+        let bodyExpr =
+          node.namedChild(2)
+          ->Option.getExn(~message="namedChild(2) does not exist")
+          ->parseExprNode
+
+        param->Result.flatMap(p =>
+          valueExpr->Result.flatMap(
+            v =>
+              bodyExpr->Result.map(
+                b => {
+                  {
+                    Expr.metaData: extractMetadata(node),
+                    raw: Expr.Let({
+                      param: p,
+                      expr: v,
+                      body: b,
+                    }),
+                  }
+                },
+              ),
+          )
+        )
+      }
+
     | _ => raise(NotImplemented)
     }
-  }
+  })
 }

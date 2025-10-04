@@ -1,6 +1,6 @@
 import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
-import { parseSyntaxNode } from './SyntaxNodeParser.gen.ts';
+import { parseExprNode } from './SyntaxNodeParser.gen.ts';
 
 let parser;
 
@@ -14,7 +14,7 @@ beforeAll(
     }
 )
 
-describe('SyntaxNodeParser', () => {
+describe('parseExprNode', () => {
     describe('for integer', () => {
         it('parse zero', () => {
             const input = '0';
@@ -25,7 +25,7 @@ describe('SyntaxNodeParser', () => {
                     raw: { TAG: "IntLit", _0: 0 }
                 },
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -38,7 +38,7 @@ describe('SyntaxNodeParser', () => {
                     raw: { TAG: "IntLit", _0: 12321 }
                 },
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -52,7 +52,7 @@ describe('SyntaxNodeParser', () => {
                     raw: { TAG: "IntLit", _0: 1 }
                 },
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -68,7 +68,7 @@ describe('SyntaxNodeParser', () => {
                     raw: { TAG: "BoolLit", _0: true }
                 },
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -81,7 +81,7 @@ describe('SyntaxNodeParser', () => {
                     raw: { TAG: "BoolLit", _0: false }
                 },
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
     });
@@ -110,7 +110,7 @@ describe('SyntaxNodeParser', () => {
                     },
                 },
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -137,7 +137,7 @@ describe('SyntaxNodeParser', () => {
                     },
                 },
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -164,7 +164,7 @@ describe('SyntaxNodeParser', () => {
                     },
                 },
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -191,7 +191,7 @@ describe('SyntaxNodeParser', () => {
                     },
                 },
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -218,7 +218,7 @@ describe('SyntaxNodeParser', () => {
                     },
                 },
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
     });
@@ -244,7 +244,7 @@ describe('SyntaxNodeParser', () => {
                     }
                 }
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -268,7 +268,7 @@ describe('SyntaxNodeParser', () => {
                     }
                 }
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -292,7 +292,7 @@ describe('SyntaxNodeParser', () => {
                     }
                 }
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -316,7 +316,7 @@ describe('SyntaxNodeParser', () => {
                     }
                 }
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -340,7 +340,7 @@ describe('SyntaxNodeParser', () => {
                     }
                 }
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -364,7 +364,7 @@ describe('SyntaxNodeParser', () => {
                     }
                 }
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
     });
@@ -372,7 +372,7 @@ describe('SyntaxNodeParser', () => {
     describe('for parens', () => {
         it('parse (1 + 2) * 3', () => {
             const input = '(1 + 2) * 3';
-            expect(parseSyntaxNode((parser.parse(input)).rootNode)).toMatchInlineSnapshot(`
+            expect(parseExprNode((parser.parse(input)).rootNode)).toMatchInlineSnapshot(`
               {
                 "TAG": "Ok",
                 "_0": {
@@ -460,7 +460,7 @@ describe('SyntaxNodeParser', () => {
         });
     });
 
-     describe('for logical operators', () => {
+    describe('for logical operators', () => {
         it('parse true && false || true', () => {
             const input = 'true && false || true';
             const expectedOutput = {
@@ -495,7 +495,7 @@ describe('SyntaxNodeParser', () => {
                     }
                 }
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -515,7 +515,7 @@ describe('SyntaxNodeParser', () => {
                     }
                 }
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
     });
@@ -547,15 +547,81 @@ describe('SyntaxNodeParser', () => {
                     }
                 }
             };
-            expect(parseSyntaxNode((parser.parse(input)).rootNode))
+            expect(parseExprNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
+    });
+
+    describe('for variables', () => {
+        it('parse x', () => {
+            const input = 'x';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                    raw: { TAG: "Var", _0: { TAG: "Raw", name: 'x' } }
+                }
+            };
+            expect(parseExprNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        });
+    });
+
+    describe('for let expressions', () => {
+        it('parse let x = 1 in x', () => {
+            const input = 'let x = 1 in x';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 14 } },
+                    raw: {
+                        TAG: "Let",
+                        param: { typ: undefined, var: { TAG: "Raw", name: 'x' } },
+                        expr: {
+                            metaData: { start: { row: 0, col: 8 }, end: { row: 0, col: 9 } },
+                            raw: { TAG: "IntLit", _0: 1 }
+                        },
+                        body: {
+                            metaData: { start: { row: 0, col: 13 }, end: { row: 0, col: 14 } },
+                            raw: { TAG: "Var", _0: { TAG: "Raw", name: 'x' } }
+                        }
+                    }
+                }
+            };
+            expect(parseExprNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        });
+
+        it('parse let x:int = 1 in x', () => {
+            const input = 'let x:int = 1 in x';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 18 } },
+                    raw: {
+                        TAG: "Let",
+                        param: { typ: "Int", var: { TAG: "Raw", name: 'x' } },
+                        expr: {
+                            metaData: { start: { row: 0, col: 12 }, end: { row: 0, col: 13 } },
+                            raw: { TAG: "IntLit", _0: 1 }
+                        },
+                        body: {
+                            metaData: { start: { row: 0, col: 17 }, end: { row: 0, col: 18 } },
+                            raw: { TAG: "Var", _0: { TAG: "Raw", name: 'x' } }
+                        }
+                    }
+                }
+            };
+            expect(parseExprNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        });
+
     });
 
     describe('for combined expressions', () => {
         it('parse (1 + 2) * 3 == 9 - 6 / 2', () => {
             const input = '(1 + 2) * 3 == 9 - 6 / 2';
-            expect(parseSyntaxNode((parser.parse(input)).rootNode)).toMatchSnapshot();
+            expect(parseExprNode((parser.parse(input)).rootNode)).toMatchSnapshot();
         });
     });
 });
