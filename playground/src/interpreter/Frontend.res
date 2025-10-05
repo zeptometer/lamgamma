@@ -20,17 +20,18 @@ type evalError =
 
 @genType
 let evaluate = (_input: string, _treeSitterParser: 'a): string => {
-  let doit = (): result<Interpreter.Runtime.val, evalError> => {
+  let doit = (): result<Interpreter.Val.t, evalError> => {
     let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` _treeSitterParser.parse(_input).rootNode `)
+    let env = Interpreter.ValEnv.make()
 
     SyntaxNodeParser.parseExprNode(syntaxNode)
     ->Result.mapError(x => ParseError(x))
     ->Result.map(Expr.stripTypeInfo)
-    ->Result.flatMap(expr => Interpreter.evaluate(expr)->Result.mapError(x => EvalError(x)))
+    ->Result.flatMap(expr => Interpreter.evaluate(expr, env)->Result.mapError(x => EvalError(x)))
   }
 
   switch doit() {
-  | Ok(value) => value->Interpreter.Runtime.toString
+  | Ok(value) => value->Interpreter.Val.toString
   | Error(_) => "error"
   | exception _ => "error"
   }
@@ -76,7 +77,7 @@ let typeCheck = (_input: string, _treeSitterParser: 'a): string => {
     SyntaxNodeParser.parseExprNode(syntaxNode)
     ->Result.mapError(x => TypeError.ParseError(x))
     ->Result.flatMap(expr =>
-      TypeChecker.typeCheck(expr, Belt.Map.make(~id=module(TypeChecker.TypeEnv.VarCmp)))->Result.mapError(x => TypeError.TypeError(x))
+      TypeChecker.typeCheck(expr, TypeChecker.TypeEnv.make())->Result.mapError(x => TypeError.TypeError(x))
     )
   }
 

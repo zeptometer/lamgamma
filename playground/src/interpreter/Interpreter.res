@@ -1,11 +1,11 @@
-module Runtime = {
+module Val = {
   @genType
-  type val =
+  type t =
     | IntVal(int)
     | BoolVal(bool)
 
   @genType
-  let toString = (v: val): string =>
+  let toString = (v: t): string =>
     switch v {
     | IntVal(i) => Int.toString(i)
     | BoolVal(b) =>
@@ -20,116 +20,135 @@ module Runtime = {
 type evalError =
   | TypeMismatch
   | ZeroDivision
+  | UndefinedVariable
 
-let return = (x: Runtime.val) => Belt.Result.Ok(x)
-let raise = (x: evalError) => Belt.Result.Error(x)
+let ok = (x: Val.t) => Belt.Result.Ok(x)
+let fail = (x: evalError) => Belt.Result.Error(x)
+
+module ValEnv = {
+  type t = Belt.Map.t<Var.t, Val.t, Var.Cmp.identity>
+
+  @genType
+  let make = (): t => Belt.Map.make(~id=module(Var.Cmp))
+}
 
 @genType
-let rec evaluate = (e: RawExpr.t): result<Runtime.val, evalError> => {
-  open Runtime
+let rec evaluate = (e: RawExpr.t, env: ValEnv.t): result<Val.t, evalError> => {
+  open Val
   open RawExpr
 
   switch e {
-  | IntLit(i) => return(IntVal(i))
-  | BoolLit(b) => return(BoolVal(b))
+  | IntLit(i) => ok(IntVal(i))
+  | BoolLit(b) => ok(BoolVal(b))
   | BinOp({op, left, right}) =>
-    evaluate(left)->Result.flatMap(leftVal =>
-      evaluate(right)->Result.flatMap(rightVal =>
+    evaluate(left, env)->Result.flatMap(leftVal =>
+      evaluate(right, env)->Result.flatMap(rightVal =>
         switch op {
         // Arithmetic
         | Operator.BinOp.Add =>
           switch (leftVal, rightVal) {
-          | (IntVal(l), IntVal(r)) => return(IntVal(l + r))
-          | _ => raise(TypeMismatch)
+          | (IntVal(l), IntVal(r)) => ok(IntVal(l + r))
+          | _ => fail(TypeMismatch)
           }
         | Operator.BinOp.Sub =>
           switch (leftVal, rightVal) {
-          | (IntVal(l), IntVal(r)) => return(IntVal(l - r))
-          | _ => raise(TypeMismatch)
+          | (IntVal(l), IntVal(r)) => ok(IntVal(l - r))
+          | _ => fail(TypeMismatch)
           }
         | Operator.BinOp.Mul =>
           switch (leftVal, rightVal) {
-          | (IntVal(l), IntVal(r)) => return(IntVal(l * r))
-          | _ => raise(TypeMismatch)
+          | (IntVal(l), IntVal(r)) => ok(IntVal(l * r))
+          | _ => fail(TypeMismatch)
           }
         | Operator.BinOp.Div =>
           switch (leftVal, rightVal) {
-          | (IntVal(_), IntVal(0)) => raise(ZeroDivision)
-          | (IntVal(l), IntVal(r)) => return(IntVal(l / r))
-          | _ => raise(TypeMismatch)
+          | (IntVal(_), IntVal(0)) => fail(ZeroDivision)
+          | (IntVal(l), IntVal(r)) => ok(IntVal(l / r))
+          | _ => fail(TypeMismatch)
           }
         | Operator.BinOp.Mod =>
           switch (leftVal, rightVal) {
-          | (IntVal(_), IntVal(0)) => raise(ZeroDivision)
-          | (IntVal(l), IntVal(r)) => return(IntVal(Int.mod(l, r)))
-          | _ => raise(TypeMismatch)
+          | (IntVal(_), IntVal(0)) => fail(ZeroDivision)
+          | (IntVal(l), IntVal(r)) => ok(IntVal(Int.mod(l, r)))
+          | _ => fail(TypeMismatch)
           }
         // Comparison
         | Operator.BinOp.Eq =>
           switch (leftVal, rightVal) {
-          | (IntVal(l), IntVal(r)) => return(BoolVal(l == r))
-          | (BoolVal(l), BoolVal(r)) => return(BoolVal(l == r))
-          | _ => raise(TypeMismatch)
+          | (IntVal(l), IntVal(r)) => ok(BoolVal(l == r))
+          | (BoolVal(l), BoolVal(r)) => ok(BoolVal(l == r))
+          | _ => fail(TypeMismatch)
           }
         | Operator.BinOp.Ne =>
           switch (leftVal, rightVal) {
-          | (IntVal(l), IntVal(r)) => return(BoolVal(l != r))
-          | (BoolVal(l), BoolVal(r)) => return(BoolVal(l != r))
-          | _ => raise(TypeMismatch)
+          | (IntVal(l), IntVal(r)) => ok(BoolVal(l != r))
+          | (BoolVal(l), BoolVal(r)) => ok(BoolVal(l != r))
+          | _ => fail(TypeMismatch)
           }
         | Operator.BinOp.Lt =>
           switch (leftVal, rightVal) {
-          | (IntVal(l), IntVal(r)) => return(BoolVal(l < r))
-          | _ => raise(TypeMismatch)
+          | (IntVal(l), IntVal(r)) => ok(BoolVal(l < r))
+          | _ => fail(TypeMismatch)
           }
         | Operator.BinOp.Le =>
           switch (leftVal, rightVal) {
-          | (IntVal(l), IntVal(r)) => return(BoolVal(l <= r))
-          | _ => raise(TypeMismatch)
+          | (IntVal(l), IntVal(r)) => ok(BoolVal(l <= r))
+          | _ => fail(TypeMismatch)
           }
         | Operator.BinOp.Gt =>
           switch (leftVal, rightVal) {
-          | (IntVal(l), IntVal(r)) => return(BoolVal(l > r))
-          | _ => raise(TypeMismatch)
+          | (IntVal(l), IntVal(r)) => ok(BoolVal(l > r))
+          | _ => fail(TypeMismatch)
           }
         | Operator.BinOp.Ge =>
           switch (leftVal, rightVal) {
-          | (IntVal(l), IntVal(r)) => return(BoolVal(l >= r))
-          | _ => raise(TypeMismatch)
+          | (IntVal(l), IntVal(r)) => ok(BoolVal(l >= r))
+          | _ => fail(TypeMismatch)
           }
         }
       )
     )
   | ShortCircuitOp({op, left, right}) =>
-    evaluate(left)->Result.flatMap(leftVal =>
+    evaluate(left, env)->Result.flatMap(leftVal =>
       switch (op, leftVal) {
-      | (Operator.ShortCircuitOp.And, BoolVal(false)) => return(BoolVal(false)) // short-circuit
-      | (Operator.ShortCircuitOp.Or, BoolVal(true)) => return(BoolVal(true)) // short-circuit
+      | (Operator.ShortCircuitOp.And, BoolVal(false)) => ok(BoolVal(false)) // short-circuit
+      | (Operator.ShortCircuitOp.Or, BoolVal(true)) => ok(BoolVal(true)) // short-circuit
       | (Operator.ShortCircuitOp.And, BoolVal(true))
       | (Operator.ShortCircuitOp.Or, BoolVal(false)) =>
-        evaluate(right)->Result.flatMap(rightVal =>
+        evaluate(right, env)->Result.flatMap(rightVal =>
           switch rightVal {
-          | BoolVal(b) => return(BoolVal(b))
-          | _ => raise(TypeMismatch)
+          | BoolVal(b) => ok(BoolVal(b))
+          | _ => fail(TypeMismatch)
           }
         )
-      | _ => raise(TypeMismatch)
+      | _ => fail(TypeMismatch)
       }
     )
   | UniOp({op, expr}) =>
-    evaluate(expr)->Result.flatMap(exprVal =>
+    evaluate(expr, env)->Result.flatMap(exprVal =>
       switch (op, exprVal) {
-      | (Operator.UniOp.Not, BoolVal(b)) => return(BoolVal(!b))
-      | _ => raise(TypeMismatch)
+      | (Operator.UniOp.Not, BoolVal(b)) => ok(BoolVal(!b))
+      | _ => fail(TypeMismatch)
       }
     )
   | If({cond, thenBranch, elseBranch}) =>
-    evaluate(cond)->Result.flatMap(condVal =>
+    evaluate(cond, env)->Result.flatMap(condVal =>
       switch condVal {
-      | BoolVal(true) => evaluate(thenBranch)
-      | BoolVal(false) => evaluate(elseBranch)
-      | _ => raise(TypeMismatch)
+      | BoolVal(true) => evaluate(thenBranch, env)
+      | BoolVal(false) => evaluate(elseBranch, env)
+      | _ => fail(TypeMismatch)
       }
     )
+
+  | Var(v) =>
+    Belt.Map.get(env, v)
+    ->Option.map(ok)
+    ->Option.getOr(fail(UndefinedVariable))
+
+  | Let({param, expr, body}) =>
+    evaluate(expr, env)->Result.flatMap(exprVal => {
+      let newEnv = Belt.Map.set(env, param, exprVal)
+      evaluate(body, newEnv)
+    })
   }
 }

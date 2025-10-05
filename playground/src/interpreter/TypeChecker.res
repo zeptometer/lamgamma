@@ -8,17 +8,14 @@ let ok = (x: 'a) => Belt.Result.Ok(x)
 let fail = (x: TypeError.t) => Belt.Result.Error(x)
 
 module TypeEnv = {
-  module VarCmp = Belt.Id.MakeComparableU({
-    type t = Var.t
-    let cmp = (Var.Raw({name: nameA}), Var.Raw({name: nameB})) => {Pervasives.compare(nameA, nameB)}
-  })
+  type t = Belt.Map.t<Var.t, Typ.t, Var.Cmp.identity>
 
   @genType
-  let make = (): Belt.Map.t<Var.t, Typ.t, VarCmp.identity> => Belt.Map.make(~id=module(VarCmp))
+  let make = (): t => Belt.Map.make(~id=module(Var.Cmp))
 }
 
 @genType
-let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, TypeEnv.VarCmp.identity>): result<Typ.t, TypeError.t> => {
+let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identity>): result<Typ.t, TypeError.t> => {
   open Expr
   open Typ
 
