@@ -1419,6 +1419,48 @@
     }
   },
   {
+    "type": "func_type",
+    "named": true,
+    "fields": {
+      "param": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "func_type",
+            "named": true
+          },
+          {
+            "type": "int_type",
+            "named": true
+          }
+        ]
+      },
+      "return": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "func_type",
+            "named": true
+          },
+          {
+            "type": "int_type",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "ge",
     "named": true,
     "fields": {
@@ -1980,6 +2022,10 @@
         "types": [
           {
             "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "func_type",
             "named": true
           },
           {
@@ -3521,6 +3567,10 @@
           "named": true
         },
         {
+          "type": "func_type",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
@@ -4127,6 +4177,10 @@
   },
   {
     "type": "-",
+    "named": false
+  },
+  {
+    "type": "->",
     "named": false
   },
   {

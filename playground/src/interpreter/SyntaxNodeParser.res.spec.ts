@@ -740,3 +740,69 @@ describe('parseExprNode', () => {
         })
     })
 });
+
+describe('parseTypeNode', () => {
+    it('parse int type', () => {
+        const input = '(x:int) => { x }';
+        const expectedOutput = {
+            TAG: "Ok",
+            _0: {
+                metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 16 } },
+                raw: {
+                    TAG: "Func",
+                    params: { hd: { typ: "Int", var: { TAG: "Raw", name: "x" } }, tl: 0 },
+                    returnType: undefined,
+                    body: {
+                        metaData: { start: { row: 0, col: 13 }, end: { row: 0, col: 14 } },
+                        raw: { TAG: "Var", _0: { TAG: "Raw", name: "x" } }
+                    }
+                }
+            }
+        };
+        expect(parseExprNode((parser.parse(input)).rootNode))
+            .toEqual(expectedOutput);
+    })
+
+    it('parse bool type', () => {
+        const input = '(x:bool) => { x }';
+        const expectedOutput = {
+            TAG: "Ok",
+            _0: {
+                metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 17 } },
+                raw: {
+                    TAG: "Func",
+                    params: { hd: { typ: "Bool", var: { TAG: "Raw", name: "x" } }, tl: 0 },
+                    returnType: undefined,
+                    body: {
+                        metaData: { start: { row: 0, col: 14 }, end: { row: 0, col: 15 } },
+                        raw: { TAG: "Var", _0: { TAG: "Raw", name: "x" } }
+                    }
+                }
+            }
+        };
+        expect(parseExprNode((parser.parse(input)).rootNode))
+            .toEqual(expectedOutput);
+    })
+
+
+    it('parse func type', () => {
+        const input = '(x:int->int) => { x }';
+        const expectedOutput = {
+            TAG: "Ok",
+            _0: {
+                metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 21 } },
+                raw: {
+                    TAG: "Func",
+                    params: { hd: { typ: { TAG: "Func", _0: "Int", _1: "Int" }, var: { TAG: "Raw", name: "x" } }, tl: 0 },
+                    returnType: undefined,
+                    body: {
+                        metaData: { start: { row: 0, col: 18 }, end: { row: 0, col: 19 } },
+                        raw: { TAG: "Var", _0: { TAG: "Raw", name: "x" } }
+                    }
+                }
+            }
+        };
+        expect(parseExprNode((parser.parse(input)).rootNode))
+            .toEqual(expectedOutput);
+    })
+});

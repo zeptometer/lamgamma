@@ -868,6 +868,10 @@
         {
           "type": "SYMBOL",
           "name": "bool_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "func_type"
         }
       ]
     },
@@ -878,6 +882,35 @@
     "bool_type": {
       "type": "STRING",
       "value": "bool"
+    },
+    "func_type": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "param",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_type"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "->"
+          },
+          {
+            "type": "FIELD",
+            "name": "return",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_type"
+            }
+          }
+        ]
+      }
     }
   },
   "extras": [

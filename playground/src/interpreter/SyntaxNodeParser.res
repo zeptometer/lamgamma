@@ -43,6 +43,11 @@ let getNamedChildForFieldName = (node: syntaxNode, fieldName: string): option<sy
   }
 }
 
+let getNamedChildForFieldNameUnsafe = (node: syntaxNode, fieldName: string): syntaxNode => {
+  getNamedChildForFieldName(node, fieldName)
+  ->Option.getExn(~message=`No named child with field name ${fieldName}`)
+}
+
 let ok = (x: 'a) => Belt.Result.Ok(x)
 let fail = (x: ParseError.t) => Belt.Result.Error(x)
 
@@ -76,12 +81,25 @@ let validateNode = (node: syntaxNode): result<unit, ParseError.t> => {
 }
 
 @genType
-let parseTypeNode = (node: syntaxNode): result<Typ.t, ParseError.t> => {
-  validateNode(node)->Result.map(_ => {
+let rec parseTypeNode = (node: syntaxNode): result<Typ.t, ParseError.t> => {
+  validateNode(node)->Result.flatMap(_ => {
     switch node.type_ {
-    | "int_type" => Typ.Int
-    | "bool_type" => Typ.Bool
-    | _ => raise(UnexpectedNodeType({expected: "int_type | bool_type", actual: node.type_}))
+    | "int_type" => ok(Typ.Int)
+    | "bool_type" => ok(Typ.Bool)
+    | "func_type" =>
+      let paramType =
+        node
+        ->getNamedChildForFieldNameUnsafe("param")
+        ->parseTypeNode
+
+      let returnType =
+        node
+        ->getNamedChildForFieldNameUnsafe("return")
+        ->parseTypeNode
+
+      paramType->Result.flatMap(p => returnType->Result.map(r => Typ.Func(p, r)))
+
+    | _ => raise(MalformedNode({msg: `Unknown node type for type node: ${node.type_}`}))
     }
   })
 }
@@ -401,8 +419,7 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
     | "lambda" =>
       let params =
         node
-        ->getNamedChildForFieldName("params")
-        ->Option.getExn(~message="Lambda node has no params child")
+        ->getNamedChildForFieldNameUnsafe("params")
         ->parseParamsNode
 
       let returnType = switch node->getNamedChildForFieldName("return_type") {
@@ -412,8 +429,7 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
 
       let body =
         node
-        ->getNamedChildForFieldName("body")
-        ->Option.getExn(~message="Lambda node has no body child")
+        ->getNamedChildForFieldNameUnsafe("body")
         ->parseExprNode
 
       params->Result.flatMap(p => {
@@ -436,14 +452,12 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
     | "application" =>
       let func =
         node
-        ->getNamedChildForFieldName("func")
-        ->Option.getExn(~message="Application node has no func child")
+        ->getNamedChildForFieldNameUnsafe("func")
         ->parseExprNode
 
       let arg =
         node
-        ->getNamedChildForFieldName("arg")
-        ->Option.getExn(~message="Application node has no arg child")
+        ->getNamedChildForFieldNameUnsafe("arg")
         ->parseExprNode
 
       func->Result.flatMap(f => {

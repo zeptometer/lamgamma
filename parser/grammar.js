@@ -211,12 +211,21 @@ module.exports = grammar({
 
     _type: $ => choice(
       $.int_type,
-      $.bool_type
+      $.bool_type,
+      $.func_type
     ),
 
     int_type: $ => 'int',
 
     bool_type: $ => 'bool',
+
+    func_type: $ => prec.right(PREC.typefunc,
+      seq(
+        field('param', $._type),
+        '->',
+        field('return', $._type)
+      )
+    ),
 
   }
 });
