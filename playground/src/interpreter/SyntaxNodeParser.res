@@ -5,6 +5,7 @@ type rec syntaxNode = {
   isError: bool,
   hasError: bool,
   isMissing: bool,
+  isNamed: bool,
   namedChildCount: int,
   @as("type") type_: string,
   namedChild: int => Nullable.t<syntaxNode>,
@@ -12,6 +13,7 @@ type rec syntaxNode = {
   endPosition: loc,
   grammarType: string,
   childForFieldName: string => Nullable.t<syntaxNode>,
+  childrenForFieldName: string => array<syntaxNode>,
 }
 
 module ParseError = {
@@ -20,10 +22,26 @@ module ParseError = {
     | MissingNodeError({start: loc, end: loc, missing: string})
 }
 
+@deprecated("Use MalformedNode instead")
 exception NodeCountMismatch({expected: int, actual: int, node: syntaxNode})
+@deprecated("Use MalformedNode instead")
 exception UnexpectedText({text: option<string>})
+@deprecated("Use MalformedNode instead")
 exception UnexpectedNodeType({expected: string, actual: string})
+exception MalformedNode({msg: string})
 exception NotImplemented
+
+let getNamedChildForFieldName = (node: syntaxNode, fieldName: string): option<syntaxNode> => {
+  let xs = node.childrenForFieldName(fieldName)->Array.filter(child => child.isNamed)
+
+  if Array.length(xs) == 0 {
+    None
+  } else if Array.length(xs) > 1 {
+    raise(MalformedNode({msg: `More than one named child with field name ${fieldName}`}))
+  } else {
+    Some(Array.getUnsafe(xs, 0))
+  }
+}
 
 let ok = (x: 'a) => Belt.Result.Ok(x)
 let fail = (x: ParseError.t) => Belt.Result.Error(x)
@@ -382,21 +400,20 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
 
     | "lambda" =>
       let params =
-        node.childForFieldName("params")
-        ->Nullable.toOption
-        ->Option.getExn(~message="params field does not exist")
+        node
+        ->getNamedChildForFieldName("params")
+        ->Option.getExn(~message="Lambda node has no params child")
         ->parseParamsNode
 
-      let returnType = switch node.childForFieldName("return_type")->Nullable.toOption {
-      | Some(n) =>
-        n->parseTypeNode->Result.map(t => Some(t))
+      let returnType = switch node->getNamedChildForFieldName("return_type") {
+      | Some(n) => n->parseTypeNode->Result.map(t => Some(t))
       | None => ok(None)
       }
 
       let body =
-        node.childForFieldName("body")
-        ->Nullable.toOption
-        ->Option.getExn(~message="body field does not exist")
+        node
+        ->getNamedChildForFieldName("body")
+        ->Option.getExn(~message="Lambda node has no body child")
         ->parseExprNode
 
       params->Result.flatMap(p => {
@@ -418,13 +435,15 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
 
     | "application" =>
       let func =
-        node.childForFieldName("func")
-        ->Nullable.getExn
+        node
+        ->getNamedChildForFieldName("func")
+        ->Option.getExn(~message="Application node has no func child")
         ->parseExprNode
 
       let arg =
-        node.childForFieldName("arg")
-        ->Nullable.getExn
+        node
+        ->getNamedChildForFieldName("arg")
+        ->Option.getExn(~message="Application node has no arg child")
         ->parseExprNode
 
       func->Result.flatMap(f => {
