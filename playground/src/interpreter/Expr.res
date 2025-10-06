@@ -24,7 +24,7 @@ and raw_t =
   // // basic syntax
   | Var(Var.t)
   | Func({params: list<Param.t>, returnType: option<Typ.t>, body: t})
-  // | App({ func: t, args: list<t> })
+  | App({func: t, arg: t})
   | Let({param: Param.t, expr: t, body: t})
   // | LetRec({ param: Param.t, expr: t, body: t})
   // // primitive operations
@@ -68,6 +68,11 @@ let rec stripTypeInfo = (expr: t): RawExpr.t => {
     RawExpr.Func({
       params: params->Belt.List.map(p => p.var),
       body: stripTypeInfo(body),
+    })
+  | App({func, arg}) =>
+    RawExpr.App({
+      func: stripTypeInfo(func),
+      arg: stripTypeInfo(arg),
     })
   }
 }

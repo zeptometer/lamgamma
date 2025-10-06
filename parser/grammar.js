@@ -89,8 +89,8 @@ module.exports = grammar({
 
     application: $ =>
       prec.left(PREC.application, seq(
-        $._expression,
-        $._simple_expression
+        field("func", $._expression),
+        field("arg", $._simple_expression)
       )),
 
     param: $ => choice($.identifier, seq($.identifier, ':', $._type)),

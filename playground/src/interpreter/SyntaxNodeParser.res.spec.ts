@@ -627,7 +627,7 @@ describe('parseExprNode', () => {
                     metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 13 } },
                     raw: {
                         TAG: "Func",
-                        params: {hd: {typ: undefined, var: {TAG: "Raw", name: "x"}}, tl: 0},
+                        params: { hd: { typ: undefined, var: { TAG: "Raw", name: "x" } }, tl: 0 },
                         returnType: undefined,
                         body: {
                             metaData: { start: { row: 0, col: 9 }, end: { row: 0, col: 11 } },
@@ -648,7 +648,7 @@ describe('parseExprNode', () => {
                     metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 21 } },
                     raw: {
                         TAG: "Func",
-                        params: {hd: {typ: "Int", var: {TAG: "Raw", name: "x"}}, tl: 0},
+                        params: { hd: { typ: "Int", var: { TAG: "Raw", name: "x" } }, tl: 0 },
                         returnType: "Int",
                         body: {
                             metaData: { start: { row: 0, col: 17 }, end: { row: 0, col: 19 } },
@@ -669,7 +669,7 @@ describe('parseExprNode', () => {
                     metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 28 } },
                     raw: {
                         TAG: "Func",
-                        params: {hd: {typ: "Int", var: {TAG: "Raw", name: "x"}}, tl: {hd: {typ: "Int", var: {TAG: "Raw", name: "y"}}, tl: 0}},
+                        params: { hd: { typ: "Int", var: { TAG: "Raw", name: "x" } }, tl: { hd: { typ: "Int", var: { TAG: "Raw", name: "y" } }, tl: 0 } },
                         returnType: "Int",
                         body: {
                             metaData: { start: { row: 0, col: 24 }, end: { row: 0, col: 26 } },
@@ -682,6 +682,41 @@ describe('parseExprNode', () => {
                 .toEqual(expectedOutput);
         })
     });
+
+    describe('for applications', () => {
+        it('parse x y z', () => {
+            const input = 'x y z';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 5 } },
+                    raw: {
+                        TAG: "App",
+                        func: {
+                            metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 3 } },
+                            raw: {
+                                TAG: "App",
+                                func: {
+                                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+                                    raw: { TAG: "Var", _0: { TAG: "Raw", name: "x" } }
+                                },
+                                arg: {
+                                    metaData: { start: { row: 0, col: 2 }, end: { row: 0, col: 3 } },
+                                    raw: { TAG: "Var", _0: { TAG: "Raw", name: "y" } }
+                                }
+                            }
+                        },
+                        arg: {
+                            metaData: { start: { row: 0, col: 4 }, end: { row: 0, col: 5 } },
+                            raw: { TAG: "Var", _0: { TAG: "Raw", name: "z" } }
+                        }
+                    }
+                }
+            };
+            expect(parseExprNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        })
+    })
 
     describe('for combined expressions', () => {
         it('parse (1 + 2) * 3 == 9 - 6 / 2', () => {

@@ -416,6 +416,28 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
         )
       })
 
+    | "application" =>
+      let func =
+        node.childForFieldName("func")
+        ->Nullable.getExn
+        ->parseExprNode
+
+      let arg =
+        node.childForFieldName("arg")
+        ->Nullable.getExn
+        ->parseExprNode
+
+      func->Result.flatMap(f => {
+        arg->Result.map(
+          a => {
+            {
+              Expr.metaData: extractMetadata(node),
+              raw: Expr.App({func: f, arg: a}),
+            }
+          },
+        )
+      })
+
     | _ => raise(NotImplemented)
     }
   })
