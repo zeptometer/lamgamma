@@ -2,7 +2,7 @@
 type rec t =
   // basic syntax
   | Var(Var.t)
-  // | Func({ params: list<Var.t>, body: t })
+  | Func({ params: list<Var.t>, body: t })
   // | App({ func: t, args: list<t> })
   | Let({ param: Var.t, expr: t, body: t})
   // | LetRec({ var: Var.t, expr: t, body: t})

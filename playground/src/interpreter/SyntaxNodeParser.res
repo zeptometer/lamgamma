@@ -1,15 +1,16 @@
 type loc = {row: int, column: int}
 
 type rec syntaxNode = {
-  text: option<string>,
+  text: Nullable.t<string>,
   isError: bool,
   isMissing: bool,
   namedChildCount: int,
   @as("type") type_: string,
-  namedChild: int => option<syntaxNode>,
+  namedChild: int => Nullable.t<syntaxNode>,
   startPosition: loc,
   endPosition: loc,
   grammarType: string,
+  childForFieldName: string => Nullable.t<syntaxNode>,
 }
 
 module ParseError = {
@@ -71,7 +72,8 @@ let parseIdentifierNode = (node: syntaxNode): result<Var.t, ParseError.t> => {
     if node.type_ != "identifier" {
       raise(UnexpectedNodeType({expected: "identifier", actual: node.type_}))
     }
-    let varname = node.text->Option.getExn(~message="Identifier node has no text")
+    let varname =
+      node.text->Nullable.toOption->Option.getExn(~message="Identifier node has no text")
     Var.Raw({name: varname})
   })
 }
@@ -83,14 +85,23 @@ let parseParamNode = (node: syntaxNode): result<Expr.Param.t, ParseError.t> => {
     }
 
     if node.namedChildCount == 1 {
-      let varNode = node.namedChild(0)->Option.getExn(~message="namedChild(0) does not exist")
+      let varNode =
+        node.namedChild(0)
+        ->Nullable.toOption
+        ->Option.getExn(~message="namedChild(0) does not exist")
 
       parseIdentifierNode(varNode)->Result.map(v => {
         {Expr.Param.var: v, typ: None}
       })
     } else if node.namedChildCount == 2 {
-      let varNode = node.namedChild(0)->Option.getExn(~message="namedChild(0) does not exist")
-      let typeNode = node.namedChild(1)->Option.getExn(~message="namedChild(1) does not exist")
+      let varNode =
+        node.namedChild(0)
+        ->Nullable.toOption
+        ->Option.getExn(~message="namedChild(0) does not exist")
+      let typeNode =
+        node.namedChild(1)
+        ->Nullable.toOption
+        ->Option.getExn(~message="namedChild(1) does not exist")
 
       parseIdentifierNode(varNode)->Result.flatMap(v => {
         parseTypeNode(typeNode)->Result.map(
@@ -105,6 +116,28 @@ let parseParamNode = (node: syntaxNode): result<Expr.Param.t, ParseError.t> => {
   })
 }
 
+let parseParamsNode = (node: syntaxNode): result<list<Expr.Param.t>, ParseError.t> => {
+  validateNode(node)->Result.flatMap(_ => {
+    if node.type_ != "params" {
+      raise(UnexpectedNodeType({expected: "params", actual: node.type_}))
+    }
+
+    let rec aux = (idx: int, acc: list<Expr.Param.t>): result<list<Expr.Param.t>, ParseError.t> => {
+      if idx >= node.namedChildCount {
+        ok(Belt.List.reverse(acc))
+      } else {
+        node.namedChild(idx)
+        ->Nullable.toOption
+        ->Option.getExn(~message="namedChild does not exist")
+        ->parseParamNode
+        ->Result.flatMap(param => aux(idx + 1, Belt.List.add(acc, param)))
+      }
+    }
+
+    aux(0, Belt.List.fromArray([]))
+  })
+}
+
 @genType
 let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
   validateNode(node)->Result.flatMap(_ => {
@@ -114,6 +147,7 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
         raise(NodeCountMismatch({expected: 1, actual: node.namedChildCount, node}))
       } else {
         node.namedChild(0)
+        ->Nullable.toOption
         ->Option.getExn(~message="namedChild(0) does not exist")
         ->parseExprNode
       }
@@ -121,6 +155,7 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
     | "number" =>
       let intval =
         node.text
+        ->Nullable.toOption
         ->Option.getExn(~message="Number node has no text")
         ->Int.fromString
         ->Option.getExn(~message="Failed to parse int from string")
@@ -131,10 +166,10 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       })
 
     | "boolean" =>
-      let boolval = switch node.text {
+      let boolval = switch node.text->Nullable.toOption {
       | Some("true") => true
       | Some("false") => false
-      | _ => raise(UnexpectedText({text: node.text}))
+      | _ => raise(UnexpectedText({text: node.text->Nullable.toOption}))
       }
 
       ok({
@@ -175,11 +210,13 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       } else {
         let left =
           node.namedChild(0)
+          ->Nullable.toOption
           ->Option.getExn(~message="namedChild(0) does not exist")
           ->parseExprNode
 
         let right =
           node.namedChild(1)
+          ->Nullable.toOption
           ->Option.getExn(~message="namedChild(1) does not exist")
           ->parseExprNode
 
@@ -212,11 +249,13 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       } else {
         let left =
           node.namedChild(0)
+          ->Nullable.toOption
           ->Option.getExn(~message="namedChild(0) does not exist")
           ->parseExprNode
 
         let right =
           node.namedChild(1)
+          ->Nullable.toOption
           ->Option.getExn(~message="namedChild(1) does not exist")
           ->parseExprNode
 
@@ -243,6 +282,7 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       } else {
         let expr =
           node.namedChild(0)
+          ->Nullable.toOption
           ->Option.getExn(~message="namedChild(0) does not exist")
           ->parseExprNode
 
@@ -260,16 +300,19 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       } else {
         let cond =
           node.namedChild(0)
+          ->Nullable.toOption
           ->Option.getExn(~message="condition does not exist in ctrl_if node")
           ->parseExprNode
 
         let thenBranch =
           node.namedChild(1)
+          ->Nullable.toOption
           ->Option.getExn(~message="then branch does not exist in ctrl_if node")
           ->parseExprNode
 
         let elseBranch =
           node.namedChild(2)
+          ->Nullable.toOption
           ->Option.getExn(~message="else branch does not exist in ctrl_if node")
           ->parseExprNode
 
@@ -301,16 +344,19 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       } else {
         let param =
           node.namedChild(0)
+          ->Nullable.toOption
           ->Option.getExn(~message="namedChild(0) does not exist")
           ->parseParamNode
 
         let valueExpr =
           node.namedChild(1)
+          ->Nullable.toOption
           ->Option.getExn(~message="namedChild(1) does not exist")
           ->parseExprNode
 
         let bodyExpr =
           node.namedChild(2)
+          ->Nullable.toOption
           ->Option.getExn(~message="namedChild(2) does not exist")
           ->parseExprNode
 
@@ -332,6 +378,43 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
           )
         )
       }
+
+    | "lambda" =>
+      let params =
+        node.childForFieldName("params")
+        ->Nullable.toOption
+        ->Option.getExn(~message="params field does not exist")
+        ->parseParamsNode
+
+      let returnType = switch node.childForFieldName("return_type")->Nullable.toOption {
+      | Some(n) =>
+        Console.log(n)
+        n->parseTypeNode->Result.map(t => Some(t))
+      | None => ok(None)
+      }
+
+      let body =
+        node.childForFieldName("body")
+        ->Nullable.toOption
+        ->Option.getExn(~message="body field does not exist")
+        ->parseExprNode
+
+      params->Result.flatMap(p => {
+        returnType->Result.flatMap(
+          r => {
+            body->Result.map(
+              b => {
+                Expr.metaData: extractMetadata(node),
+                raw: Expr.Func({
+                  params: p,
+                  returnType: r,
+                  body: b,
+                }),
+              },
+            )
+          },
+        )
+      })
 
     | _ => raise(NotImplemented)
     }

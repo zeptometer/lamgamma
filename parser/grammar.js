@@ -81,10 +81,10 @@ module.exports = grammar({
     ),
 
     lambda: $ => prec.right(PREC.lambda,
-      seq('(', $.params, ')',
-        optional(seq(':', $._type)),
+      seq('(', field('params', $.params), ')',
+        optional(seq(':', field('return_type', $._type))),
         '=>',
-        seq('{', $._expression, '}'),
+        seq('{', field('body', $._expression), '}'),
       )),
 
     application: $ =>

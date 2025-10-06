@@ -618,6 +618,71 @@ describe('parseExprNode', () => {
 
     });
 
+    describe('for function definitions', () => {
+        it('parse (x) => { 10 }', () => {
+            const input = '(x) => { 10 }';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 13 } },
+                    raw: {
+                        TAG: "Func",
+                        params: {hd: {typ: undefined, var: {TAG: "Raw", name: "x"}}, tl: 0},
+                        returnType: undefined,
+                        body: {
+                            metaData: { start: { row: 0, col: 9 }, end: { row: 0, col: 11 } },
+                            raw: { TAG: "IntLit", _0: 10 }
+                        }
+                    }
+                }
+            };
+            expect(parseExprNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        });
+
+        it('parse (x:int):int => {10}', () => {
+            const input = '(x:int):int => { 10 }';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 21 } },
+                    raw: {
+                        TAG: "Func",
+                        params: {hd: {typ: "Int", var: {TAG: "Raw", name: "x"}}, tl: 0},
+                        returnType: "Int",
+                        body: {
+                            metaData: { start: { row: 0, col: 17 }, end: { row: 0, col: 19 } },
+                            raw: { TAG: "IntLit", _0: 10 }
+                        }
+                    }
+                }
+            };
+            expect(parseExprNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        })
+
+        it('parse (x:int, y:int):int => {10}', () => {
+            const input = '(x:int, y:int):int => { 10 }';
+            const expectedOutput = {
+                TAG: "Ok",
+                _0: {
+                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 28 } },
+                    raw: {
+                        TAG: "Func",
+                        params: {hd: {typ: "Int", var: {TAG: "Raw", name: "x"}}, tl: {hd: {typ: "Int", var: {TAG: "Raw", name: "y"}}, tl: 0}},
+                        returnType: "Int",
+                        body: {
+                            metaData: { start: { row: 0, col: 24 }, end: { row: 0, col: 26 } },
+                            raw: { TAG: "IntLit", _0: 10 }
+                        }
+                    }
+                }
+            };
+            expect(parseExprNode((parser.parse(input)).rootNode))
+                .toEqual(expectedOutput);
+        })
+    });
+
     describe('for combined expressions', () => {
         it('parse (1 + 2) * 3 == 9 - 6 / 2', () => {
             const input = '(1 + 2) * 3 == 9 - 6 / 2';

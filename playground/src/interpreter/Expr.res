@@ -23,9 +23,9 @@ type rec t = {metaData: MetaData.t, raw: raw_t}
 and raw_t =
   // // basic syntax
   | Var(Var.t)
-  // | Func({ clss: list<Typ.clsdecl>, params: list<Var.t>, body: t })
+  | Func({params: list<Param.t>, returnType: option<Typ.t>, body: t})
   // | App({ func: t, args: list<t> })
-  | Let({ param: Param.t, expr: t, body: t})
+  | Let({param: Param.t, expr: t, body: t})
   // | LetRec({ param: Param.t, expr: t, body: t})
   // // primitive operations
   | IntLit(int)
@@ -62,6 +62,11 @@ let rec stripTypeInfo = (expr: t): RawExpr.t => {
     RawExpr.Let({
       param: param.var,
       expr: stripTypeInfo(expr),
+      body: stripTypeInfo(body),
+    })
+  | Func({params, body, returnType: _}) =>
+    RawExpr.Func({
+      params: params->Belt.List.map(p => p.var),
       body: stripTypeInfo(body),
     })
   }
