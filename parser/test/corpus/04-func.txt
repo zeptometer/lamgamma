@@ -1,0 +1,96 @@
+==================
+Func without types
+==================
+
+( x ) => { 10 }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)))
+    (number)))
+
+==================
+Func with param type
+==================
+
+( x:int ) => { 10 }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (int_type)))
+    (number)))
+
+==================
+Func with return type
+==================
+
+( x ):int => { 10 }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)))
+    (int_type)
+    (number)))
+
+==================
+Func with multiple params
+==================
+
+( x, y:int, z:bool ):int => { 10 }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier))
+      (param
+        (identifier)
+        (int_type))
+      (param
+        (identifier)
+        (bool_type)))
+    (int_type)
+    (number)))
+
+==================
+Func without params is illegal
+==================
+
+(  ) => { 10 }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param (MISSING identifier)))
+    (number)))
+
+==================
+Func without braces for body is illegal
+==================
+
+( x ) => 10
+
+---
+
+(ERROR
+  (params
+    (param
+      (identifier)))
+  (number))

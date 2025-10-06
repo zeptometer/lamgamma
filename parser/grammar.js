@@ -37,6 +37,10 @@ module.exports = grammar({
 
   word: $ => $.identifier,
 
+  conflicts: $ => [
+    [$._simple_expression, $.param]
+  ],
+
   rules: {
     source_file: $ => $._expression,
 
@@ -44,8 +48,6 @@ module.exports = grammar({
       $._simple_expression,
       $.lambda,
       $.application,
-      // fixpoint
-      $.fixpoint,
       // arithmetic
       $.add,
       $.sub,
@@ -79,10 +81,11 @@ module.exports = grammar({
     ),
 
     lambda: $ => prec.right(PREC.lambda,
-      seq('fn', $.parameters, '->', $._expression)),
-
-    fixpoint: $ => prec.right(PREC.lambda,
-      seq('fix', $.identifier, '->', $._expression)),
+      seq('(', $.params, ')',
+        optional(seq(':', $._type)),
+        '=>',
+        seq('{', $._expression, '}'),
+      )),
 
     application: $ =>
       prec.left(PREC.application, seq(
@@ -90,7 +93,9 @@ module.exports = grammar({
         $._simple_expression
       )),
 
-    parameters: $ => repeat1($.identifier),
+    param: $ => choice($.identifier, seq($.identifier, ':', $._type)),
+
+    params: $ => seq($.param, repeat(seq(',', $.param))),
 
     identifier: $ => /[a-z_][a-zA-Z0-9_]*/,
 
@@ -199,9 +204,6 @@ module.exports = grammar({
         seq('~', field("shift", $.number), '{', field("body", $._expression), '}')
       )
     ),
-
-    // let
-    param: $ => choice($.identifier, seq($.identifier, ':', $._type)),
 
     let: $ => prec.right(PREC.assign,
       seq('let', $.param, '=', $._expression, 'in', $._expression)
