@@ -402,4 +402,87 @@ describe('Typechecker', () => {
             });
         });
     });
+
+    describe('for function expressions', () => {
+        describe('successfully', () => {
+            it('infer type of (x: int) => { x + 1 } as (Int -> Int)', () => {
+                expect(typeCheck(parse('(x: int) => { x + 1 }'), emptyEnv)).toEqual({
+                    TAG: "Ok",
+                    _0: {
+                        TAG: "Func",
+                        _0: "Int",
+                        _1: "Int"
+                    }
+                });
+            });
+
+            it('infer type of (x: int):int => { x + 1 } as (Int -> Int)', () => {
+                expect(typeCheck(parse('(x: int):int => { x + 1 }'), emptyEnv)).toEqual({
+                    TAG: "Ok",
+                    _0: {
+                        TAG: "Func",
+                        _0: "Int",
+                        _1: "Int"
+                    }
+                });
+            });
+
+            it('infer type of (x: int, y:int) => { x + y } as (Int -> Int)', () => {
+                expect(typeCheck(parse('(x: int, y: int) => { x + y }'), emptyEnv)).toEqual({
+                    TAG: "Ok",
+                    _0: {
+                        TAG: "Func",
+                        _0: "Int",
+                        _1: {
+                            TAG: "Func",
+                            _0: "Int",
+                            _1: "Int"
+                        }
+                    }
+                });
+            });
+        });
+
+        describe('fails typecheck', () => {
+            it('infer type of (x: int):bool => { x + 1 } as Error', () => {
+                expect(typeCheck(parse('(x: int):bool => { x + 1 }'), emptyEnv)).toEqual({
+                    TAG: "Error",
+                    _0: {
+                        TAG: "TypeMismatch",
+                        expected: "Bool",
+                        actual: "Int",
+                        metaData: {
+                            start: { row: 0, col: 19 },
+                            end: { row: 0, col: 24 },
+                        },
+                    }
+                });
+            });
+
+            it('infer type of (x) => { x + 1 } as Error', () => {
+                expect(typeCheck(parse('(x) => { x + 1 }'), emptyEnv)).toEqual({
+                    TAG: "Error",
+                    _0: {
+                        TAG: "InsufficientTypeAnnotation",
+                        metaData: {
+                            start: { row: 0, col: 0 },
+                            end: { row: 0, col: 16 },
+                        },
+                    }
+                });
+            });
+
+        });
+    });
+
+    describe('for function application', () => {
+        describe('successfully', () => {
+            it('infer type of let y = (x: int) => { x + 1 } in y 2 as Int', () => {
+                expect(typeCheck(parse('let y = (x: int) => { x + 1 } in y 2'), emptyEnv)).toEqual({
+                    TAG: "Ok",
+                    _0: "Int"
+                });
+            });
+        });
+    });
 });

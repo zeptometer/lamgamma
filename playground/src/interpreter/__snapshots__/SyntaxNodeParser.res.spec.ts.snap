@@ -364,6 +364,23 @@ exports[`parseExprNode > for combined expressions > parse (1 + 2) * 3 == 9 - 6 /
 }
 `;
 
+exports[`parseExprNode > for errornious input > parse fun (x: int) -> { x + 1 } 1`] = `
+{
+  "TAG": "Error",
+  "_0": {
+    "TAG": "SyntaxError",
+    "end": {
+      "column": 25,
+      "row": 0,
+    },
+    "start": {
+      "column": 0,
+      "row": 0,
+    },
+  },
+}
+`;
+
 exports[`parseSyntaxNode > for combined expressions > parse (1 + 2) * 3 == 9 - 6 / 2 1`] = `
 {
   "TAG": "Ok",

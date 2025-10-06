@@ -724,4 +724,19 @@ describe('parseExprNode', () => {
             expect(parseExprNode((parser.parse(input)).rootNode)).toMatchSnapshot();
         });
     });
+
+    describe('for errornious input', () => {
+        it('parse fun (x: int) -> { x + 1 }', () => {
+            const input = 'fun (x: int) -> { x + 1 }';
+            const expectedOutput = {
+                TAG: "Error",
+                _0: {
+                    TAG: "SyntaxError",
+                    start: { row: 0, column: 0 },
+                    end: { row: 0, column: 25 },
+                }
+            }
+            expect(parseExprNode((parser.parse(input)).rootNode)).toEqual(expectedOutput);
+        })
+    })
 });

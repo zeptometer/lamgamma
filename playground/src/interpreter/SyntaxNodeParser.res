@@ -3,6 +3,7 @@ type loc = {row: int, column: int}
 type rec syntaxNode = {
   text: Nullable.t<string>,
   isError: bool,
+  hasError: bool,
   isMissing: bool,
   namedChildCount: int,
   @as("type") type_: string,
@@ -41,7 +42,7 @@ let extractMetadata = (node: syntaxNode): Expr.MetaData.t => {
 }
 
 let validateNode = (node: syntaxNode): result<unit, ParseError.t> => {
-  if node.isError {
+  if node.hasError {
     fail(SyntaxError({start: node.startPosition, end: node.endPosition}))
   } else if node.isMissing {
     fail(
@@ -388,7 +389,6 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
 
       let returnType = switch node.childForFieldName("return_type")->Nullable.toOption {
       | Some(n) =>
-        Console.log(n)
         n->parseTypeNode->Result.map(t => Some(t))
       | None => ok(None)
       }

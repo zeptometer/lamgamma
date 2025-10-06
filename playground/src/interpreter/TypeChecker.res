@@ -2,6 +2,7 @@ module TypeError = {
   type t =
     | TypeMismatch({metaData: Expr.MetaData.t, expected: Typ.t, actual: Typ.t})
     | UndefinedVariable({metaData: Expr.MetaData.t, var: Var.t})
+    | InsufficientTypeAnnotation({metaData: Expr.MetaData.t})
 }
 
 let ok = (x: 'a) => Belt.Result.Ok(x)
@@ -15,13 +16,15 @@ module TypeEnv = {
 }
 
 @genType
-let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identity>): result<Typ.t, TypeError.t> => {
+let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identity>): result<
+  Typ.t,
+  TypeError.t,
+> => {
   open Expr
-  open Typ
 
   switch expr.raw {
-  | IntLit(_) => ok(Int)
-  | BoolLit(_) => ok(Bool)
+  | IntLit(_) => ok(Typ.Int)
+  | BoolLit(_) => ok(Typ.Bool)
   | BinOp({op, left, right}) =>
     typeCheck(left, env)->Result.flatMap(leftType => {
       typeCheck(right, env)->Result.flatMap(rightType => {
@@ -29,18 +32,18 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
         switch op {
         // Arithmetic operations require both operands to be integers and return an integer.
         | Add | Sub | Mul | Div | Mod =>
-          if leftType != Int {
-            fail(TypeMismatch({metaData: left.metaData, expected: Int, actual: leftType}))
-          } else if rightType != Int {
-            fail(TypeMismatch({metaData: right.metaData, expected: Int, actual: rightType}))
+          if leftType != Typ.Int {
+            fail(TypeMismatch({metaData: left.metaData, expected: Typ.Int, actual: leftType}))
+          } else if rightType != Typ.Int {
+            fail(TypeMismatch({metaData: right.metaData, expected: Typ.Int, actual: rightType}))
           } else {
-            ok(Int)
+            ok(Typ.Int)
           }
 
         // Comparison operations return a boolean. For equality and inequality, both operands must be of the same type.
         | Eq | Ne =>
           if leftType == rightType {
-            ok(Bool)
+            ok(Typ.Bool)
           } else {
             fail(TypeMismatch({metaData: right.metaData, expected: leftType, actual: rightType}))
           }
@@ -52,7 +55,7 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
           } else if rightType != Int {
             fail(TypeMismatch({metaData: right.metaData, expected: Int, actual: rightType}))
           } else {
-            ok(Bool)
+            ok(Typ.Bool)
           }
         }
       })
@@ -68,7 +71,7 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
           } else if rightType != Bool {
             fail(TypeMismatch({metaData: right.metaData, expected: Bool, actual: rightType}))
           } else {
-            ok(Bool)
+            ok(Typ.Bool)
           }
         }
       })
@@ -81,7 +84,7 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
         if exprType != Bool {
           fail(TypeMismatch({metaData: expr.metaData, expected: Bool, actual: exprType}))
         } else {
-          ok(Bool)
+          ok(Typ.Bool)
         }
       }
     })
@@ -114,6 +117,7 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
     | Some(typ) => ok(typ)
     | None => fail(UndefinedVariable({metaData: expr.metaData, var: v}))
     }
+
   | Let({param, expr, body}) =>
     typeCheck(expr, env)->Result.flatMap(exprType => {
       switch param.typ {
@@ -127,6 +131,64 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
       }->Result.flatMap(_ => {
         let newEnv = Belt.Map.set(env, param.var, exprType)
         typeCheck(body, newEnv)
+      })
+    })
+
+  | Func({params, returnType, body}) =>
+    let rec extendEnv = (params: list<Param.t>, env: TypeEnv.t): result<TypeEnv.t, TypeError.t> =>
+      switch params {
+      | list{} => ok(env)
+      | list{param, ...rest} =>
+        switch param.typ {
+        | Some(typ) => ok(typ)
+        | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
+        }->Result.flatMap(paramType => {
+          extendEnv(rest, Belt.Map.set(env, param.var, paramType))
+        })
+      }
+
+    let rec expandFuncType = (params: list<Param.t>, returnType: Typ.t): result<
+      Typ.t,
+      TypeError.t,
+    > =>
+      switch params {
+      | list{} => ok(returnType)
+      | list{head, ...tail} =>
+        switch head.typ {
+        | Some(t) => expandFuncType(tail, Typ.Func(t, returnType))
+        | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
+        }
+      }
+
+    extendEnv(params, env)->Result.flatMap(newEnv => {
+      typeCheck(body, newEnv)->Result.flatMap(bodyType => {
+        switch returnType {
+        | Some(typ) =>
+          if typ != bodyType {
+            fail(TypeMismatch({metaData: body.metaData, expected: typ, actual: bodyType}))
+          } else {
+            ok()
+          }
+        | None => ok()
+        }->Result.flatMap(_ => expandFuncType(Belt.List.reverse(params), bodyType))
+      })
+    })
+
+  | App({func, arg}) =>
+    typeCheck(func, env)->Belt.Result.flatMap(funcType => {
+      typeCheck(arg, env)->Belt.Result.flatMap(argType => {
+        switch funcType {
+        | Func(paramType, returnType) =>
+          if paramType != argType {
+            fail(TypeMismatch({metaData: arg.metaData, expected: paramType, actual: argType}))
+          } else {
+            ok(returnType)
+          }
+        | _ =>
+          fail(
+            TypeMismatch({metaData: func.metaData, expected: Func(argType, Int), actual: funcType}),
+          )
+        }
       })
     })
   }
