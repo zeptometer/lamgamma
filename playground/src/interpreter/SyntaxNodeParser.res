@@ -184,7 +184,10 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
     let boolval = switch node.text->Nullable.toOption {
     | Some("true") => true
     | Some("false") => false
-    | _ => raise(UnexpectedText({text: node.text->Nullable.toOption}))
+    | _ =>
+      raise(
+        MalformedNode({msg: `Boolean node has invalid text: ${node.text->Nullable.getOr("null")}`}),
+      )
     }
 
     ok({
@@ -220,35 +223,29 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       ])
     }
 
-    if node.namedChildCount != 2 {
-      raise(NodeCountMismatch({expected: 2, actual: node.namedChildCount, node}))
-    } else {
-      let left =
-        node.namedChild(0)
-        ->Nullable.toOption
-        ->Option.getExn(~message="namedChild(0) does not exist")
-        ->parseExprNode
+    let left =
+      node
+      ->getNamedChildForFieldNameUnsafe("left")
+      ->parseExprNode
 
-      let right =
-        node.namedChild(1)
-        ->Nullable.toOption
-        ->Option.getExn(~message="namedChild(1) does not exist")
-        ->parseExprNode
+    let right =
+      node
+      ->getNamedChildForFieldNameUnsafe("right")
+      ->parseExprNode
 
-      let op =
-        binOpMapping
-        ->Dict.get(node.type_)
-        ->Option.getExn(~message="Operator not found in mapping")
+    let op =
+      binOpMapping
+      ->Dict.get(node.type_)
+      ->Option.getExn(~message="Operator not found in mapping")
 
-      left->Result.flatMap(l =>
-        right->Result.map(r => {
-          {
-            Expr.metaData: extractMetadata(node),
-            raw: Expr.BinOp({op, left: l, right: r}),
-          }
-        })
-      )
-    }
+    left->Result.flatMap(l =>
+      right->Result.map(r => {
+        {
+          Expr.metaData: extractMetadata(node),
+          raw: Expr.BinOp({op, left: l, right: r}),
+        }
+      })
+    )
 
   | "and"
   | "or" =>
@@ -257,35 +254,29 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       Dict.fromArray([("and", And), ("or", Or)])
     }
 
-    if node.namedChildCount != 2 {
-      raise(NodeCountMismatch({expected: 2, actual: node.namedChildCount, node}))
-    } else {
-      let left =
-        node.namedChild(0)
-        ->Nullable.toOption
-        ->Option.getExn(~message="namedChild(0) does not exist")
-        ->parseExprNode
+    let left =
+      node
+      ->getNamedChildForFieldNameUnsafe("left")
+      ->parseExprNode
 
-      let right =
-        node.namedChild(1)
-        ->Nullable.toOption
-        ->Option.getExn(~message="namedChild(1) does not exist")
-        ->parseExprNode
+    let right =
+      node
+      ->getNamedChildForFieldNameUnsafe("right")
+      ->parseExprNode
 
-      let op =
-        shortCircuitOpMapping
-        ->Dict.get(node.type_)
-        ->Option.getExn(~message="Operator not found in mapping")
+    let op =
+      shortCircuitOpMapping
+      ->Dict.get(node.type_)
+      ->Option.getExn(~message="Operator not found in mapping")
 
-      left->Result.flatMap(l =>
-        right->Result.map(r => {
-          {
-            Expr.metaData: extractMetadata(node),
-            raw: Expr.ShortCircuitOp({op, left: l, right: r}),
-          }
-        })
-      )
-    }
+    left->Result.flatMap(l =>
+      right->Result.map(r => {
+        {
+          Expr.metaData: extractMetadata(node),
+          raw: Expr.ShortCircuitOp({op, left: l, right: r}),
+        }
+      })
+    )
 
   | "not" =>
     if node.namedChildCount != 1 {
@@ -306,25 +297,16 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
     }
 
   | "ctrl_if" =>
-    if node.namedChildCount != 3 {
-      raise(NodeCountMismatch({expected: 3, actual: node.namedChildCount, node}))
-    } else {
       let cond =
-        node.namedChild(0)
-        ->Nullable.toOption
-        ->Option.getExn(~message="condition does not exist in ctrl_if node")
+        node->getNamedChildForFieldNameUnsafe("cond")
         ->parseExprNode
 
       let thenBranch =
-        node.namedChild(1)
-        ->Nullable.toOption
-        ->Option.getExn(~message="then branch does not exist in ctrl_if node")
+        node->getNamedChildForFieldNameUnsafe("then")
         ->parseExprNode
 
       let elseBranch =
-        node.namedChild(2)
-        ->Nullable.toOption
-        ->Option.getExn(~message="else branch does not exist in ctrl_if node")
+        node->getNamedChildForFieldNameUnsafe("else")
         ->parseExprNode
 
       cond->Result.flatMap(c =>
@@ -339,7 +321,7 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
           )
         )
       )
-    }
+
   | "identifier" =>
     ok({
       Expr.metaData: extractMetadata(node),
