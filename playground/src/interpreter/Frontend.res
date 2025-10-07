@@ -59,6 +59,13 @@ module TypeError = {
         `(${(er + 1)->Int.toString},${ec->Int.toString})`
 
       `${locstring} Undefined variable: ${name}`
+    | InsufficientTypeAnnotation({metaData}) =>
+      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
+      let locstring =
+        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
+        `(${(er + 1)->Int.toString},${ec->Int.toString})`
+
+      `${locstring} Insufficient type annotation`
     }
   }
 
