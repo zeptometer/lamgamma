@@ -24,7 +24,7 @@ let evaluate = (_input: string, _treeSitterParser: 'a): string => {
     let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` _treeSitterParser.parse(_input).rootNode `)
     let env = Interpreter.Env.make()
 
-    SyntaxNodeParser.parseExprNode(syntaxNode)
+    SyntaxNodeParser.parseSourceFileNode(syntaxNode)
     ->Result.mapError(x => ParseError(x))
     ->Result.map(Expr.stripTypeInfo)
     ->Result.flatMap(expr => Interpreter.evaluate(expr, env)->Result.mapError(x => EvalError(x)))
@@ -81,7 +81,7 @@ let typeCheck = (_input: string, _treeSitterParser: 'a): string => {
   let doit = (): result<Typ.t, TypeError.t> => {
     let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` _treeSitterParser.parse(_input).rootNode `)
 
-    SyntaxNodeParser.parseExprNode(syntaxNode)
+    SyntaxNodeParser.parseSourceFileNode(syntaxNode)
     ->Result.mapError(x => TypeError.ParseError(x))
     ->Result.flatMap(expr =>
       TypeChecker.typeCheck(expr, TypeChecker.TypeEnv.make())->Result.mapError(x => TypeError.TypeError(x))

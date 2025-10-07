@@ -6,6 +6,7 @@ type rec syntaxNode = {
   hasError: bool,
   isMissing: bool,
   isNamed: bool,
+  children: array<syntaxNode>,
   namedChildCount: int,
   @as("type") type_: string,
   namedChild: int => Nullable.t<syntaxNode>,
@@ -20,6 +21,27 @@ module ParseError = {
   type t =
     | SyntaxError({start: loc, end: loc})
     | MissingNodeError({start: loc, end: loc, missing: string})
+}
+
+let rec findParseError = (node: syntaxNode): option<ParseError.t> => {
+  if node.isError {
+    Some(SyntaxError({start: node.startPosition, end: node.endPosition}))
+  } else if node.isMissing {
+    Some(
+      MissingNodeError({
+        start: node.startPosition,
+        end: node.endPosition,
+        missing: node.grammarType,
+      }),
+    )
+  } else {
+    node.children->Array.reduce(None, (acc: option<ParseError.t>, child: syntaxNode) =>
+      switch acc {
+      | Some(e) => Some(e)
+      | None => findParseError(child)
+      }
+    )
+  }
 }
 
 @deprecated("Use MalformedNode instead")
@@ -72,402 +94,367 @@ let extractMetadata = (node: syntaxNode): Expr.MetaData.t => {
   }
 }
 
-let validateNode = (node: syntaxNode): result<unit, ParseError.t> => {
-  if node.hasError {
-    fail(SyntaxError({start: node.startPosition, end: node.endPosition}))
-  } else if node.isMissing {
-    fail(
-      MissingNodeError({
-        start: node.startPosition,
-        end: node.endPosition,
-        missing: node.grammarType,
-      }),
-    )
-  } else {
-    ok()
+@genType
+let rec parseTypeNode = (node: syntaxNode): result<Typ.t, ParseError.t> => {
+  switch node.type_ {
+  | "int_type" => ok(Typ.Int)
+  | "bool_type" => ok(Typ.Bool)
+  | "func_type" =>
+    let paramType =
+      node
+      ->getNamedChildForFieldNameUnsafe("param")
+      ->parseTypeNode
+
+    let returnType =
+      node
+      ->getNamedChildForFieldNameUnsafe("return")
+      ->parseTypeNode
+
+    paramType->Result.flatMap(p => returnType->Result.map(r => Typ.Func(p, r)))
+
+  | _ => raise(MalformedNode({msg: `Unknown node type for type node: ${node.type_}`}))
   }
 }
 
-@genType
-let rec parseTypeNode = (node: syntaxNode): result<Typ.t, ParseError.t> => {
-  validateNode(node)->Result.flatMap(_ => {
-    switch node.type_ {
-    | "int_type" => ok(Typ.Int)
-    | "bool_type" => ok(Typ.Bool)
-    | "func_type" =>
-      let paramType =
-        node
-        ->getNamedChildForFieldNameUnsafe("param")
-        ->parseTypeNode
-
-      let returnType =
-        node
-        ->getNamedChildForFieldNameUnsafe("return")
-        ->parseTypeNode
-
-      paramType->Result.flatMap(p => returnType->Result.map(r => Typ.Func(p, r)))
-
-    | _ => raise(MalformedNode({msg: `Unknown node type for type node: ${node.type_}`}))
-    }
-  })
-}
-
-let parseIdentifierNode = (node: syntaxNode): result<Var.t, ParseError.t> => {
-  validateNode(node)->Result.map(_ => {
-    if node.type_ != "identifier" {
-      raise(MalformedNode({msg: `Expected identifier node, got ${node.type_}`}))
-    }
-    let varname =
-      node.text->Nullable.toOption->Option.getExn(~message="Identifier node has no text")
-    Var.Raw({name: varname})
-  })
+let parseIdentifierNode = (node: syntaxNode): Var.t => {
+  if node.type_ != "identifier" {
+    raise(MalformedNode({msg: `Expected identifier node, got ${node.type_}`}))
+  }
+  let varname = node.text->Nullable.toOption->Option.getExn(~message="Identifier node has no text")
+  Var.Raw({name: varname})
 }
 
 let parseParamNode = (node: syntaxNode): result<Expr.Param.t, ParseError.t> => {
-  validateNode(node)->Result.flatMap(_ => {
-    if node.type_ != "param" {
-      raise(MalformedNode({msg: `Expected param node, got ${node.type_}`}))
-    }
+  if node.type_ != "param" {
+    raise(MalformedNode({msg: `Expected param node, got ${node.type_}`}))
+  }
 
-    let var =
-      node
-      ->getNamedChildForFieldNameUnsafe("var")
-      ->parseIdentifierNode
+  let var =
+    node
+    ->getNamedChildForFieldNameUnsafe("var")
+    ->parseIdentifierNode
 
-    let typ = switch node->getNamedChildForFieldName("type") {
-    | Some(n) => n->parseTypeNode->Result.map(t => Some(t))
-    | None => ok(None)
-    }
+  let typ = switch node->getNamedChildForFieldName("type") {
+  | Some(n) => n->parseTypeNode->Result.map(t => Some(t))
+  | None => ok(None)
+  }
 
-    var->Result.flatMap(v => {
-      typ->Result.map(
-        t => {
-          {Expr.Param.var: v, typ: t}
-        },
-      )
-    })
+  typ->Result.map(t => {
+    {Expr.Param.var, typ: t}
   })
 }
 
 let parseParamsNode = (node: syntaxNode): result<list<Expr.Param.t>, ParseError.t> => {
-  validateNode(node)->Result.flatMap(_ => {
-    if node.type_ != "params" {
-      raise(MalformedNode({msg: `Expected params node, got ${node.type_}`}))
-    }
+  if node.type_ != "params" {
+    raise(MalformedNode({msg: `Expected params node, got ${node.type_}`}))
+  }
 
-    let rec aux = (idx: int, acc: list<Expr.Param.t>): result<list<Expr.Param.t>, ParseError.t> => {
-      if idx >= node.namedChildCount {
-        ok(Belt.List.reverse(acc))
-      } else {
-        node.namedChild(idx)
-        ->Nullable.toOption
-        ->Option.getExn(~message="namedChild does not exist")
-        ->parseParamNode
-        ->Result.flatMap(param => aux(idx + 1, Belt.List.add(acc, param)))
-      }
+  let rec aux = (idx: int, acc: list<Expr.Param.t>): result<list<Expr.Param.t>, ParseError.t> => {
+    if idx >= node.namedChildCount {
+      ok(Belt.List.reverse(acc))
+    } else {
+      node.namedChild(idx)
+      ->Nullable.toOption
+      ->Option.getExn(~message="namedChild does not exist")
+      ->parseParamNode
+      ->Result.flatMap(param => aux(idx + 1, Belt.List.add(acc, param)))
     }
+  }
 
-    aux(0, Belt.List.fromArray([]))
-  })
+  aux(0, Belt.List.fromArray([]))
 }
 
 @genType
 let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
-  validateNode(node)->Result.flatMap(_ => {
-    switch node.type_ {
-    | "source_file" =>
-      if node.namedChildCount != 1 {
-        raise(NodeCountMismatch({expected: 1, actual: node.namedChildCount, node}))
-      } else {
+  switch node.type_ {
+  | "number" =>
+    let intval =
+      node.text
+      ->Nullable.toOption
+      ->Option.getExn(~message="Number node has no text")
+      ->Int.fromString
+      ->Option.getExn(~message="Failed to parse int from string")
+
+    ok({
+      Expr.metaData: extractMetadata(node),
+      raw: Expr.IntLit(intval),
+    })
+
+  | "boolean" =>
+    let boolval = switch node.text->Nullable.toOption {
+    | Some("true") => true
+    | Some("false") => false
+    | _ => raise(UnexpectedText({text: node.text->Nullable.toOption}))
+    }
+
+    ok({
+      Expr.metaData: extractMetadata(node),
+      raw: Expr.BoolLit(boolval),
+    })
+
+  | "add"
+  | "sub"
+  | "mult"
+  | "div"
+  | "mod"
+  | "eq"
+  | "ne"
+  | "lt"
+  | "le"
+  | "gt"
+  | "ge" =>
+    let binOpMapping = {
+      open Operator.BinOp
+      Dict.fromArray([
+        ("add", Add),
+        ("sub", Sub),
+        ("mult", Mul),
+        ("div", Div),
+        ("mod", Mod),
+        ("eq", Eq),
+        ("ne", Ne),
+        ("lt", Lt),
+        ("le", Le),
+        ("gt", Gt),
+        ("ge", Ge),
+      ])
+    }
+
+    if node.namedChildCount != 2 {
+      raise(NodeCountMismatch({expected: 2, actual: node.namedChildCount, node}))
+    } else {
+      let left =
         node.namedChild(0)
         ->Nullable.toOption
         ->Option.getExn(~message="namedChild(0) does not exist")
         ->parseExprNode
-      }
 
-    | "number" =>
-      let intval =
-        node.text
+      let right =
+        node.namedChild(1)
         ->Nullable.toOption
-        ->Option.getExn(~message="Number node has no text")
-        ->Int.fromString
-        ->Option.getExn(~message="Failed to parse int from string")
+        ->Option.getExn(~message="namedChild(1) does not exist")
+        ->parseExprNode
 
-      ok({
-        Expr.metaData: extractMetadata(node),
-        raw: Expr.IntLit(intval),
-      })
+      let op =
+        binOpMapping
+        ->Dict.get(node.type_)
+        ->Option.getExn(~message="Operator not found in mapping")
 
-    | "boolean" =>
-      let boolval = switch node.text->Nullable.toOption {
-      | Some("true") => true
-      | Some("false") => false
-      | _ => raise(UnexpectedText({text: node.text->Nullable.toOption}))
-      }
-
-      ok({
-        Expr.metaData: extractMetadata(node),
-        raw: Expr.BoolLit(boolval),
-      })
-
-    | "add"
-    | "sub"
-    | "mult"
-    | "div"
-    | "mod"
-    | "eq"
-    | "ne"
-    | "lt"
-    | "le"
-    | "gt"
-    | "ge" =>
-      let binOpMapping = {
-        open Operator.BinOp
-        Dict.fromArray([
-          ("add", Add),
-          ("sub", Sub),
-          ("mult", Mul),
-          ("div", Div),
-          ("mod", Mod),
-          ("eq", Eq),
-          ("ne", Ne),
-          ("lt", Lt),
-          ("le", Le),
-          ("gt", Gt),
-          ("ge", Ge),
-        ])
-      }
-
-      if node.namedChildCount != 2 {
-        raise(NodeCountMismatch({expected: 2, actual: node.namedChildCount, node}))
-      } else {
-        let left =
-          node.namedChild(0)
-          ->Nullable.toOption
-          ->Option.getExn(~message="namedChild(0) does not exist")
-          ->parseExprNode
-
-        let right =
-          node.namedChild(1)
-          ->Nullable.toOption
-          ->Option.getExn(~message="namedChild(1) does not exist")
-          ->parseExprNode
-
-        let op =
-          binOpMapping
-          ->Dict.get(node.type_)
-          ->Option.getExn(~message="Operator not found in mapping")
-
-        left->Result.flatMap(l =>
-          right->Result.map(
-            r => {
-              {
-                Expr.metaData: extractMetadata(node),
-                raw: Expr.BinOp({op, left: l, right: r}),
-              }
-            },
-          )
-        )
-      }
-
-    | "and"
-    | "or" =>
-      let shortCircuitOpMapping = {
-        open Operator.ShortCircuitOp
-        Dict.fromArray([("and", And), ("or", Or)])
-      }
-
-      if node.namedChildCount != 2 {
-        raise(NodeCountMismatch({expected: 2, actual: node.namedChildCount, node}))
-      } else {
-        let left =
-          node.namedChild(0)
-          ->Nullable.toOption
-          ->Option.getExn(~message="namedChild(0) does not exist")
-          ->parseExprNode
-
-        let right =
-          node.namedChild(1)
-          ->Nullable.toOption
-          ->Option.getExn(~message="namedChild(1) does not exist")
-          ->parseExprNode
-
-        let op =
-          shortCircuitOpMapping
-          ->Dict.get(node.type_)
-          ->Option.getExn(~message="Operator not found in mapping")
-
-        left->Result.flatMap(l =>
-          right->Result.map(
-            r => {
-              {
-                Expr.metaData: extractMetadata(node),
-                raw: Expr.ShortCircuitOp({op, left: l, right: r}),
-              }
-            },
-          )
-        )
-      }
-
-    | "not" =>
-      if node.namedChildCount != 1 {
-        raise(NodeCountMismatch({expected: 1, actual: node.namedChildCount, node}))
-      } else {
-        let expr =
-          node.namedChild(0)
-          ->Nullable.toOption
-          ->Option.getExn(~message="namedChild(0) does not exist")
-          ->parseExprNode
-
-        expr->Result.map(e => {
+      left->Result.flatMap(l =>
+        right->Result.map(r => {
           {
             Expr.metaData: extractMetadata(node),
-            raw: Expr.UniOp({op: Operator.UniOp.Not, expr: e}),
+            raw: Expr.BinOp({op, left: l, right: r}),
           }
         })
-      }
+      )
+    }
 
-    | "ctrl_if" =>
-      if node.namedChildCount != 3 {
-        raise(NodeCountMismatch({expected: 3, actual: node.namedChildCount, node}))
-      } else {
-        let cond =
-          node.namedChild(0)
-          ->Nullable.toOption
-          ->Option.getExn(~message="condition does not exist in ctrl_if node")
-          ->parseExprNode
+  | "and"
+  | "or" =>
+    let shortCircuitOpMapping = {
+      open Operator.ShortCircuitOp
+      Dict.fromArray([("and", And), ("or", Or)])
+    }
 
-        let thenBranch =
-          node.namedChild(1)
-          ->Nullable.toOption
-          ->Option.getExn(~message="then branch does not exist in ctrl_if node")
-          ->parseExprNode
+    if node.namedChildCount != 2 {
+      raise(NodeCountMismatch({expected: 2, actual: node.namedChildCount, node}))
+    } else {
+      let left =
+        node.namedChild(0)
+        ->Nullable.toOption
+        ->Option.getExn(~message="namedChild(0) does not exist")
+        ->parseExprNode
 
-        let elseBranch =
-          node.namedChild(2)
-          ->Nullable.toOption
-          ->Option.getExn(~message="else branch does not exist in ctrl_if node")
-          ->parseExprNode
+      let right =
+        node.namedChild(1)
+        ->Nullable.toOption
+        ->Option.getExn(~message="namedChild(1) does not exist")
+        ->parseExprNode
 
-        cond->Result.flatMap(c =>
-          thenBranch->Result.flatMap(
-            t =>
-              elseBranch->Result.map(
-                e => {
-                  {
-                    Expr.metaData: extractMetadata(node),
-                    raw: Expr.If({cond: c, thenBranch: t, elseBranch: e}),
-                  }
-                },
-              ),
-          )
-        )
-      }
-    | "identifier" =>
-      parseIdentifierNode(node)->Result.map(v => {
+      let op =
+        shortCircuitOpMapping
+        ->Dict.get(node.type_)
+        ->Option.getExn(~message="Operator not found in mapping")
+
+      left->Result.flatMap(l =>
+        right->Result.map(r => {
+          {
+            Expr.metaData: extractMetadata(node),
+            raw: Expr.ShortCircuitOp({op, left: l, right: r}),
+          }
+        })
+      )
+    }
+
+  | "not" =>
+    if node.namedChildCount != 1 {
+      raise(NodeCountMismatch({expected: 1, actual: node.namedChildCount, node}))
+    } else {
+      let expr =
+        node.namedChild(0)
+        ->Nullable.toOption
+        ->Option.getExn(~message="namedChild(0) does not exist")
+        ->parseExprNode
+
+      expr->Result.map(e => {
         {
           Expr.metaData: extractMetadata(node),
-          raw: Expr.Var(v),
+          raw: Expr.UniOp({op: Operator.UniOp.Not, expr: e}),
         }
       })
+    }
 
-    | "let" =>
-      if node.namedChildCount != 3 {
-        raise(NodeCountMismatch({expected: 3, actual: node.namedChildCount, node}))
-      } else {
-        let param =
-          node.namedChild(0)
-          ->Nullable.toOption
-          ->Option.getExn(~message="namedChild(0) does not exist")
-          ->parseParamNode
+  | "ctrl_if" =>
+    if node.namedChildCount != 3 {
+      raise(NodeCountMismatch({expected: 3, actual: node.namedChildCount, node}))
+    } else {
+      let cond =
+        node.namedChild(0)
+        ->Nullable.toOption
+        ->Option.getExn(~message="condition does not exist in ctrl_if node")
+        ->parseExprNode
 
-        let valueExpr =
-          node.namedChild(1)
-          ->Nullable.toOption
-          ->Option.getExn(~message="namedChild(1) does not exist")
-          ->parseExprNode
+      let thenBranch =
+        node.namedChild(1)
+        ->Nullable.toOption
+        ->Option.getExn(~message="then branch does not exist in ctrl_if node")
+        ->parseExprNode
 
-        let bodyExpr =
-          node.namedChild(2)
-          ->Nullable.toOption
-          ->Option.getExn(~message="namedChild(2) does not exist")
-          ->parseExprNode
+      let elseBranch =
+        node.namedChild(2)
+        ->Nullable.toOption
+        ->Option.getExn(~message="else branch does not exist in ctrl_if node")
+        ->parseExprNode
 
-        param->Result.flatMap(p =>
-          valueExpr->Result.flatMap(
-            v =>
-              bodyExpr->Result.map(
-                b => {
-                  {
-                    Expr.metaData: extractMetadata(node),
-                    raw: Expr.Let({
-                      param: p,
-                      expr: v,
-                      body: b,
-                    }),
-                  }
-                },
-              ),
+      cond->Result.flatMap(c =>
+        thenBranch->Result.flatMap(t =>
+          elseBranch->Result.map(
+            e => {
+              {
+                Expr.metaData: extractMetadata(node),
+                raw: Expr.If({cond: c, thenBranch: t, elseBranch: e}),
+              }
+            },
           )
         )
-      }
+      )
+    }
+  | "identifier" =>
+    ok({
+      Expr.metaData: extractMetadata(node),
+      raw: Expr.Var(parseIdentifierNode(node)),
+    })
 
-    | "lambda" =>
-      let params =
-        node
-        ->getNamedChildForFieldNameUnsafe("params")
-        ->parseParamsNode
+  | "let" =>
+    if node.namedChildCount != 3 {
+      raise(NodeCountMismatch({expected: 3, actual: node.namedChildCount, node}))
+    } else {
+      let param =
+        node.namedChild(0)
+        ->Nullable.toOption
+        ->Option.getExn(~message="namedChild(0) does not exist")
+        ->parseParamNode
 
-      let returnType = switch node->getNamedChildForFieldName("return_type") {
-      | Some(n) => n->parseTypeNode->Result.map(t => Some(t))
-      | None => ok(None)
-      }
-
-      let body =
-        node
-        ->getNamedChildForFieldNameUnsafe("body")
+      let valueExpr =
+        node.namedChild(1)
+        ->Nullable.toOption
+        ->Option.getExn(~message="namedChild(1) does not exist")
         ->parseExprNode
 
-      params->Result.flatMap(p => {
-        returnType->Result.flatMap(
-          r => {
-            body->Result.map(
-              b => {
+      let bodyExpr =
+        node.namedChild(2)
+        ->Nullable.toOption
+        ->Option.getExn(~message="namedChild(2) does not exist")
+        ->parseExprNode
+
+      param->Result.flatMap(p =>
+        valueExpr->Result.flatMap(v =>
+          bodyExpr->Result.map(
+            b => {
+              {
                 Expr.metaData: extractMetadata(node),
-                raw: Expr.Func({
-                  params: p,
-                  returnType: r,
+                raw: Expr.Let({
+                  param: p,
+                  expr: v,
                   body: b,
                 }),
-              },
-            )
-          },
+              }
+            },
+          )
         )
-      })
-
-    | "application" =>
-      let func =
-        node
-        ->getNamedChildForFieldNameUnsafe("func")
-        ->parseExprNode
-
-      let arg =
-        node
-        ->getNamedChildForFieldNameUnsafe("arg")
-        ->parseExprNode
-
-      func->Result.flatMap(f => {
-        arg->Result.map(
-          a => {
-            {
-              Expr.metaData: extractMetadata(node),
-              raw: Expr.App({func: f, arg: a}),
-            }
-          },
-        )
-      })
-
-    | _ => raise(NotImplemented)
+      )
     }
-  })
+
+  | "lambda" =>
+    let params =
+      node
+      ->getNamedChildForFieldNameUnsafe("params")
+      ->parseParamsNode
+
+    let returnType = switch node->getNamedChildForFieldName("return_type") {
+    | Some(n) => n->parseTypeNode->Result.map(t => Some(t))
+    | None => ok(None)
+    }
+
+    let body =
+      node
+      ->getNamedChildForFieldNameUnsafe("body")
+      ->parseExprNode
+
+    params->Result.flatMap(p => {
+      returnType->Result.flatMap(r => {
+        body->Result.map(
+          b => {
+            Expr.metaData: extractMetadata(node),
+            raw: Expr.Func({
+              params: p,
+              returnType: r,
+              body: b,
+            }),
+          },
+        )
+      })
+    })
+
+  | "application" =>
+    let func =
+      node
+      ->getNamedChildForFieldNameUnsafe("func")
+      ->parseExprNode
+
+    let arg =
+      node
+      ->getNamedChildForFieldNameUnsafe("arg")
+      ->parseExprNode
+
+    func->Result.flatMap(f => {
+      arg->Result.map(a => {
+        {
+          Expr.metaData: extractMetadata(node),
+          raw: Expr.App({func: f, arg: a}),
+        }
+      })
+    })
+
+  | _ => raise(NotImplemented)
+  }
+}
+
+@genType
+let parseSourceFileNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
+  let errorOpt = findParseError(node)
+
+  if errorOpt != None {
+    fail(Option.getExn(errorOpt))
+  } else if node.namedChildCount != 1 {
+    raise(MalformedNode({msg: "source_file must have exactly one named child"}))
+  } else if node.type_ != "source_file" {
+    raise(MalformedNode({msg: `Expected source_file node, got ${node.type_}`}))
+  } else {
+    node.namedChild(0)
+    ->Nullable.toOption
+    ->Option.getExn(~message="namedChild(0) does not exist")
+    ->parseExprNode
+  }
 }

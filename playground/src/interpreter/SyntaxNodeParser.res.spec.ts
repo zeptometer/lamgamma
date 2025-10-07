@@ -1,6 +1,6 @@
 import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
-import { parseExprNode } from './SyntaxNodeParser.gen.ts';
+import { parseSourceFileNode } from './SyntaxNodeParser.gen.ts';
 
 let parser;
 
@@ -14,7 +14,7 @@ beforeAll(
     }
 )
 
-describe('parseExprNode', () => {
+describe('parseSourceFileNode', () => {
     describe('for integer', () => {
         it('parse zero', () => {
             const input = '0';
@@ -25,7 +25,7 @@ describe('parseExprNode', () => {
                     raw: { TAG: "IntLit", _0: 0 }
                 },
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -38,7 +38,7 @@ describe('parseExprNode', () => {
                     raw: { TAG: "IntLit", _0: 12321 }
                 },
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -52,7 +52,7 @@ describe('parseExprNode', () => {
                     raw: { TAG: "IntLit", _0: 1 }
                 },
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -68,7 +68,7 @@ describe('parseExprNode', () => {
                     raw: { TAG: "BoolLit", _0: true }
                 },
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -81,7 +81,7 @@ describe('parseExprNode', () => {
                     raw: { TAG: "BoolLit", _0: false }
                 },
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
     });
@@ -110,7 +110,7 @@ describe('parseExprNode', () => {
                     },
                 },
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -137,7 +137,7 @@ describe('parseExprNode', () => {
                     },
                 },
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -164,7 +164,7 @@ describe('parseExprNode', () => {
                     },
                 },
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -191,7 +191,7 @@ describe('parseExprNode', () => {
                     },
                 },
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -218,7 +218,7 @@ describe('parseExprNode', () => {
                     },
                 },
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
     });
@@ -244,7 +244,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -268,7 +268,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -292,7 +292,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -316,7 +316,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -340,7 +340,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -364,7 +364,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
     });
@@ -372,7 +372,7 @@ describe('parseExprNode', () => {
     describe('for parens', () => {
         it('parse (1 + 2) * 3', () => {
             const input = '(1 + 2) * 3';
-            expect(parseExprNode((parser.parse(input)).rootNode)).toMatchInlineSnapshot(`
+            expect(parseSourceFileNode((parser.parse(input)).rootNode)).toMatchInlineSnapshot(`
               {
                 "TAG": "Ok",
                 "_0": {
@@ -495,7 +495,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -515,7 +515,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
     });
@@ -547,7 +547,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
     });
@@ -562,7 +562,7 @@ describe('parseExprNode', () => {
                     raw: { TAG: "Var", _0: { TAG: "Raw", name: 'x' } }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
     });
@@ -588,7 +588,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -612,7 +612,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -636,7 +636,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         });
 
@@ -657,7 +657,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         })
 
@@ -678,7 +678,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         })
     });
@@ -713,7 +713,7 @@ describe('parseExprNode', () => {
                     }
                 }
             };
-            expect(parseExprNode((parser.parse(input)).rootNode))
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
                 .toEqual(expectedOutput);
         })
     })
@@ -721,22 +721,29 @@ describe('parseExprNode', () => {
     describe('for combined expressions', () => {
         it('parse (1 + 2) * 3 == 9 - 6 / 2', () => {
             const input = '(1 + 2) * 3 == 9 - 6 / 2';
-            expect(parseExprNode((parser.parse(input)).rootNode)).toMatchSnapshot();
+            expect(parseSourceFileNode((parser.parse(input)).rootNode)).toMatchSnapshot();
         });
     });
 
     describe('for errornious input', () => {
-        it('parse fun (x: int) -> { x + 1 }', () => {
+        it('unneccesarry fun', () => {
             const input = 'fun (x: int) -> { x + 1 }';
-            const expectedOutput = {
-                TAG: "Error",
-                _0: {
-                    TAG: "SyntaxError",
-                    start: { row: 0, column: 0 },
-                    end: { row: 0, column: 25 },
-                }
-            }
-            expect(parseExprNode((parser.parse(input)).rootNode)).toEqual(expectedOutput);
+            expect(parseSourceFileNode((parser.parse(input)).rootNode)).toMatchInlineSnapshot(`
+              {
+                "TAG": "Error",
+                "_0": {
+                  "TAG": "SyntaxError",
+                  "end": {
+                    "column": 11,
+                    "row": 0,
+                  },
+                  "start": {
+                    "column": 6,
+                    "row": 0,
+                  },
+                },
+              }
+            `);
         })
     })
 });
@@ -759,7 +766,7 @@ describe('parseTypeNode', () => {
                 }
             }
         };
-        expect(parseExprNode((parser.parse(input)).rootNode))
+        expect(parseSourceFileNode((parser.parse(input)).rootNode))
             .toEqual(expectedOutput);
     })
 
@@ -780,7 +787,7 @@ describe('parseTypeNode', () => {
                 }
             }
         };
-        expect(parseExprNode((parser.parse(input)).rootNode))
+        expect(parseSourceFileNode((parser.parse(input)).rootNode))
             .toEqual(expectedOutput);
     })
 
@@ -802,13 +809,13 @@ describe('parseTypeNode', () => {
                 }
             }
         };
-        expect(parseExprNode((parser.parse(input)).rootNode))
+        expect(parseSourceFileNode((parser.parse(input)).rootNode))
             .toEqual(expectedOutput);
     })
 
     it('parse type with paren', () => {
         const input = '(x:(int->int)->int) => { x }';
-        expect(parseExprNode((parser.parse(input)).rootNode))
+        expect(parseSourceFileNode((parser.parse(input)).rootNode))
             .toMatchInlineSnapshot(`
               {
                 "TAG": "Ok",
