@@ -1423,9 +1423,17 @@
     "named": true,
     "fields": {
       "param": {
-        "multiple": false,
+        "multiple": true,
         "required": true,
         "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
           {
             "type": "bool_type",
             "named": true
@@ -1441,9 +1449,17 @@
         ]
       },
       "return": {
-        "multiple": false,
+        "multiple": true,
         "required": true,
         "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
           {
             "type": "bool_type",
             "named": true
@@ -2017,9 +2033,17 @@
         ]
       },
       "return_type": {
-        "multiple": false,
+        "multiple": true,
         "required": false,
         "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
           {
             "type": "bool_type",
             "named": true
@@ -3559,9 +3583,17 @@
     "named": true,
     "fields": {
       "type": {
-        "multiple": false,
+        "multiple": true,
         "required": false,
         "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
           {
             "type": "bool_type",
             "named": true

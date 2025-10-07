@@ -805,4 +805,67 @@ describe('parseTypeNode', () => {
         expect(parseExprNode((parser.parse(input)).rootNode))
             .toEqual(expectedOutput);
     })
+
+    it('parse type with paren', () => {
+        const input = '(x:(int->int)->int) => { x }';
+        expect(parseExprNode((parser.parse(input)).rootNode))
+            .toMatchInlineSnapshot(`
+              {
+                "TAG": "Ok",
+                "_0": {
+                  "metaData": {
+                    "end": {
+                      "col": 28,
+                      "row": 0,
+                    },
+                    "start": {
+                      "col": 0,
+                      "row": 0,
+                    },
+                  },
+                  "raw": {
+                    "TAG": "Func",
+                    "body": {
+                      "metaData": {
+                        "end": {
+                          "col": 26,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 25,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Var",
+                        "_0": {
+                          "TAG": "Raw",
+                          "name": "x",
+                        },
+                      },
+                    },
+                    "params": {
+                      "hd": {
+                        "typ": {
+                          "TAG": "Func",
+                          "_0": {
+                            "TAG": "Func",
+                            "_0": "Int",
+                            "_1": "Int",
+                          },
+                          "_1": "Int",
+                        },
+                        "var": {
+                          "TAG": "Raw",
+                          "name": "x",
+                        },
+                      },
+                      "tl": 0,
+                    },
+                    "returnType": undefined,
+                  },
+                },
+              }
+            `);
+    })
 });

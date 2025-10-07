@@ -214,7 +214,8 @@ module.exports = grammar({
     _type: $ => choice(
       $.int_type,
       $.bool_type,
-      $.func_type
+      $.func_type,
+      seq('(', $._type, ')')
     ),
 
     int_type: $ => 'int',
