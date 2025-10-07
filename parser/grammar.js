@@ -93,7 +93,9 @@ module.exports = grammar({
         field("arg", $._simple_expression)
       )),
 
-    param: $ => choice($.identifier, seq($.identifier, ':', $._type)),
+    param: $ => seq(
+      field("var", $.identifier),
+      optional(seq(':', field("type", $._type)))),
 
     params: $ => seq($.param, repeat(seq(',', $.param))),
 

@@ -1,8 +1,16 @@
+module Env = {
+  type t<'a> = Belt.Map.t<Var.t, 'a, Var.Cmp.identity>
+
+  @genType
+  let make = (): t<'a> => Belt.Map.make(~id=module(Var.Cmp))
+}
+
 module Val = {
   @genType
-  type t =
+  type rec t =
     | IntVal(int)
     | BoolVal(bool)
+    | Closure(Env.t<t>, list<Var.t>, RawExpr.t)
 
   @genType
   let toString = (v: t): string =>
@@ -14,6 +22,7 @@ module Val = {
       } else {
         "false"
       }
+    | Closure(_, _, _) => "#<closure>"
     }
 }
 
@@ -22,18 +31,13 @@ type evalError =
   | ZeroDivision
   | UndefinedVariable
 
+exception MalformedValue({msg: string})
+
 let ok = (x: Val.t) => Belt.Result.Ok(x)
 let fail = (x: evalError) => Belt.Result.Error(x)
 
-module ValEnv = {
-  type t = Belt.Map.t<Var.t, Val.t, Var.Cmp.identity>
-
-  @genType
-  let make = (): t => Belt.Map.make(~id=module(Var.Cmp))
-}
-
 @genType
-let rec evaluate = (e: RawExpr.t, env: ValEnv.t): result<Val.t, evalError> => {
+let rec evaluate = (e: RawExpr.t, env: Env.t<Val.t>): result<Val.t, evalError> => {
   open Val
   open RawExpr
 
@@ -150,5 +154,24 @@ let rec evaluate = (e: RawExpr.t, env: ValEnv.t): result<Val.t, evalError> => {
       let newEnv = Belt.Map.set(env, param, exprVal)
       evaluate(body, newEnv)
     })
+
+  | Func({params, body}) => ok(Closure(env, params, body))
+
+  | App({func, arg}) =>
+    evaluate(func, env)->Result.flatMap(funcVal =>
+      evaluate(arg, env)->Result.flatMap(argVal =>
+        switch funcVal {
+        | Closure(closureEnv, list{param}, body) =>
+          let newEnv = Belt.Map.set(closureEnv, param, argVal)
+          evaluate(body, newEnv)
+        | Closure(closureEnv, list{param, ...rest}, body) =>
+          let newEnv = Belt.Map.set(closureEnv, param, argVal)
+          ok(Closure(newEnv, rest, body))
+        | Closure(_, _, _) =>
+          raise(MalformedValue({msg: "Closure with empty params should be impossible"}))
+        | _ => fail(TypeMismatch)
+        }
+      )
+    )
   }
 }

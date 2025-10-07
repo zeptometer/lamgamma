@@ -22,7 +22,7 @@ type evalError =
 let evaluate = (_input: string, _treeSitterParser: 'a): string => {
   let doit = (): result<Interpreter.Val.t, evalError> => {
     let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` _treeSitterParser.parse(_input).rootNode `)
-    let env = Interpreter.ValEnv.make()
+    let env = Interpreter.Env.make()
 
     SyntaxNodeParser.parseExprNode(syntaxNode)
     ->Result.mapError(x => ParseError(x))

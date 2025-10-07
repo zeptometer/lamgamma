@@ -2,7 +2,7 @@ import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
 import { parseExprNode } from './SyntaxNodeParser.gen.ts';
 import { stripTypeInfo } from './Expr.gen.ts';
-import { evaluate, ValEnv_make } from './Interpreter.gen.ts';
+import { evaluate, Env_make } from './Interpreter.gen.ts';
 import { t as Expr_t } from './Expr.gen.ts'
 
 let parser;
@@ -22,7 +22,7 @@ beforeAll(
     }
 )
 
-const env = ValEnv_make();
+const env = Env_make();
 
 describe('Literal evaluation', () => {
     it('evaluates integer literal 123', () => {
@@ -425,6 +425,48 @@ describe('Variables and Let bindings', () => {
             expect(evaluate(parse('x + 2'), env)).toEqual({
                 TAG: "Error",
                 _0: "UndefinedVariable"
+            });
+        });
+    });
+});
+
+describe('Functions and Applications', () => {
+    describe('successfully', () => {
+        it('apply function', () => {
+            expect(evaluate(parse('let x = (y) => { 0 } in x 10'), env)).toEqual({
+                TAG: "Ok",
+                _0: { TAG: "IntVal", _0: 0 }
+            });
+        });
+
+        it('assign value to new env', () => {
+            expect(evaluate(parse('let x = (y) => { y * 2 } in x 10'), env)).toEqual({
+                TAG: "Ok",
+                _0: { TAG: "IntVal", _0: 20 }
+            });
+        });
+
+        it('curry', () => {
+            expect(evaluate(parse('let x = (y, z) => { y + z } in x 10 5'), env)).toEqual({
+                TAG: "Ok",
+                _0: { TAG: "IntVal", _0: 15 }
+            });
+        });
+
+    });
+
+    describe('fail', () => {
+        it('due to application to integer', () => {
+            expect(evaluate(parse('10 20'), env)).toEqual({
+                TAG: "Error",
+                _0: "TypeMismatch"
+            });
+        });
+
+        it('due to application to boolean', () => {
+            expect(evaluate(parse('true false'), env)).toEqual({
+                TAG: "Error",
+                _0: "TypeMismatch"
             });
         });
     });

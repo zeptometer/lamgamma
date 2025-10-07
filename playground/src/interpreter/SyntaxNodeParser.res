@@ -23,11 +23,17 @@ module ParseError = {
 }
 
 @deprecated("Use MalformedNode instead")
-exception NodeCountMismatch({expected: int, actual: int, node: syntaxNode})
+exception NodeCountMismatch({
+  expected: int,
+  actual: int,
+  node: syntaxNode,
+})
+@deprecated("Use MalformedNode instead") exception UnexpectedText({text: option<string>})
 @deprecated("Use MalformedNode instead")
-exception UnexpectedText({text: option<string>})
-@deprecated("Use MalformedNode instead")
-exception UnexpectedNodeType({expected: string, actual: string})
+exception UnexpectedNodeType({
+  expected: string,
+  actual: string,
+})
 exception MalformedNode({msg: string})
 exception NotImplemented
 
@@ -44,8 +50,10 @@ let getNamedChildForFieldName = (node: syntaxNode, fieldName: string): option<sy
 }
 
 let getNamedChildForFieldNameUnsafe = (node: syntaxNode, fieldName: string): syntaxNode => {
-  getNamedChildForFieldName(node, fieldName)
-  ->Option.getExn(~message=`No named child with field name ${fieldName}`)
+  switch getNamedChildForFieldName(node, fieldName) {
+  | Some(n) => n
+  | None => raise(MalformedNode({msg: `No named child with field name ${fieldName}`}))
+  }
 }
 
 let ok = (x: 'a) => Belt.Result.Ok(x)
@@ -107,7 +115,7 @@ let rec parseTypeNode = (node: syntaxNode): result<Typ.t, ParseError.t> => {
 let parseIdentifierNode = (node: syntaxNode): result<Var.t, ParseError.t> => {
   validateNode(node)->Result.map(_ => {
     if node.type_ != "identifier" {
-      raise(UnexpectedNodeType({expected: "identifier", actual: node.type_}))
+      raise(MalformedNode({msg: `Expected identifier node, got ${node.type_}`}))
     }
     let varname =
       node.text->Nullable.toOption->Option.getExn(~message="Identifier node has no text")
@@ -118,45 +126,33 @@ let parseIdentifierNode = (node: syntaxNode): result<Var.t, ParseError.t> => {
 let parseParamNode = (node: syntaxNode): result<Expr.Param.t, ParseError.t> => {
   validateNode(node)->Result.flatMap(_ => {
     if node.type_ != "param" {
-      raise(UnexpectedNodeType({expected: "param", actual: node.type_}))
+      raise(MalformedNode({msg: `Expected param node, got ${node.type_}`}))
     }
 
-    if node.namedChildCount == 1 {
-      let varNode =
-        node.namedChild(0)
-        ->Nullable.toOption
-        ->Option.getExn(~message="namedChild(0) does not exist")
+    let var =
+      node
+      ->getNamedChildForFieldNameUnsafe("var")
+      ->parseIdentifierNode
 
-      parseIdentifierNode(varNode)->Result.map(v => {
-        {Expr.Param.var: v, typ: None}
-      })
-    } else if node.namedChildCount == 2 {
-      let varNode =
-        node.namedChild(0)
-        ->Nullable.toOption
-        ->Option.getExn(~message="namedChild(0) does not exist")
-      let typeNode =
-        node.namedChild(1)
-        ->Nullable.toOption
-        ->Option.getExn(~message="namedChild(1) does not exist")
-
-      parseIdentifierNode(varNode)->Result.flatMap(v => {
-        parseTypeNode(typeNode)->Result.map(
-          typ => {
-            {Expr.Param.var: v, typ: Some(typ)}
-          },
-        )
-      })
-    } else {
-      raise(NodeCountMismatch({expected: 1, actual: node.namedChildCount, node}))
+    let typ = switch node->getNamedChildForFieldName("type") {
+    | Some(n) => n->parseTypeNode->Result.map(t => Some(t))
+    | None => ok(None)
     }
+
+    var->Result.flatMap(v => {
+      typ->Result.map(
+        t => {
+          {Expr.Param.var: v, typ: t}
+        },
+      )
+    })
   })
 }
 
 let parseParamsNode = (node: syntaxNode): result<list<Expr.Param.t>, ParseError.t> => {
   validateNode(node)->Result.flatMap(_ => {
     if node.type_ != "params" {
-      raise(UnexpectedNodeType({expected: "params", actual: node.type_}))
+      raise(MalformedNode({msg: `Expected params node, got ${node.type_}`}))
     }
 
     let rec aux = (idx: int, acc: list<Expr.Param.t>): result<list<Expr.Param.t>, ParseError.t> => {
