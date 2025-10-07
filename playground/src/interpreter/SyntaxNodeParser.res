@@ -280,7 +280,7 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
 
   | "not" =>
     if node.namedChildCount != 1 {
-      raise(NodeCountMismatch({expected: 1, actual: node.namedChildCount, node}))
+      raise(MalformedNode({msg: "not node must have exactly one named child"}))
     } else {
       let expr =
         node.namedChild(0)
@@ -297,30 +297,33 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
     }
 
   | "ctrl_if" =>
-      let cond =
-        node->getNamedChildForFieldNameUnsafe("cond")
-        ->parseExprNode
+    let cond =
+      node
+      ->getNamedChildForFieldNameUnsafe("cond")
+      ->parseExprNode
 
-      let thenBranch =
-        node->getNamedChildForFieldNameUnsafe("then")
-        ->parseExprNode
+    let thenBranch =
+      node
+      ->getNamedChildForFieldNameUnsafe("then")
+      ->parseExprNode
 
-      let elseBranch =
-        node->getNamedChildForFieldNameUnsafe("else")
-        ->parseExprNode
+    let elseBranch =
+      node
+      ->getNamedChildForFieldNameUnsafe("else")
+      ->parseExprNode
 
-      cond->Result.flatMap(c =>
-        thenBranch->Result.flatMap(t =>
-          elseBranch->Result.map(
-            e => {
-              {
-                Expr.metaData: extractMetadata(node),
-                raw: Expr.If({cond: c, thenBranch: t, elseBranch: e}),
-              }
-            },
-          )
+    cond->Result.flatMap(c =>
+      thenBranch->Result.flatMap(t =>
+        elseBranch->Result.map(
+          e => {
+            {
+              Expr.metaData: extractMetadata(node),
+              raw: Expr.If({cond: c, thenBranch: t, elseBranch: e}),
+            }
+          },
         )
       )
+    )
 
   | "identifier" =>
     ok({
@@ -329,44 +332,34 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
     })
 
   | "let" =>
-    if node.namedChildCount != 3 {
-      raise(NodeCountMismatch({expected: 3, actual: node.namedChildCount, node}))
-    } else {
-      let param =
-        node.namedChild(0)
-        ->Nullable.toOption
-        ->Option.getExn(~message="namedChild(0) does not exist")
-        ->parseParamNode
+    let param =
+      node->getNamedChildForFieldNameUnsafe("param")
+      ->parseParamNode
 
-      let valueExpr =
-        node.namedChild(1)
-        ->Nullable.toOption
-        ->Option.getExn(~message="namedChild(1) does not exist")
-        ->parseExprNode
+    let valueExpr =
+      node->getNamedChildForFieldNameUnsafe("value")
+      ->parseExprNode
 
-      let bodyExpr =
-        node.namedChild(2)
-        ->Nullable.toOption
-        ->Option.getExn(~message="namedChild(2) does not exist")
-        ->parseExprNode
+    let bodyExpr =
+      node->getNamedChildForFieldNameUnsafe("body")
+      ->parseExprNode
 
-      param->Result.flatMap(p =>
-        valueExpr->Result.flatMap(v =>
-          bodyExpr->Result.map(
-            b => {
-              {
-                Expr.metaData: extractMetadata(node),
-                raw: Expr.Let({
-                  param: p,
-                  expr: v,
-                  body: b,
-                }),
-              }
-            },
-          )
+    param->Result.flatMap(p =>
+      valueExpr->Result.flatMap(v =>
+        bodyExpr->Result.map(
+          b => {
+            {
+              Expr.metaData: extractMetadata(node),
+              raw: Expr.Let({
+                param: p,
+                expr: v,
+                body: b,
+              }),
+            }
+          },
         )
       )
-    }
+    )
 
   | "lambda" =>
     let params =

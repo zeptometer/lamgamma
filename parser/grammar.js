@@ -208,7 +208,12 @@ module.exports = grammar({
     ),
 
     let: $ => prec.right(PREC.assign,
-      seq('let', $.param, '=', $._expression, 'in', $._expression)
+      seq('let',
+        field('param', $.param),
+        '=',
+        field('value', $._expression),
+        'in',
+        field('body', $._expression))
     ),
 
     _type: $ => choice(
