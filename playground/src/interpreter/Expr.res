@@ -26,7 +26,7 @@ and raw_t =
   | Func({params: list<Param.t>, returnType: option<Typ.t>, body: t})
   | App({func: t, arg: t})
   | Let({param: Param.t, expr: t, body: t})
-  // | LetRec({ param: Param.t, expr: t, body: t})
+  | LetRec({ param: Param.t, expr: t, body: t})
   // // primitive operations
   | IntLit(int)
   | BoolLit(bool)
@@ -61,6 +61,12 @@ let rec stripTypeInfo = (expr: t): RawExpr.t => {
   | Let({param, expr, body}) =>
     RawExpr.Let({
       param: param.var,
+      expr: stripTypeInfo(expr),
+      body: stripTypeInfo(body),
+    })
+  | LetRec({param, expr, body}) =>
+    RawExpr.LetRec({
+      var: param.var,
       expr: stripTypeInfo(expr),
       body: stripTypeInfo(body),
     })

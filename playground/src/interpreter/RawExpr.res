@@ -5,7 +5,7 @@ type rec t =
   | Func({ params: list<Var.t>, body: t })
   | App({ func: t, arg: t })
   | Let({ param: Var.t, expr: t, body: t})
-  // | LetRec({ var: Var.t, expr: t, body: t})
+  | LetRec({ var: Var.t, expr: t, body: t})
   // // primitive operations
   | IntLit(int)
   | BoolLit(bool)

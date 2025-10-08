@@ -3,6 +3,7 @@ module TypeError = {
     | TypeMismatch({metaData: Expr.MetaData.t, expected: Typ.t, actual: Typ.t})
     | UndefinedVariable({metaData: Expr.MetaData.t, var: Var.t})
     | InsufficientTypeAnnotation({metaData: Expr.MetaData.t})
+    | UnsupportedFormat({metaData: Expr.MetaData.t, message: string})
 }
 
 let ok = (x: 'a) => Belt.Result.Ok(x)
@@ -13,6 +14,27 @@ module TypeEnv = {
 
   @genType
   let make = (): t => Belt.Map.make(~id=module(Var.Cmp))
+}
+
+let extractFuncType = (
+  params: list<Expr.Param.t>,
+  returnType: Typ.t,
+  metaData: Expr.MetaData.t,
+): result<Typ.t, TypeError.t> => {
+  let rec aux = (params: list<Expr.Param.t>, returnType: Typ.t, metaData: Expr.MetaData.t): result<
+    Typ.t,
+    TypeError.t,
+  > => {
+    switch params {
+    | list{} => ok(returnType)
+    | list{head, ...tail} =>
+      switch head.typ {
+      | Some(t) => aux(tail, Typ.Func(t, returnType), metaData)
+      | None => fail(InsufficientTypeAnnotation({metaData: metaData}))
+      }
+    }
+  }
+  aux(Belt.List.reverse(params), returnType, metaData)
 }
 
 @genType
@@ -134,6 +156,38 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
       })
     })
 
+  | LetRec({param, expr, body}) =>
+    switch expr.raw {
+    | Func({params: args, returnType: returnTypeO, body: _}) =>
+      let funcTypeR = switch returnTypeO {
+        | Some(r) => extractFuncType(args, r, expr.metaData)
+        | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
+      }
+
+      param.typ
+      ->Belt.Option.map(ok)
+      ->Belt.Option.getWithDefault(funcTypeR)
+      ->Belt.Result.flatMap(funcType => {
+        let newEnv = Belt.Map.set(env, param.var, funcType)
+
+        typeCheck(expr, newEnv)->Belt.Result.flatMap(exprType => {
+          if exprType != funcType {
+            fail(TypeMismatch({metaData: expr.metaData, expected: funcType, actual: exprType}))
+          } else {
+            typeCheck(body, newEnv)
+          }
+        })
+      })
+
+    | _ =>
+      fail(
+        UnsupportedFormat({
+          metaData: expr.metaData,
+          message: "Let rec can only be used with function values",
+        }),
+      )
+    }
+
   | Func({params, returnType, body}) =>
     let rec extendEnv = (params: list<Param.t>, env: TypeEnv.t): result<TypeEnv.t, TypeError.t> =>
       switch params {
@@ -147,19 +201,6 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
         })
       }
 
-    let rec expandFuncType = (params: list<Param.t>, returnType: Typ.t): result<
-      Typ.t,
-      TypeError.t,
-    > =>
-      switch params {
-      | list{} => ok(returnType)
-      | list{head, ...tail} =>
-        switch head.typ {
-        | Some(t) => expandFuncType(tail, Typ.Func(t, returnType))
-        | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
-        }
-      }
-
     extendEnv(params, env)->Result.flatMap(newEnv => {
       typeCheck(body, newEnv)->Result.flatMap(bodyType => {
         switch returnType {
@@ -170,7 +211,7 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
             ok()
           }
         | None => ok()
-        }->Result.flatMap(_ => expandFuncType(Belt.List.reverse(params), bodyType))
+        }->Result.flatMap(_ => extractFuncType(params, bodyType, expr.metaData))
       })
     })
 

@@ -875,4 +875,22 @@ describe('parseTypeNode', () => {
               }
             `);
     })
+
+    describe('for letrec expressions', () => {
+        it('parse let rec', () => {
+            const input = `
+              let rec x: int->int = (y) => {
+                if y >= 0 then
+                  0
+                else
+                  y + x(y-1)
+              } in
+              x 10
+            `;
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
+                .toMatchSnapshot();
+        });
+
+    });
+
 });

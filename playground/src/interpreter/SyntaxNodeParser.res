@@ -333,15 +333,18 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
 
   | "let" =>
     let param =
-      node->getNamedChildForFieldNameUnsafe("param")
+      node
+      ->getNamedChildForFieldNameUnsafe("param")
       ->parseParamNode
 
     let valueExpr =
-      node->getNamedChildForFieldNameUnsafe("value")
+      node
+      ->getNamedChildForFieldNameUnsafe("value")
       ->parseExprNode
 
     let bodyExpr =
-      node->getNamedChildForFieldNameUnsafe("body")
+      node
+      ->getNamedChildForFieldNameUnsafe("body")
       ->parseExprNode
 
     param->Result.flatMap(p =>
@@ -351,6 +354,39 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
             {
               Expr.metaData: extractMetadata(node),
               raw: Expr.Let({
+                param: p,
+                expr: v,
+                body: b,
+              }),
+            }
+          },
+        )
+      )
+    )
+
+  | "letrec" =>
+    let param =
+      node
+      ->getNamedChildForFieldNameUnsafe("param")
+      ->parseParamNode
+
+    let valueExpr =
+      node
+      ->getNamedChildForFieldNameUnsafe("value")
+      ->parseExprNode
+
+    let bodyExpr =
+      node
+      ->getNamedChildForFieldNameUnsafe("body")
+      ->parseExprNode
+
+    param->Result.flatMap(p =>
+      valueExpr->Result.flatMap(v =>
+        bodyExpr->Result.map(
+          b => {
+            {
+              Expr.metaData: extractMetadata(node),
+              raw: Expr.LetRec({
                 param: p,
                 expr: v,
                 body: b,

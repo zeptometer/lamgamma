@@ -20,7 +20,7 @@ const App: React.FC = () => {
       monaco.languages.setMonarchTokensProvider('lamgamma', {
         tokenizer: {
           root: [
-            [/\b(?:let|in|fn|if|then|else|->|fix)\b/, "keyword"],
+            [/\b(?:let|rec|in|fn|if|then|else|->|fix)\b/, "keyword"],
           ]
         }
       });

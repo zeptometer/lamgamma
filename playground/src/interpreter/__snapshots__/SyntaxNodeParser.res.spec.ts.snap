@@ -181,3 +181,313 @@ exports[`parseSourceFileNode > for combined expressions > parse (1 + 2) * 3 == 9
   },
 }
 `;
+
+exports[`parseTypeNode > for letrec expressions > parse let rec 1`] = `
+{
+  "TAG": "Ok",
+  "_0": {
+    "metaData": {
+      "end": {
+        "col": 18,
+        "row": 7,
+      },
+      "start": {
+        "col": 14,
+        "row": 1,
+      },
+    },
+    "raw": {
+      "TAG": "LetRec",
+      "body": {
+        "metaData": {
+          "end": {
+            "col": 18,
+            "row": 7,
+          },
+          "start": {
+            "col": 14,
+            "row": 7,
+          },
+        },
+        "raw": {
+          "TAG": "App",
+          "arg": {
+            "metaData": {
+              "end": {
+                "col": 18,
+                "row": 7,
+              },
+              "start": {
+                "col": 16,
+                "row": 7,
+              },
+            },
+            "raw": {
+              "TAG": "IntLit",
+              "_0": 10,
+            },
+          },
+          "func": {
+            "metaData": {
+              "end": {
+                "col": 15,
+                "row": 7,
+              },
+              "start": {
+                "col": 14,
+                "row": 7,
+              },
+            },
+            "raw": {
+              "TAG": "Var",
+              "_0": {
+                "TAG": "Raw",
+                "name": "x",
+              },
+            },
+          },
+        },
+      },
+      "expr": {
+        "metaData": {
+          "end": {
+            "col": 15,
+            "row": 6,
+          },
+          "start": {
+            "col": 36,
+            "row": 1,
+          },
+        },
+        "raw": {
+          "TAG": "Func",
+          "body": {
+            "metaData": {
+              "end": {
+                "col": 28,
+                "row": 5,
+              },
+              "start": {
+                "col": 16,
+                "row": 2,
+              },
+            },
+            "raw": {
+              "TAG": "If",
+              "cond": {
+                "metaData": {
+                  "end": {
+                    "col": 25,
+                    "row": 2,
+                  },
+                  "start": {
+                    "col": 19,
+                    "row": 2,
+                  },
+                },
+                "raw": {
+                  "TAG": "BinOp",
+                  "left": {
+                    "metaData": {
+                      "end": {
+                        "col": 20,
+                        "row": 2,
+                      },
+                      "start": {
+                        "col": 19,
+                        "row": 2,
+                      },
+                    },
+                    "raw": {
+                      "TAG": "Var",
+                      "_0": {
+                        "TAG": "Raw",
+                        "name": "y",
+                      },
+                    },
+                  },
+                  "op": "Ge",
+                  "right": {
+                    "metaData": {
+                      "end": {
+                        "col": 25,
+                        "row": 2,
+                      },
+                      "start": {
+                        "col": 24,
+                        "row": 2,
+                      },
+                    },
+                    "raw": {
+                      "TAG": "IntLit",
+                      "_0": 0,
+                    },
+                  },
+                },
+              },
+              "elseBranch": {
+                "metaData": {
+                  "end": {
+                    "col": 28,
+                    "row": 5,
+                  },
+                  "start": {
+                    "col": 18,
+                    "row": 5,
+                  },
+                },
+                "raw": {
+                  "TAG": "BinOp",
+                  "left": {
+                    "metaData": {
+                      "end": {
+                        "col": 19,
+                        "row": 5,
+                      },
+                      "start": {
+                        "col": 18,
+                        "row": 5,
+                      },
+                    },
+                    "raw": {
+                      "TAG": "Var",
+                      "_0": {
+                        "TAG": "Raw",
+                        "name": "y",
+                      },
+                    },
+                  },
+                  "op": "Add",
+                  "right": {
+                    "metaData": {
+                      "end": {
+                        "col": 28,
+                        "row": 5,
+                      },
+                      "start": {
+                        "col": 22,
+                        "row": 5,
+                      },
+                    },
+                    "raw": {
+                      "TAG": "App",
+                      "arg": {
+                        "metaData": {
+                          "end": {
+                            "col": 27,
+                            "row": 5,
+                          },
+                          "start": {
+                            "col": 24,
+                            "row": 5,
+                          },
+                        },
+                        "raw": {
+                          "TAG": "BinOp",
+                          "left": {
+                            "metaData": {
+                              "end": {
+                                "col": 25,
+                                "row": 5,
+                              },
+                              "start": {
+                                "col": 24,
+                                "row": 5,
+                              },
+                            },
+                            "raw": {
+                              "TAG": "Var",
+                              "_0": {
+                                "TAG": "Raw",
+                                "name": "y",
+                              },
+                            },
+                          },
+                          "op": "Sub",
+                          "right": {
+                            "metaData": {
+                              "end": {
+                                "col": 27,
+                                "row": 5,
+                              },
+                              "start": {
+                                "col": 26,
+                                "row": 5,
+                              },
+                            },
+                            "raw": {
+                              "TAG": "IntLit",
+                              "_0": 1,
+                            },
+                          },
+                        },
+                      },
+                      "func": {
+                        "metaData": {
+                          "end": {
+                            "col": 23,
+                            "row": 5,
+                          },
+                          "start": {
+                            "col": 22,
+                            "row": 5,
+                          },
+                        },
+                        "raw": {
+                          "TAG": "Var",
+                          "_0": {
+                            "TAG": "Raw",
+                            "name": "x",
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              "thenBranch": {
+                "metaData": {
+                  "end": {
+                    "col": 19,
+                    "row": 3,
+                  },
+                  "start": {
+                    "col": 18,
+                    "row": 3,
+                  },
+                },
+                "raw": {
+                  "TAG": "IntLit",
+                  "_0": 0,
+                },
+              },
+            },
+          },
+          "params": {
+            "hd": {
+              "typ": undefined,
+              "var": {
+                "TAG": "Raw",
+                "name": "y",
+              },
+            },
+            "tl": 0,
+          },
+          "returnType": undefined,
+        },
+      },
+      "param": {
+        "typ": {
+          "TAG": "Func",
+          "_0": "Int",
+          "_1": "Int",
+        },
+        "var": {
+          "TAG": "Raw",
+          "name": "x",
+        },
+      },
+    },
+  },
+}
+`;
