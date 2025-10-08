@@ -471,3 +471,44 @@ describe('Functions and Applications', () => {
         });
     });
 });
+
+describe('Recursive Functions', () => {
+    describe('successfully', () => {
+        it('run sum', () => {
+            const code = `
+              let rec sum = (n) => {
+                if n == 0 then 0 else n + sum(n - 1)
+              } in
+              sum 5
+            `
+            expect(evaluate(parse(code), env)).toEqual({
+                TAG: "Ok",
+                _0: { TAG: "IntVal", _0: 15 }
+            });
+        });
+    });
+
+    describe('fail', () => {
+        it('for non-functional recursion', () => {
+            const code = `
+              let rec x = x in
+              x
+            `
+            expect(evaluate(parse(code), env)).toEqual({
+                TAG: "Error",
+                _0: "UnsupportedForm"
+            });
+        });
+
+        it('for unnecessary rec', () => {
+            const code = `
+              let rec x = 1 in
+              x
+            `
+            expect(evaluate(parse(code), env)).toEqual({
+                TAG: "Error",
+                _0: "UnsupportedForm"
+            });
+        });
+    });
+});

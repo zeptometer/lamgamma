@@ -134,6 +134,7 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
         })
       }
     })
+
   | Var(v) =>
     switch Belt.Map.get(env, v) {
     | Some(typ) => ok(typ)

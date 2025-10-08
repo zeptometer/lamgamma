@@ -10,7 +10,7 @@ module Val = {
   type rec t =
     | IntVal(int)
     | BoolVal(bool)
-    | Closure(Env.t<t>, list<Var.t>, RawExpr.t)
+    | Closure({self: option<Var.t>, env: Env.t<t>, params: list<Var.t>, body: RawExpr.t})
 
   @genType
   let toString = (v: t): string =>
@@ -22,7 +22,7 @@ module Val = {
       } else {
         "false"
       }
-    | Closure(_, _, _) => "#<closure>"
+    | Closure(_) => "#<closure>"
     }
 }
 
@@ -30,6 +30,7 @@ type evalError =
   | TypeMismatch
   | ZeroDivision
   | UndefinedVariable
+  | UnsupportedForm
 
 exception MalformedValue({msg: string})
 
@@ -155,23 +156,41 @@ let rec evaluate = (e: RawExpr.t, env: Env.t<Val.t>): result<Val.t, evalError> =
       evaluate(body, newEnv)
     })
 
-  | Func({params, body}) => ok(Closure(env, params, body))
+  | Func({params, body}) => ok(Closure({self: None, env, params, body}))
 
   | App({func, arg}) =>
     evaluate(func, env)->Result.flatMap(funcVal =>
       evaluate(arg, env)->Result.flatMap(argVal =>
         switch funcVal {
-        | Closure(closureEnv, list{param}, body) =>
+        | Closure({self: None, env: closureEnv, params: list{param}, body}) =>
           let newEnv = Belt.Map.set(closureEnv, param, argVal)
           evaluate(body, newEnv)
-        | Closure(closureEnv, list{param, ...rest}, body) =>
+        | Closure({self: None, env: closureEnv, params: list{param, ...rest}, body}) =>
           let newEnv = Belt.Map.set(closureEnv, param, argVal)
-          ok(Closure(newEnv, rest, body))
-        | Closure(_, _, _) =>
+          ok(Closure({self: None, env: newEnv, params: rest, body}))
+        | Closure({self: Some(self), env: closureEnv, params: list{param}, body}) =>
+          let newEnv = closureEnv->Belt.Map.set(param, argVal)->Belt.Map.set(self, funcVal)
+          evaluate(body, newEnv)
+        | Closure({self: Some(self), env: closureEnv, params: list{param, ...rest}, body}) =>
+          let newEnv = closureEnv->Belt.Map.set(param, argVal)->Belt.Map.set(self, funcVal)
+          ok(Closure({self: None, env: newEnv, params: rest, body}))
+        | Closure(_) =>
           raise(MalformedValue({msg: "Closure with empty params should be impossible"}))
         | _ => fail(TypeMismatch)
         }
       )
     )
+
+  | LetRec({param, expr: Func({params: fparams, body: fbody}), body}) =>
+    let recFunc = Val.Closure({
+      self: Some(param),
+      env,
+      params: fparams,
+      body: fbody,
+    })
+
+    evaluate(body, Belt.Map.set(env, param, recFunc))
+
+  | LetRec(_) => fail(UnsupportedForm)
   }
 }

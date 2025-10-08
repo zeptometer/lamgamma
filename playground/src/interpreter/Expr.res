@@ -66,7 +66,7 @@ let rec stripTypeInfo = (expr: t): RawExpr.t => {
     })
   | LetRec({param, expr, body}) =>
     RawExpr.LetRec({
-      var: param.var,
+      param: param.var,
       expr: stripTypeInfo(expr),
       body: stripTypeInfo(body),
     })
