@@ -66,7 +66,8 @@ module.exports = grammar({
       $.or,
       $.not,
       // let
-      $.let
+      $.let,
+      $.letrec
     ),
 
     // Expressions that can be used as an argument as-is
@@ -216,6 +217,15 @@ module.exports = grammar({
         field('body', $._expression))
     ),
 
+    letrec: $ => prec.right(PREC.assign,
+      seq('let', 'rec',
+        field('param', $.param),
+        '=',
+        field('value', $._expression),
+        'in',
+        field('body', $._expression))
+    ),
+
     _type: $ => choice(
       $.int_type,
       $.bool_type,
@@ -234,6 +244,5 @@ module.exports = grammar({
         field('return', $._type)
       )
     ),
-
   }
 });
