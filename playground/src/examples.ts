@@ -11,12 +11,12 @@ let x = \`{ 1 + 2 } in
 `.trim();
 
 const fib = `
-(fix fib -> (fn n ->
+let rec fib = (n:int):int => {
   if n <= 1
   then 1
-  else (fib (n-1)) + (fib (n-2))
-))
-10
+  else fib(n - 1) + fib(n - 2)
+} in
+fib 20
 `.trim();
 
 const runtime_evaluation_csp =
@@ -141,19 +141,9 @@ let gibonacci_st = fn n -> \`{ fn x y ->
 }
 `.trim();
 
-export type Example = "quasiquote" | "runtime_evaluation" | "runtime_evaluation_csp" |
+export type Example = "fib" | "quasiquote" | "runtime_evaluation" | "runtime_evaluation_csp" |
  "nested_quote" | "ill_staged_variable" |  "scope_extrusion" | "spower" | "spower_sqr" | "spower_cont" |
  "gibonacci";
 export const ExamplePrograms = {
-  quasiquote,
-  runtime_evaluation,
-  runtime_evaluation_csp,
-  nested_quote,
-  scope_extrusion,
-  ill_staged_variable,
-  fib,
-  spower,
-  spower_sqr,
-  spower_cont,
-  gibonacci
+  fib
 };

@@ -9,8 +9,8 @@ import { Example, ExamplePrograms } from './examples';
 
 const App: React.FC = () => {
   const [treeSitterParser, setTreeSitterParser] = useState<Parser | null>(null);
-  const [code, setCode] = useState(ExamplePrograms.quasiquote);
-  const [example, setExample] = useState<Example>("quasiquote");
+  const [code, setCode] = useState(ExamplePrograms.fib);
+  const [example, setExample] = useState<Example>("fib");
 
   const monaco = useMonaco();
 
