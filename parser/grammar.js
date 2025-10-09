@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-/// <reference types="tree-sitter-cli/dsl" />
+/// <reference types='tree-sitter-cli/dsl' />
 // @ts-check
 
 // borrow from tree-sitter-satysfi
@@ -33,7 +33,7 @@ const PREC = {
 };
 
 module.exports = grammar({
-  name: "lamgamma_parser",
+  name: 'lamgamma_parser',
 
   word: $ => $.identifier,
 
@@ -90,13 +90,14 @@ module.exports = grammar({
 
     application: $ =>
       prec.left(PREC.application, seq(
-        field("func", $._expression),
-        field("arg", $._simple_expression)
+        field('func', $._expression),
+        field('arg', $._simple_expression)
       )),
 
     param: $ => seq(
-      field("var", $.identifier),
-      optional(seq(':', field("type", $._type)))),
+      field('var', $.identifier),
+      optional(seq(':', field('type', $._type))),
+      optional(seq('@', field('classifier', $.identifier)))),
 
     params: $ => seq($.param, repeat(seq(',', $.param))),
 
@@ -107,105 +108,104 @@ module.exports = grammar({
 
     add: $ => prec.left(PREC.additive,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '+',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     sub: $ => prec.left(PREC.subtractive,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '-',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     mult: $ => prec.left(PREC.multiplicative,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '*',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     div: $ => prec.left(PREC.divisive,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '/',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     mod: $ => prec.left(PREC.divisive,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         'mod',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     // boolean:
     boolean: $ => choice('true', 'false'),
 
     ctrl_if: $ => prec.right(PREC.match,
       seq('if',
-        field("cond", $._expression),
+        field('cond', $._expression),
         'then',
-        field("then", $._expression),
+        field('then', $._expression),
         'else',
-        field("else", $._expression))),
+        field('else', $._expression))),
 
     eq: $ => prec.left(PREC.comparative,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '==',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     ne: $ => prec.left(PREC.comparative,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '!=',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     lt: $ => prec.left(PREC.comparative,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '<',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     le: $ => prec.left(PREC.comparative,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '<=',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     gt: $ => prec.left(PREC.comparative,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '>',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     ge: $ => prec.left(PREC.comparative,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '>=',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     and: $ => prec.left(PREC.and,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '&&',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     or: $ => prec.left(PREC.or,
       seq(
-        field("left", $._expression),
+        field('left', $._expression),
         '||',
-        field("right", $._expression))),
+        field('right', $._expression))),
 
     not: $ => prec.right(PREC.unary,
       seq('!', $._expression)),
 
     // staging
     quote: $ => prec(PREC.stage,
-      seq('`{', $._expression, '}')),
+      seq('`{',
+        optional(seq('@', field('classifier', $.identifier))),
+        field('body', $._expression), '}')),
 
     splice: $ => prec(PREC.stage,
-      choice(
-        seq('~{', field("body", $._expression), '}'),
-        seq('~', field("shift", $.number), '{', field("body", $._expression), '}')
-      )
+      seq('~', optional(field('shift', $.number)), '{', field('body', $._expression), '}')
     ),
 
     let: $ => prec.right(PREC.assign,

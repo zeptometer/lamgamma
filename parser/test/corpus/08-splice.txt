@@ -1,0 +1,22 @@
+==================
+Splice
+==================
+
+~{ x }
+---
+
+(source_file
+  (splice
+    (identifier)))
+
+==================
+Splice with explicit shift
+==================
+
+~0{ x }
+---
+
+(source_file
+  (splice
+    (number)
+    (identifier)))

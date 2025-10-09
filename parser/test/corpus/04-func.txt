@@ -46,10 +46,43 @@ Func with return type
     (number)))
 
 ==================
+Func with classifier
+==================
+
+( x@g ) => { 10 }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (identifier)))
+    (number)))
+
+==================
+Func with param type and classifier
+==================
+
+( x:int@g ) => { 10 }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (int_type)
+        (identifier)))
+    (number)))
+
+==================
 Func with multiple params
 ==================
 
-( x, y:int, z:bool ):int => { 10 }
+( x, y:int, z:bool, w:int@g ):int => { 10 }
 
 ---
 
@@ -63,7 +96,11 @@ Func with multiple params
         (int_type))
       (param
         (identifier)
-        (bool_type)))
+        (bool_type))
+      (param
+        (identifier)
+        (int_type)
+        (identifier)))
     (int_type)
     (number)))
 
@@ -78,7 +115,8 @@ Func without params is illegal
 (source_file
   (lambda
     (params
-      (param (MISSING identifier)))
+      (param
+        (MISSING identifier)))
     (number)))
 
 ==================

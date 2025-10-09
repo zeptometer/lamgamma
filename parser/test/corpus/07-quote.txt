@@ -1,0 +1,28 @@
+==================
+Quotation without classifier annotation
+==================
+
+`{ x + y }
+
+---
+
+(source_file
+  (quote
+    (add
+      (identifier)
+      (identifier))))
+
+==================
+Quotation with classifier annotation
+==================
+
+`{@g x + y }
+
+---
+
+(source_file
+  (quote
+    (identifier)
+    (add
+      (identifier)
+      (identifier))))
