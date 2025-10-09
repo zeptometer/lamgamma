@@ -44,18 +44,6 @@ let rec findParseError = (node: syntaxNode): option<ParseError.t> => {
   }
 }
 
-@deprecated("Use MalformedNode instead")
-exception NodeCountMismatch({
-  expected: int,
-  actual: int,
-  node: syntaxNode,
-})
-@deprecated("Use MalformedNode instead") exception UnexpectedText({text: option<string>})
-@deprecated("Use MalformedNode instead")
-exception UnexpectedNodeType({
-  expected: string,
-  actual: string,
-})
 exception MalformedNode({msg: string})
 exception NotImplemented
 
