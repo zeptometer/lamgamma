@@ -683,6 +683,37 @@
     "fields": {}
   },
   {
+    "type": "code_type",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "bool_type",
+          "named": true
+        },
+        {
+          "type": "code_type",
+          "named": true
+        },
+        {
+          "type": "func_type",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "int_type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "ctrl_if",
     "named": true,
     "fields": {
@@ -1491,6 +1522,10 @@
             "named": true
           },
           {
+            "type": "code_type",
+            "named": true
+          },
+          {
             "type": "func_type",
             "named": true
           },
@@ -1514,6 +1549,10 @@
           },
           {
             "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "code_type",
             "named": true
           },
           {
@@ -2118,6 +2157,10 @@
           },
           {
             "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "code_type",
             "named": true
           },
           {
@@ -4098,6 +4141,10 @@
             "named": true
           },
           {
+            "type": "code_type",
+            "named": true
+          },
+          {
             "type": "func_type",
             "named": true
           },
@@ -4138,7 +4185,17 @@
     "type": "quote",
     "named": true,
     "fields": {
-      "body": {
+      "classifier": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "expr": {
         "multiple": true,
         "required": true,
         "types": [
@@ -4244,16 +4301,6 @@
           },
           {
             "type": "sub",
-            "named": true
-          }
-        ]
-      },
-      "classifier": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "identifier",
             "named": true
           }
         ]
@@ -4372,7 +4419,7 @@
     "type": "splice",
     "named": true,
     "fields": {
-      "body": {
+      "expr": {
         "multiple": true,
         "required": true,
         "types": [

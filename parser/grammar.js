@@ -202,10 +202,10 @@ module.exports = grammar({
     quote: $ => prec(PREC.stage,
       seq('`{',
         optional(seq('@', field('classifier', $.identifier))),
-        field('body', $._expression), '}')),
+        field('expr', $._expression), '}')),
 
     splice: $ => prec(PREC.stage,
-      seq('~', optional(field('shift', $.number)), '{', field('body', $._expression), '}')
+      seq('~', optional(field('shift', $.number)), '{', field('expr', $._expression), '}')
     ),
 
     let: $ => prec.right(PREC.assign,
@@ -230,6 +230,7 @@ module.exports = grammar({
       $.int_type,
       $.bool_type,
       $.func_type,
+      $.code_type,
       seq('(', $._type, ')')
     ),
 
@@ -244,5 +245,7 @@ module.exports = grammar({
         field('return', $._type)
       )
     ),
+
+    code_type: $ => seq('<', $._type, '@', $.identifier, '>'),
   }
 });

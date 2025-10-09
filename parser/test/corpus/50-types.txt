@@ -1,0 +1,107 @@
+==================
+Int
+==================
+
+(x:int) => { x }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (int_type)))
+    (identifier)))
+
+==================
+Bool
+==================
+
+(x:bool) => { x }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (bool_type)))
+    (identifier)))
+
+==================
+Func
+==================
+
+(x:int->int) => { x }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (func_type
+          (int_type)
+          (int_type))))
+    (identifier)))
+
+==================
+Associativity of Func
+==================
+
+(x:int->int->int) => { x }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (func_type
+          (int_type)
+          (func_type
+            (int_type)
+            (int_type)))))
+    (identifier)))
+
+==================
+Paren
+==================
+
+(x:(int->int)->int) => { x }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (func_type
+          (func_type
+            (int_type)
+            (int_type))
+          (int_type))))
+    (identifier)))
+
+==================
+Code
+==================
+
+(x:<int@g>) => { x }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (code_type
+          (int_type)
+          (identifier))))
+    (identifier)))
