@@ -14,8 +14,8 @@ type rec t =
   | UniOp({op: Operator.UniOp.t, expr: t})
   | If({cond: t, thenBranch: t, elseBranch: t})
 // staging constructs
-// | Quote(t)
-// | Unquote({ shift: int, expr: t })
+  | Quote({ expr : t })
+  | Splice({ shift: int, expr: t })
 // | LetCs({ var: Var.t, expr: t, body: t})
 // | LetRecCs({ var: Var.t, expr: t, body: t})
 // | Serialize(t)

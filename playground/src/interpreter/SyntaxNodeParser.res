@@ -104,12 +104,20 @@ let rec parseTypeNode = (node: syntaxNode): result<Typ.t, ParseError.t> => {
   }
 }
 
-let parseIdentifierNode = (node: syntaxNode): Var.t => {
+let parseVar = (node: syntaxNode): Var.t => {
   if node.type_ != "identifier" {
     raise(MalformedNode({msg: `Expected identifier node, got ${node.type_}`}))
   }
   let varname = node.text->Nullable.toOption->Option.getExn(~message="Identifier node has no text")
   Var.Raw({name: varname})
+}
+
+let parseClassifier = (node: syntaxNode): Classifier.t => {
+  if node.type_ != "identifier" {
+    raise(MalformedNode({msg: `Expected identifier node, got ${node.type_}`}))
+  }
+  let varname = node.text->Nullable.toOption->Option.getExn(~message="Identifier node has no text")
+  Classifier.Named(varname)
 }
 
 let parseParamNode = (node: syntaxNode): result<Expr.Param.t, ParseError.t> => {
@@ -120,15 +128,20 @@ let parseParamNode = (node: syntaxNode): result<Expr.Param.t, ParseError.t> => {
   let var =
     node
     ->getNamedChildForFieldNameUnsafe("var")
-    ->parseIdentifierNode
+    ->parseVar
 
   let typ = switch node->getNamedChildForFieldName("type") {
   | Some(n) => n->parseTypeNode->Result.map(t => Some(t))
   | None => ok(None)
   }
 
+  let cls = switch node->getNamedChildForFieldName("classifier") {
+  | Some(n) => n->parseClassifier
+  | None => Classifier.Source.fresh()
+  }
+
   typ->Result.map(t => {
-    {Expr.Param.var, typ: t}
+    {Expr.Param.var, typ: t, cls}
   })
 }
 
@@ -149,7 +162,7 @@ let parseParamsNode = (node: syntaxNode): result<list<Expr.Param.t>, ParseError.
     }
   }
 
-  aux(0, Belt.List.fromArray([]))
+  aux(0, list{})
 }
 
 @genType
@@ -316,7 +329,7 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
   | "identifier" =>
     ok({
       Expr.metaData: extractMetadata(node),
-      raw: Expr.Var(parseIdentifierNode(node)),
+      raw: Expr.Var(parseVar(node)),
     })
 
   | "let" =>
@@ -434,6 +447,49 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
           raw: Expr.App({func: f, arg: a}),
         }
       })
+    })
+
+  | "quote" =>
+    let cls =
+      node
+      ->getNamedChildForFieldName("classifier")
+      ->Belt.Option.map(parseClassifier)
+      ->Belt.Option.getWithDefault(Classifier.Source.fresh())
+
+    let expr =
+      node
+      ->getNamedChildForFieldNameUnsafe("expr")
+      ->parseExprNode
+
+    expr->Result.map(e => {
+      {
+        Expr.metaData: extractMetadata(node),
+        raw: Expr.Quote({cls, expr: e}),
+      }
+    })
+
+  | "splice" =>
+    let defaultShift = 1
+    let shift =
+      node
+      ->getNamedChildForFieldName("shift")
+      ->Belt.Option.map(n => {
+        Nullable.getUnsafe(n.text)
+        ->Int.fromString
+        ->Option.getExn(~message="Failed to parse int from string")
+      })
+      ->Belt.Option.getWithDefault(defaultShift)
+
+    let expr =
+      node
+      ->getNamedChildForFieldNameUnsafe("expr")
+      ->parseExprNode
+
+    expr->Result.map(e => {
+      {
+        Expr.metaData: extractMetadata(node),
+        raw: Expr.Splice({shift, expr: e}),
+      }
     })
 
   | _ => raise(NotImplemented)

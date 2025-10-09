@@ -1,6 +1,7 @@
-import { expect, it, beforeAll, describe } from 'vitest';
+import { expect, it, beforeAll, beforeEach, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
 import { parseSourceFileNode } from './SyntaxNodeParser.gen.ts';
+import { Source_reset as classifier_source_reset } from './Classifier.gen.ts';
 
 let parser;
 
@@ -13,6 +14,10 @@ beforeAll(
         parser = parser1;
     }
 )
+
+beforeEach(() => {
+    classifier_source_reset();
+})
 
 describe('parseSourceFileNode', () => {
     describe('for integer', () => {
@@ -570,116 +575,540 @@ describe('parseSourceFileNode', () => {
     describe('for let expressions', () => {
         it('parse let x = 1 in x', () => {
             const input = 'let x = 1 in x';
-            const expectedOutput = {
-                TAG: "Ok",
-                _0: {
-                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 14 } },
-                    raw: {
-                        TAG: "Let",
-                        param: { typ: undefined, var: { TAG: "Raw", name: 'x' } },
-                        expr: {
-                            metaData: { start: { row: 0, col: 8 }, end: { row: 0, col: 9 } },
-                            raw: { TAG: "IntLit", _0: 1 }
-                        },
-                        body: {
-                            metaData: { start: { row: 0, col: 13 }, end: { row: 0, col: 14 } },
-                            raw: { TAG: "Var", _0: { TAG: "Raw", name: 'x' } }
-                        }
-                    }
-                }
-            };
             expect(parseSourceFileNode((parser.parse(input)).rootNode))
-                .toEqual(expectedOutput);
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 14,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Let",
+                        "body": {
+                          "metaData": {
+                            "end": {
+                              "col": 14,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 13,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "Var",
+                            "_0": {
+                              "TAG": "Raw",
+                              "name": "x",
+                            },
+                          },
+                        },
+                        "expr": {
+                          "metaData": {
+                            "end": {
+                              "col": 9,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 8,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "IntLit",
+                            "_0": 1,
+                          },
+                        },
+                        "param": {
+                          "cls": {
+                            "TAG": "Generated",
+                            "_0": 1,
+                          },
+                          "typ": undefined,
+                          "var": {
+                            "TAG": "Raw",
+                            "name": "x",
+                          },
+                        },
+                      },
+                    },
+                  }
+                `);
         });
 
         it('parse let x:int = 1 in x', () => {
             const input = 'let x:int = 1 in x';
-            const expectedOutput = {
-                TAG: "Ok",
-                _0: {
-                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 18 } },
-                    raw: {
-                        TAG: "Let",
-                        param: { typ: "Int", var: { TAG: "Raw", name: 'x' } },
-                        expr: {
-                            metaData: { start: { row: 0, col: 12 }, end: { row: 0, col: 13 } },
-                            raw: { TAG: "IntLit", _0: 1 }
-                        },
-                        body: {
-                            metaData: { start: { row: 0, col: 17 }, end: { row: 0, col: 18 } },
-                            raw: { TAG: "Var", _0: { TAG: "Raw", name: 'x' } }
-                        }
-                    }
-                }
-            };
             expect(parseSourceFileNode((parser.parse(input)).rootNode))
-                .toEqual(expectedOutput);
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 18,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Let",
+                        "body": {
+                          "metaData": {
+                            "end": {
+                              "col": 18,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 17,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "Var",
+                            "_0": {
+                              "TAG": "Raw",
+                              "name": "x",
+                            },
+                          },
+                        },
+                        "expr": {
+                          "metaData": {
+                            "end": {
+                              "col": 13,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 12,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "IntLit",
+                            "_0": 1,
+                          },
+                        },
+                        "param": {
+                          "cls": {
+                            "TAG": "Generated",
+                            "_0": 1,
+                          },
+                          "typ": "Int",
+                          "var": {
+                            "TAG": "Raw",
+                            "name": "x",
+                          },
+                        },
+                      },
+                    },
+                  }
+                `);
         });
 
+        it('parse let with classifier annotation', () => {
+            const input = 'let x@g = 1 in x';
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 16,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Let",
+                        "body": {
+                          "metaData": {
+                            "end": {
+                              "col": 16,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 15,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "Var",
+                            "_0": {
+                              "TAG": "Raw",
+                              "name": "x",
+                            },
+                          },
+                        },
+                        "expr": {
+                          "metaData": {
+                            "end": {
+                              "col": 11,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 10,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "IntLit",
+                            "_0": 1,
+                          },
+                        },
+                        "param": {
+                          "cls": {
+                            "TAG": "Named",
+                            "_0": "g",
+                          },
+                          "typ": undefined,
+                          "var": {
+                            "TAG": "Raw",
+                            "name": "x",
+                          },
+                        },
+                      },
+                    },
+                  }
+                `);
+        });
+
+
+        it('parse let with both type and classifier annotation', () => {
+            const input = 'let x:int@g = 1 in x';
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 20,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Let",
+                        "body": {
+                          "metaData": {
+                            "end": {
+                              "col": 20,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 19,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "Var",
+                            "_0": {
+                              "TAG": "Raw",
+                              "name": "x",
+                            },
+                          },
+                        },
+                        "expr": {
+                          "metaData": {
+                            "end": {
+                              "col": 15,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 14,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "IntLit",
+                            "_0": 1,
+                          },
+                        },
+                        "param": {
+                          "cls": {
+                            "TAG": "Named",
+                            "_0": "g",
+                          },
+                          "typ": "Int",
+                          "var": {
+                            "TAG": "Raw",
+                            "name": "x",
+                          },
+                        },
+                      },
+                    },
+                  }
+                `)
+        });
     });
 
     describe('for function definitions', () => {
         it('parse (x) => { 10 }', () => {
             const input = '(x) => { 10 }';
-            const expectedOutput = {
-                TAG: "Ok",
-                _0: {
-                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 13 } },
-                    raw: {
-                        TAG: "Func",
-                        params: { hd: { typ: undefined, var: { TAG: "Raw", name: "x" } }, tl: 0 },
-                        returnType: undefined,
-                        body: {
-                            metaData: { start: { row: 0, col: 9 }, end: { row: 0, col: 11 } },
-                            raw: { TAG: "IntLit", _0: 10 }
-                        }
-                    }
-                }
-            };
+
             expect(parseSourceFileNode((parser.parse(input)).rootNode))
-                .toEqual(expectedOutput);
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 13,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Func",
+                        "body": {
+                          "metaData": {
+                            "end": {
+                              "col": 11,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 9,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "IntLit",
+                            "_0": 10,
+                          },
+                        },
+                        "params": {
+                          "hd": {
+                            "cls": {
+                              "TAG": "Generated",
+                              "_0": 1,
+                            },
+                            "typ": undefined,
+                            "var": {
+                              "TAG": "Raw",
+                              "name": "x",
+                            },
+                          },
+                          "tl": 0,
+                        },
+                        "returnType": undefined,
+                      },
+                    },
+                  }
+                `);
         });
 
         it('parse (x:int):int => {10}', () => {
             const input = '(x:int):int => { 10 }';
-            const expectedOutput = {
-                TAG: "Ok",
-                _0: {
-                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 21 } },
-                    raw: {
-                        TAG: "Func",
-                        params: { hd: { typ: "Int", var: { TAG: "Raw", name: "x" } }, tl: 0 },
-                        returnType: "Int",
-                        body: {
-                            metaData: { start: { row: 0, col: 17 }, end: { row: 0, col: 19 } },
-                            raw: { TAG: "IntLit", _0: 10 }
-                        }
-                    }
-                }
-            };
             expect(parseSourceFileNode((parser.parse(input)).rootNode))
-                .toEqual(expectedOutput);
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 21,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Func",
+                        "body": {
+                          "metaData": {
+                            "end": {
+                              "col": 19,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 17,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "IntLit",
+                            "_0": 10,
+                          },
+                        },
+                        "params": {
+                          "hd": {
+                            "cls": {
+                              "TAG": "Generated",
+                              "_0": 1,
+                            },
+                            "typ": "Int",
+                            "var": {
+                              "TAG": "Raw",
+                              "name": "x",
+                            },
+                          },
+                          "tl": 0,
+                        },
+                        "returnType": "Int",
+                      },
+                    },
+                  }
+                `);
         })
 
-        it('parse (x:int, y:int):int => {10}', () => {
-            const input = '(x:int, y:int):int => { 10 }';
-            const expectedOutput = {
-                TAG: "Ok",
-                _0: {
-                    metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 28 } },
-                    raw: {
-                        TAG: "Func",
-                        params: { hd: { typ: "Int", var: { TAG: "Raw", name: "x" } }, tl: { hd: { typ: "Int", var: { TAG: "Raw", name: "y" } }, tl: 0 } },
-                        returnType: "Int",
-                        body: {
-                            metaData: { start: { row: 0, col: 24 }, end: { row: 0, col: 26 } },
-                            raw: { TAG: "IntLit", _0: 10 }
-                        }
-                    }
-                }
-            };
+        it('parse func with both type and classifier annotations', () => {
+            const input = '(x:int@g):int => { 10 }';
             expect(parseSourceFileNode((parser.parse(input)).rootNode))
-                .toEqual(expectedOutput);
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 23,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Func",
+                        "body": {
+                          "metaData": {
+                            "end": {
+                              "col": 21,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 19,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "IntLit",
+                            "_0": 10,
+                          },
+                        },
+                        "params": {
+                          "hd": {
+                            "cls": {
+                              "TAG": "Named",
+                              "_0": "g",
+                            },
+                            "typ": "Int",
+                            "var": {
+                              "TAG": "Raw",
+                              "name": "x",
+                            },
+                          },
+                          "tl": 0,
+                        },
+                        "returnType": "Int",
+                      },
+                    },
+                  }
+                `)
+        })
+
+        it('parse function with multiple params', () => {
+            const input = '(x, y:int, z:int@g):int => { 10 }';
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 33,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Func",
+                        "body": {
+                          "metaData": {
+                            "end": {
+                              "col": 31,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 29,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "IntLit",
+                            "_0": 10,
+                          },
+                        },
+                        "params": {
+                          "hd": {
+                            "cls": {
+                              "TAG": "Generated",
+                              "_0": 1,
+                            },
+                            "typ": undefined,
+                            "var": {
+                              "TAG": "Raw",
+                              "name": "x",
+                            },
+                          },
+                          "tl": {
+                            "hd": {
+                              "cls": {
+                                "TAG": "Generated",
+                                "_0": 2,
+                              },
+                              "typ": "Int",
+                              "var": {
+                                "TAG": "Raw",
+                                "name": "y",
+                              },
+                            },
+                            "tl": {
+                              "hd": {
+                                "cls": {
+                                  "TAG": "Named",
+                                  "_0": "g",
+                                },
+                                "typ": "Int",
+                                "var": {
+                                  "TAG": "Raw",
+                                  "name": "z",
+                                },
+                              },
+                              "tl": 0,
+                            },
+                          },
+                        },
+                        "returnType": "Int",
+                      },
+                    },
+                  }
+                `);
         })
     });
 
@@ -746,71 +1175,524 @@ describe('parseSourceFileNode', () => {
             `);
         })
     })
+
+
+    describe('for letrec expressions', () => {
+        it('parse let rec', () => {
+            const input = `
+              let rec x: int->int = (y) => {
+                if y >= 0 then
+                  0
+                else
+                  y + x(y-1)
+              } in
+              x 10
+            `;
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
+                .toMatchSnapshot();
+        });
+
+    });
+
+    describe('for quotations', () => {
+        it('parse quotation', () => {
+            const input = '`{ x + 1 }';
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 10,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Quote",
+                        "cls": {
+                          "TAG": "Generated",
+                          "_0": 1,
+                        },
+                        "expr": {
+                          "metaData": {
+                            "end": {
+                              "col": 8,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 3,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "BinOp",
+                            "left": {
+                              "metaData": {
+                                "end": {
+                                  "col": 4,
+                                  "row": 0,
+                                },
+                                "start": {
+                                  "col": 3,
+                                  "row": 0,
+                                },
+                              },
+                              "raw": {
+                                "TAG": "Var",
+                                "_0": {
+                                  "TAG": "Raw",
+                                  "name": "x",
+                                },
+                              },
+                            },
+                            "op": "Add",
+                            "right": {
+                              "metaData": {
+                                "end": {
+                                  "col": 8,
+                                  "row": 0,
+                                },
+                                "start": {
+                                  "col": 7,
+                                  "row": 0,
+                                },
+                              },
+                              "raw": {
+                                "TAG": "IntLit",
+                                "_0": 1,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  }
+                `)
+        });
+
+        it('parse quotation with classifier annotation', () => {
+            const input = '`{@g x + 1 }';
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 12,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Quote",
+                        "cls": {
+                          "TAG": "Named",
+                          "_0": "g",
+                        },
+                        "expr": {
+                          "metaData": {
+                            "end": {
+                              "col": 10,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 5,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "BinOp",
+                            "left": {
+                              "metaData": {
+                                "end": {
+                                  "col": 6,
+                                  "row": 0,
+                                },
+                                "start": {
+                                  "col": 5,
+                                  "row": 0,
+                                },
+                              },
+                              "raw": {
+                                "TAG": "Var",
+                                "_0": {
+                                  "TAG": "Raw",
+                                  "name": "x",
+                                },
+                              },
+                            },
+                            "op": "Add",
+                            "right": {
+                              "metaData": {
+                                "end": {
+                                  "col": 10,
+                                  "row": 0,
+                                },
+                                "start": {
+                                  "col": 9,
+                                  "row": 0,
+                                },
+                              },
+                              "raw": {
+                                "TAG": "IntLit",
+                                "_0": 1,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  }
+                `)
+        });
+    });
+
+    describe('for splices', () => {
+        it('parse splice', () => {
+            const input = '~1{ x + 1 }';
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 11,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Splice",
+                        "expr": {
+                          "metaData": {
+                            "end": {
+                              "col": 9,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 4,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "BinOp",
+                            "left": {
+                              "metaData": {
+                                "end": {
+                                  "col": 5,
+                                  "row": 0,
+                                },
+                                "start": {
+                                  "col": 4,
+                                  "row": 0,
+                                },
+                              },
+                              "raw": {
+                                "TAG": "Var",
+                                "_0": {
+                                  "TAG": "Raw",
+                                  "name": "x",
+                                },
+                              },
+                            },
+                            "op": "Add",
+                            "right": {
+                              "metaData": {
+                                "end": {
+                                  "col": 9,
+                                  "row": 0,
+                                },
+                                "start": {
+                                  "col": 8,
+                                  "row": 0,
+                                },
+                              },
+                              "raw": {
+                                "TAG": "IntLit",
+                                "_0": 1,
+                              },
+                            },
+                          },
+                        },
+                        "shift": 1,
+                      },
+                    },
+                  }
+                `)
+        });
+
+        it('parse splice without shift', () => {
+            const input = '~{ x + 1 }';
+            expect(parseSourceFileNode((parser.parse(input)).rootNode))
+                .toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "metaData": {
+                        "end": {
+                          "col": 10,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Splice",
+                        "expr": {
+                          "metaData": {
+                            "end": {
+                              "col": 8,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 3,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "BinOp",
+                            "left": {
+                              "metaData": {
+                                "end": {
+                                  "col": 4,
+                                  "row": 0,
+                                },
+                                "start": {
+                                  "col": 3,
+                                  "row": 0,
+                                },
+                              },
+                              "raw": {
+                                "TAG": "Var",
+                                "_0": {
+                                  "TAG": "Raw",
+                                  "name": "x",
+                                },
+                              },
+                            },
+                            "op": "Add",
+                            "right": {
+                              "metaData": {
+                                "end": {
+                                  "col": 8,
+                                  "row": 0,
+                                },
+                                "start": {
+                                  "col": 7,
+                                  "row": 0,
+                                },
+                              },
+                              "raw": {
+                                "TAG": "IntLit",
+                                "_0": 1,
+                              },
+                            },
+                          },
+                        },
+                        "shift": 1,
+                      },
+                    },
+                  }
+                `)
+        });
+    });
 });
 
 describe('parseTypeNode', () => {
     it('parse int type', () => {
         const input = '(x:int) => { x }';
-        const expectedOutput = {
-            TAG: "Ok",
-            _0: {
-                metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 16 } },
-                raw: {
-                    TAG: "Func",
-                    params: { hd: { typ: "Int", var: { TAG: "Raw", name: "x" } }, tl: 0 },
-                    returnType: undefined,
-                    body: {
-                        metaData: { start: { row: 0, col: 13 }, end: { row: 0, col: 14 } },
-                        raw: { TAG: "Var", _0: { TAG: "Raw", name: "x" } }
-                    }
-                }
-            }
-        };
         expect(parseSourceFileNode((parser.parse(input)).rootNode))
-            .toEqual(expectedOutput);
+            .toMatchInlineSnapshot(`
+              {
+                "TAG": "Ok",
+                "_0": {
+                  "metaData": {
+                    "end": {
+                      "col": 16,
+                      "row": 0,
+                    },
+                    "start": {
+                      "col": 0,
+                      "row": 0,
+                    },
+                  },
+                  "raw": {
+                    "TAG": "Func",
+                    "body": {
+                      "metaData": {
+                        "end": {
+                          "col": 14,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 13,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Var",
+                        "_0": {
+                          "TAG": "Raw",
+                          "name": "x",
+                        },
+                      },
+                    },
+                    "params": {
+                      "hd": {
+                        "cls": {
+                          "TAG": "Generated",
+                          "_0": 1,
+                        },
+                        "typ": "Int",
+                        "var": {
+                          "TAG": "Raw",
+                          "name": "x",
+                        },
+                      },
+                      "tl": 0,
+                    },
+                    "returnType": undefined,
+                  },
+                },
+              }
+            `);
     })
 
     it('parse bool type', () => {
         const input = '(x:bool) => { x }';
-        const expectedOutput = {
-            TAG: "Ok",
-            _0: {
-                metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 17 } },
-                raw: {
-                    TAG: "Func",
-                    params: { hd: { typ: "Bool", var: { TAG: "Raw", name: "x" } }, tl: 0 },
-                    returnType: undefined,
-                    body: {
-                        metaData: { start: { row: 0, col: 14 }, end: { row: 0, col: 15 } },
-                        raw: { TAG: "Var", _0: { TAG: "Raw", name: "x" } }
-                    }
-                }
-            }
-        };
         expect(parseSourceFileNode((parser.parse(input)).rootNode))
-            .toEqual(expectedOutput);
-    })
-
+            .toMatchInlineSnapshot(`
+              {
+                "TAG": "Ok",
+                "_0": {
+                  "metaData": {
+                    "end": {
+                      "col": 17,
+                      "row": 0,
+                    },
+                    "start": {
+                      "col": 0,
+                      "row": 0,
+                    },
+                  },
+                  "raw": {
+                    "TAG": "Func",
+                    "body": {
+                      "metaData": {
+                        "end": {
+                          "col": 15,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 14,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Var",
+                        "_0": {
+                          "TAG": "Raw",
+                          "name": "x",
+                        },
+                      },
+                    },
+                    "params": {
+                      "hd": {
+                        "cls": {
+                          "TAG": "Generated",
+                          "_0": 1,
+                        },
+                        "typ": "Bool",
+                        "var": {
+                          "TAG": "Raw",
+                          "name": "x",
+                        },
+                      },
+                      "tl": 0,
+                    },
+                    "returnType": undefined,
+                  },
+                },
+              }
+            `)
+    });
 
     it('parse func type', () => {
         const input = '(x:int->int) => { x }';
-        const expectedOutput = {
-            TAG: "Ok",
-            _0: {
-                metaData: { start: { row: 0, col: 0 }, end: { row: 0, col: 21 } },
-                raw: {
-                    TAG: "Func",
-                    params: { hd: { typ: { TAG: "Func", _0: "Int", _1: "Int" }, var: { TAG: "Raw", name: "x" } }, tl: 0 },
-                    returnType: undefined,
-                    body: {
-                        metaData: { start: { row: 0, col: 18 }, end: { row: 0, col: 19 } },
-                        raw: { TAG: "Var", _0: { TAG: "Raw", name: "x" } }
-                    }
-                }
-            }
-        };
         expect(parseSourceFileNode((parser.parse(input)).rootNode))
-            .toEqual(expectedOutput);
+            .toMatchInlineSnapshot(`
+              {
+                "TAG": "Ok",
+                "_0": {
+                  "metaData": {
+                    "end": {
+                      "col": 21,
+                      "row": 0,
+                    },
+                    "start": {
+                      "col": 0,
+                      "row": 0,
+                    },
+                  },
+                  "raw": {
+                    "TAG": "Func",
+                    "body": {
+                      "metaData": {
+                        "end": {
+                          "col": 19,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 18,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Var",
+                        "_0": {
+                          "TAG": "Raw",
+                          "name": "x",
+                        },
+                      },
+                    },
+                    "params": {
+                      "hd": {
+                        "cls": {
+                          "TAG": "Generated",
+                          "_0": 1,
+                        },
+                        "typ": {
+                          "TAG": "Func",
+                          "_0": "Int",
+                          "_1": "Int",
+                        },
+                        "var": {
+                          "TAG": "Raw",
+                          "name": "x",
+                        },
+                      },
+                      "tl": 0,
+                    },
+                    "returnType": undefined,
+                  },
+                },
+              }
+            `);
     })
 
     it('parse type with paren', () => {
@@ -853,6 +1735,10 @@ describe('parseTypeNode', () => {
                     },
                     "params": {
                       "hd": {
+                        "cls": {
+                          "TAG": "Generated",
+                          "_0": 1,
+                        },
                         "typ": {
                           "TAG": "Func",
                           "_0": {
@@ -875,22 +1761,4 @@ describe('parseTypeNode', () => {
               }
             `);
     })
-
-    describe('for letrec expressions', () => {
-        it('parse let rec', () => {
-            const input = `
-              let rec x: int->int = (y) => {
-                if y >= 0 then
-                  0
-                else
-                  y + x(y-1)
-              } in
-              x 10
-            `;
-            expect(parseSourceFileNode((parser.parse(input)).rootNode))
-                .toMatchSnapshot();
-        });
-
-    });
-
 });

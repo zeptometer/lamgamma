@@ -15,7 +15,7 @@ module MetaData = {
 }
 
 module Param = {
-  type t = {var: Var.t, typ: option<Typ.t>}
+  type t = {var: Var.t, typ: option<Typ.t>, cls: Classifier.t}
 }
 
 @genType
@@ -26,7 +26,7 @@ and raw_t =
   | Func({params: list<Param.t>, returnType: option<Typ.t>, body: t})
   | App({func: t, arg: t})
   | Let({param: Param.t, expr: t, body: t})
-  | LetRec({ param: Param.t, expr: t, body: t})
+  | LetRec({param: Param.t, expr: t, body: t})
   // // primitive operations
   | IntLit(int)
   | BoolLit(bool)
@@ -34,9 +34,9 @@ and raw_t =
   | ShortCircuitOp({op: Operator.ShortCircuitOp.t, left: t, right: t})
   | UniOp({op: Operator.UniOp.t, expr: t})
   | If({cond: t, thenBranch: t, elseBranch: t})
-// // staging constructs
-// | Quote(t)
-// | Unquote({ shift: int, expr: t })
+  // staging constructs
+  | Quote({cls: Classifier.t, expr: t})
+  | Splice({shift: int, expr: t})
 // | LetCs({ param: Param.t, expr: t, body: t })
 // | LetRecCs({ param: Param.t, expr: t, body: t })
 // | Serialize(t)
@@ -80,5 +80,7 @@ let rec stripTypeInfo = (expr: t): RawExpr.t => {
       func: stripTypeInfo(func),
       arg: stripTypeInfo(arg),
     })
+  | Quote({cls: _, expr}) => RawExpr.Quote({expr: stripTypeInfo(expr)})
+  | Splice({shift, expr}) => RawExpr.Splice({shift, expr: stripTypeInfo(expr)})
   }
 }
