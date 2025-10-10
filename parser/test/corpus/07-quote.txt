@@ -22,7 +22,8 @@ Quotation with classifier annotation
 
 (source_file
   (quote
-    (identifier)
+    (classifier
+      (identifier))
     (add
       (identifier)
       (identifier))))

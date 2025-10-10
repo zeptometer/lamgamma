@@ -97,11 +97,13 @@ module.exports = grammar({
     param: $ => seq(
       field('var', $.identifier),
       optional(seq(':', field('type', $._type))),
-      optional(seq('@', field('classifier', $.identifier)))),
+      optional(seq('@', field('classifier', $.classifier)))),
 
     params: $ => seq($.param, repeat(seq(',', $.param))),
 
     identifier: $ => /[a-z_][a-zA-Z0-9_]*/,
+
+    classifier: $ => choice($.identifier, '!'),
 
     // arithmetic
     number: $ => /\d+/,
@@ -201,7 +203,7 @@ module.exports = grammar({
     // staging
     quote: $ => prec(PREC.stage,
       seq('`{',
-        optional(seq('@', field('classifier', $.identifier))),
+        optional(seq('@', field('classifier', $.classifier))),
         field('expr', $._expression), '}')),
 
     splice: $ => prec(PREC.stage,

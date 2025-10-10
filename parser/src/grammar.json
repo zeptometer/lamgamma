@@ -285,7 +285,7 @@
                   "name": "classifier",
                   "content": {
                     "type": "SYMBOL",
-                    "name": "identifier"
+                    "name": "classifier"
                   }
                 }
               ]
@@ -325,6 +325,19 @@
     "identifier": {
       "type": "PATTERN",
       "value": "[a-z_][a-zA-Z0-9_]*"
+    },
+    "classifier": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "identifier"
+        },
+        {
+          "type": "STRING",
+          "value": "!"
+        }
+      ]
     },
     "number": {
       "type": "PATTERN",
@@ -807,7 +820,7 @@
                     "name": "classifier",
                     "content": {
                       "type": "SYMBOL",
-                      "name": "identifier"
+                      "name": "classifier"
                     }
                   }
                 ]

@@ -683,6 +683,21 @@
     "fields": {}
   },
   {
+    "type": "classifier",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "code_type",
     "named": true,
     "fields": {},
@@ -4119,7 +4134,7 @@
         "required": false,
         "types": [
           {
-            "type": "identifier",
+            "type": "classifier",
             "named": true
           }
         ]
@@ -4190,7 +4205,7 @@
         "required": false,
         "types": [
           {
-            "type": "identifier",
+            "type": "classifier",
             "named": true
           }
         ]

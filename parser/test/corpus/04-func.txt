@@ -58,7 +58,8 @@ Func with classifier
     (params
       (param
         (identifier)
-        (identifier)))
+        (classifier
+          (identifier))))
     (number)))
 
 ==================
@@ -75,7 +76,8 @@ Func with param type and classifier
       (param
         (identifier)
         (int_type)
-        (identifier)))
+        (classifier
+          (identifier))))
     (number)))
 
 ==================
@@ -100,7 +102,8 @@ Func with multiple params
       (param
         (identifier)
         (int_type)
-        (identifier)))
+        (classifier
+          (identifier))))
     (int_type)
     (number)))
 
