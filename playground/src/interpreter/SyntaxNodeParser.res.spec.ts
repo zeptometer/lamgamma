@@ -786,7 +786,6 @@ describe('parseSourceFileNode', () => {
                 `);
         });
 
-
         it('parse let with both type and classifier annotation', () => {
             const input = 'let x:int@g = 1 in x';
             expect(parseSourceFileNode((parser.parse(input)).rootNode))
@@ -1761,4 +1760,62 @@ describe('parseTypeNode', () => {
               }
             `);
     })
+});
+
+describe('parseClassifier', () => {
+    it('parse classifier', () => {
+        const input = '(x@!) => { x }';
+        expect(parseSourceFileNode((parser.parse(input)).rootNode))
+        .toMatchInlineSnapshot(`
+          {
+            "TAG": "Ok",
+            "_0": {
+              "metaData": {
+                "end": {
+                  "col": 14,
+                  "row": 0,
+                },
+                "start": {
+                  "col": 0,
+                  "row": 0,
+                },
+              },
+              "raw": {
+                "TAG": "Func",
+                "body": {
+                  "metaData": {
+                    "end": {
+                      "col": 12,
+                      "row": 0,
+                    },
+                    "start": {
+                      "col": 11,
+                      "row": 0,
+                    },
+                  },
+                  "raw": {
+                    "TAG": "Var",
+                    "_0": {
+                      "TAG": "Raw",
+                      "name": "x",
+                    },
+                  },
+                },
+                "params": {
+                  "hd": {
+                    "cls": "Initial",
+                    "typ": undefined,
+                    "var": {
+                      "TAG": "Raw",
+                      "name": "x",
+                    },
+                  },
+                  "tl": 0,
+                },
+                "returnType": undefined,
+              },
+            },
+          }
+        `)
+    });
 });

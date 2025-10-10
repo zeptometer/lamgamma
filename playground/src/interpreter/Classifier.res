@@ -1,4 +1,5 @@
 type t =
+  | Initial
   | Named(string)
   | Generated(int)
 
@@ -13,6 +14,15 @@ module Source = {
       Generated(counter.contents)
     }
 }
-module Decl = {
-  type t = {cls: t, base: t}
-}
+module Cmp = Belt.Id.MakeComparableU({
+  type t = t
+  let cmp = (a, b) => switch (a, b) {
+    | (Initial, Initial) => 0
+    | (Initial, _) => -1
+    | (_, Initial) => 1
+    | (Named(nameA), Named(nameB)) => Pervasives.compare(nameA, nameB)
+    | (Named(_), Generated(_)) => -1
+    | (Generated(_), Named(_)) => 1
+    | (Generated(idA), Generated(idB)) => Pervasives.compare(idA, idB)
+  }
+})

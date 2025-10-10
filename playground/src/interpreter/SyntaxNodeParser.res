@@ -113,11 +113,15 @@ let parseVar = (node: syntaxNode): Var.t => {
 }
 
 let parseClassifier = (node: syntaxNode): Classifier.t => {
-  if node.type_ != "identifier" {
-    raise(MalformedNode({msg: `Expected identifier node, got ${node.type_}`}))
+  if node.type_ != "classifier" {
+    raise(MalformedNode({msg: `Expected classifier node, got ${node.type_}`}))
   }
   let varname = node.text->Nullable.toOption->Option.getExn(~message="Identifier node has no text")
-  Classifier.Named(varname)
+  if varname == "!" {
+    Classifier.Initial
+  } else {
+    Classifier.Named(varname)
+  }
 }
 
 let parseParamNode = (node: syntaxNode): result<Expr.Param.t, ParseError.t> => {
