@@ -35,7 +35,7 @@ and raw_t =
   | UniOp({op: Operator.UniOp.t, expr: t})
   | If({cond: t, thenBranch: t, elseBranch: t})
   // staging constructs
-  | Quote({cls: Classifier.t, expr: t})
+  | Quote({cls: option<Classifier.t>, expr: t})
   | Splice({shift: int, expr: t})
 // | LetCs({ param: Param.t, expr: t, body: t })
 // | LetRecCs({ param: Param.t, expr: t, body: t })

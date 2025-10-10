@@ -458,7 +458,6 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       node
       ->getNamedChildForFieldName("classifier")
       ->Belt.Option.map(parseClassifier)
-      ->Belt.Option.getWithDefault(Classifier.Source.fresh())
 
     let expr =
       node

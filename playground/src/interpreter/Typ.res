@@ -4,6 +4,7 @@ type rec t =
     | Bool
     // | CodeType(Classifier.t, t)
     | Func(t, t)
+    | Code({ cls: Classifier.t, typ: t})
 
 let rec toString = (typ: t): string => {
   switch typ {
@@ -11,5 +12,7 @@ let rec toString = (typ: t): string => {
   | Bool => "Bool"
   | Func(paramType, returnType) =>
     "(" ++ toString(paramType) ++ "->" ++ toString(returnType) ++ ")"
+  | Code({ cls, typ }) =>
+    `<@${cls->Classifier.toString} ${typ->toString}>`
   }
 }

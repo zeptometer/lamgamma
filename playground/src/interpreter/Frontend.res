@@ -52,6 +52,15 @@ module TypeError = {
         `(${(er + 1)->Int.toString},${ec->Int.toString})`
 
       `${locstring} Type error: expected ${Typ.toString(expected)}, but got ${Typ.toString(actual)}`
+
+    | ClassifierMismatch({metaData, current, spliced}) =>
+      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
+      let locstring =
+        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
+        `(${(er + 1)->Int.toString},${ec->Int.toString})`
+
+      `${locstring} Type error: spliced classifier ${spliced->Classifier.toString} is inconsistent classifier with ${current->Classifier.toString}`
+
     | UndefinedVariable({metaData, var: Var.Raw({name})}) =>
       let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
       let locstring =
@@ -74,6 +83,20 @@ module TypeError = {
         `(${(er + 1)->Int.toString},${ec->Int.toString})`
 
       `${locstring} Unsupported format: ${message}`
+    | UndefinedClassifier({metaData, cls}) =>
+      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
+      let locstring =
+        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
+        `(${(er + 1)->Int.toString},${ec->Int.toString})`
+
+      `${locstring} Undefined classifier: ${cls->Classifier.toString}`
+    | MalformedSplice({metaData, shift}) =>
+      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
+      let locstring =
+        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
+        `(${(er + 1)->Int.toString},${ec->Int.toString})`
+
+      `${locstring} Shift in splice is too large: ${shift->Int.toString}`
     }
   }
 
@@ -91,9 +114,10 @@ let typeCheck = (_input: string, _treeSitterParser: 'a): string => {
 
     SyntaxNodeParser.parseSourceFileNode(syntaxNode)
     ->Result.mapError(x => TypeError.ParseError(x))
-    ->Result.flatMap(expr =>
-      TypeChecker.typeCheck(expr, TypeChecker.TypeEnv.make())->Result.mapError(x => TypeError.TypeError(x))
-    )
+    ->Result.flatMap(expr => {
+      let env = TypeChecker.GlobalEnv.make()
+      TypeChecker.typeCheck(expr, env)->Result.mapError(x => TypeError.TypeError(x))
+    })
   }
 
   switch doit() {

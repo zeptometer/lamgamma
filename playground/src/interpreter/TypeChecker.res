@@ -1,19 +1,95 @@
 module TypeError = {
   type t =
     | TypeMismatch({metaData: Expr.MetaData.t, expected: Typ.t, actual: Typ.t})
+    | ClassifierMismatch({metaData: Expr.MetaData.t, current: Classifier.t, spliced: Classifier.t})
     | UndefinedVariable({metaData: Expr.MetaData.t, var: Var.t})
+    | UndefinedClassifier({metaData: Expr.MetaData.t, cls: Classifier.t})
+    | MalformedSplice({metaData: Expr.MetaData.t, shift: int})
     | InsufficientTypeAnnotation({metaData: Expr.MetaData.t})
     | UnsupportedFormat({metaData: Expr.MetaData.t, message: string})
 }
 
+exception MalformedGlobalEnv
+
 let ok = (x: 'a) => Belt.Result.Ok(x)
 let fail = (x: TypeError.t) => Belt.Result.Error(x)
 
-module TypeEnv = {
+module LocalEnv = {
   type t = Belt.Map.t<Var.t, Typ.t, Var.Cmp.identity>
 
-  @genType
   let make = (): t => Belt.Map.make(~id=module(Var.Cmp))
+}
+
+module ClassifierMap = {
+  type entry = {
+    // The local environment that corresponds to the given classifier
+    lenv: LocalEnv.t,
+    // A list of classifiers that is below the given classifier (including itself)
+    subcls: list<Classifier.t>,
+  }
+  type t = Belt.Map.t<Classifier.t, entry, Classifier.Cmp.identity>
+
+  @genType
+  let make = (): t =>
+    Belt.Map.make(~id=module(Classifier.Cmp))->Belt.Map.set(
+      Classifier.Initial,
+      {lenv: LocalEnv.make(), subcls: list{Classifier.Initial}},
+    )
+}
+
+module GlobalEnv = {
+  type t = {stack: list<Classifier.t>, clsmap: ClassifierMap.t}
+
+  @genType
+  let make = (): t => {stack: list{Classifier.Initial}, clsmap: ClassifierMap.make()}
+
+  let currentLocalEnv = (env: t): LocalEnv.t => {
+    let {stack, clsmap} = env
+    let current = stack->Belt.List.headExn
+
+    let {lenv} = clsmap->Belt.Map.getExn(current)
+    lenv
+  }
+
+  /**
+   return None when cls is not defined in env
+   */
+  let pushStage = (env: t, cls: Classifier.t): option<t> => {
+    let {stack, clsmap} = env
+    clsmap
+    ->Belt.Map.get(cls)
+    ->Belt.Option.map(_ => {stack: list{cls, ...stack}, clsmap})
+  }
+
+  let popStage = (env: t, shift: int): option<t> => {
+    let {stack, clsmap} = env
+    switch stack->Belt.List.drop(shift) {
+    | None
+    | Some(list{}) =>
+      None
+    | Some(stack1) => Some({stack: stack1, clsmap})
+    }
+  }
+
+  let currentSubCls = (env: t): list<Classifier.t> => {
+    let current = env.stack->Belt.List.headExn
+    let {subcls} = env.clsmap->Belt.Map.getExn(current)
+    subcls
+  }
+
+  let extend = (env: t, param: Var.t, typ: Typ.t, cls: Classifier.t): t => {
+    switch env.stack {
+    | list{current, ...rest} => {
+        let {lenv, subcls} = env.clsmap->Belt.Map.getExn(current)
+        let lenv1 = lenv->Belt.Map.set(param, typ)
+        let subcls1 = list{cls, ...subcls}
+        let stack1 = list{cls, ...rest}
+        let clsmap1 = env.clsmap->Belt.Map.set(cls, {lenv: lenv1, subcls: subcls1})
+        {stack: stack1, clsmap: clsmap1}
+      }
+    | list{} => raise(MalformedGlobalEnv)
+    }
+  }
 }
 
 let extractFuncType = (
@@ -38,10 +114,7 @@ let extractFuncType = (
 }
 
 @genType
-let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identity>): result<
-  Typ.t,
-  TypeError.t,
-> => {
+let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t> => {
   open Expr
 
   switch expr.raw {
@@ -136,7 +209,8 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
     })
 
   | Var(v) =>
-    switch Belt.Map.get(env, v) {
+    let lenv = env->GlobalEnv.currentLocalEnv
+    switch Belt.Map.get(lenv, v) {
     | Some(typ) => ok(typ)
     | None => fail(UndefinedVariable({metaData: expr.metaData, var: v}))
     }
@@ -152,8 +226,8 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
         }
       | None => ok()
       }->Result.flatMap(_ => {
-        let newEnv = Belt.Map.set(env, param.var, exprType)
-        typeCheck(body, newEnv)
+        let env1 = env->GlobalEnv.extend(param.var, exprType, param.cls)
+        typeCheck(body, env1)
       })
     })
 
@@ -161,21 +235,21 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
     switch expr.raw {
     | Func({params: args, returnType: returnTypeO, body: _}) =>
       let funcTypeR = switch returnTypeO {
-        | Some(r) => extractFuncType(args, r, expr.metaData)
-        | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
+      | Some(r) => extractFuncType(args, r, expr.metaData)
+      | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
       }
 
       param.typ
       ->Belt.Option.map(ok)
       ->Belt.Option.getWithDefault(funcTypeR)
       ->Belt.Result.flatMap(funcType => {
-        let newEnv = Belt.Map.set(env, param.var, funcType)
+        let env1 = env->GlobalEnv.extend(param.var, funcType, param.cls)
 
-        typeCheck(expr, newEnv)->Belt.Result.flatMap(exprType => {
+        typeCheck(expr, env1)->Belt.Result.flatMap(exprType => {
           if exprType != funcType {
             fail(TypeMismatch({metaData: expr.metaData, expected: funcType, actual: exprType}))
           } else {
-            typeCheck(body, newEnv)
+            typeCheck(body, env1)
           }
         })
       })
@@ -190,7 +264,10 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
     }
 
   | Func({params, returnType, body}) =>
-    let rec extendEnv = (params: list<Param.t>, env: TypeEnv.t): result<TypeEnv.t, TypeError.t> =>
+    let rec extendEnv = (params: list<Param.t>, env: GlobalEnv.t): result<
+      GlobalEnv.t,
+      TypeError.t,
+    > =>
       switch params {
       | list{} => ok(env)
       | list{param, ...rest} =>
@@ -198,12 +275,14 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
         | Some(typ) => ok(typ)
         | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
         }->Result.flatMap(paramType => {
-          extendEnv(rest, Belt.Map.set(env, param.var, paramType))
+          let env1 = env->GlobalEnv.extend(param.var, paramType, param.cls)
+
+          extendEnv(rest, env1)
         })
       }
 
-    extendEnv(params, env)->Result.flatMap(newEnv => {
-      typeCheck(body, newEnv)->Result.flatMap(bodyType => {
+    extendEnv(params, env)->Result.flatMap(env1 => {
+      typeCheck(body, env1)->Result.flatMap(bodyType => {
         switch returnType {
         | Some(typ) =>
           if typ != bodyType {
@@ -233,5 +312,51 @@ let rec typeCheck = (expr: Expr.t, env: Belt.Map.t<Var.t, Typ.t, Var.Cmp.identit
         }
       })
     })
+  | Quote({cls, expr: quoted}) =>
+    switch cls {
+    | Some(cls) =>
+      switch env->GlobalEnv.pushStage(cls) {
+      | Some(env1) => ok(env1)
+      | None => fail(UndefinedClassifier({metaData: expr.metaData, cls}))
+      }
+      ->Belt.Result.flatMap(env1 => {
+        typeCheck(quoted, env1)
+      })
+      ->Belt.Result.map(typ => {
+        Typ.Code({cls, typ})
+      })
+
+    | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
+    }
+
+  | Splice({shift, expr: spliced}) =>
+    switch env->GlobalEnv.popStage(shift) {
+    | None => fail(MalformedSplice({metaData: expr.metaData, shift}))
+    | Some(env1) =>
+      typeCheck(spliced, env1)->Result.flatMap(typSpliced => {
+        switch typSpliced {
+        | Code({cls, typ: typExpr}) =>
+          let isClsConsistent =
+            env
+            ->GlobalEnv.currentSubCls
+            ->Belt.List.has(cls, (x, y) => {x == y})
+
+          if isClsConsistent {
+            ok(typExpr)
+          } else {
+            let current = env.stack->Belt.List.headExn
+            fail(ClassifierMismatch({metaData: expr.metaData, current, spliced: cls}))
+          }
+        | _ =>
+          fail(
+            TypeMismatch({
+              metaData: expr.metaData,
+              expected: Typ.Code({cls: Classifier.Initial, typ: Typ.Int}),
+              actual: typSpliced
+            }),
+          )
+        }
+      })
+    }
   }
 }

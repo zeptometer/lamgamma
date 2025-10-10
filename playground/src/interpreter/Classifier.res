@@ -4,19 +4,20 @@ type t =
   | Generated(int)
 
 module Source = {
-    type t = int
+  type t = int
 
-    let counter = ref(0)
-    @genType
-    let reset = () => counter := 0
-    let fresh = () => {
-      counter := counter.contents + 1;
-      Generated(counter.contents)
-    }
+  let counter = ref(0)
+  @genType
+  let reset = () => counter := 0
+  let fresh = () => {
+    counter := counter.contents + 1
+    Generated(counter.contents)
+  }
 }
 module Cmp = Belt.Id.MakeComparableU({
   type t = t
-  let cmp = (a, b) => switch (a, b) {
+  let cmp = (a, b) =>
+    switch (a, b) {
     | (Initial, Initial) => 0
     | (Initial, _) => -1
     | (_, Initial) => 1
@@ -24,5 +25,13 @@ module Cmp = Belt.Id.MakeComparableU({
     | (Named(_), Generated(_)) => -1
     | (Generated(_), Named(_)) => 1
     | (Generated(idA), Generated(idB)) => Pervasives.compare(idA, idB)
-  }
+    }
 })
+
+let toString = (cls: t): string => {
+  switch cls {
+  | Initial => "!"
+  | Named(name) => name
+  | Generated(id) => `#${id->Int.toString}`
+  }
+}
