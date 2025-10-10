@@ -2,6 +2,7 @@ module TypeError = {
   type t =
     | TypeMismatch({metaData: Expr.MetaData.t, expected: Typ.t, actual: Typ.t})
     | ClassifierMismatch({metaData: Expr.MetaData.t, current: Classifier.t, spliced: Classifier.t})
+    | ClassifierEscape({metaData: Expr.MetaData.t})
     | UndefinedVariable({metaData: Expr.MetaData.t, var: Var.t})
     | UndefinedClassifier({metaData: Expr.MetaData.t, cls: Classifier.t})
     | MalformedSplice({metaData: Expr.MetaData.t, shift: int})
@@ -92,6 +93,12 @@ module GlobalEnv = {
   }
 }
 
+let doesEscapeScope = (param: Expr.Param.t, exprType: Typ.t): bool => {
+  let occuringCls = exprType->Typ.freeClassifiers
+
+  occuringCls->Belt.List.has(param.cls, (a, b) => a == b)
+}
+
 let extractFuncType = (
   params: list<Expr.Param.t>,
   returnType: Typ.t,
@@ -105,7 +112,12 @@ let extractFuncType = (
     | list{} => ok(returnType)
     | list{head, ...tail} =>
       switch head.typ {
-      | Some(t) => aux(tail, Typ.Func(t, returnType), metaData)
+      | Some(t) =>
+        if doesEscapeScope(head, returnType) {
+          fail(ClassifierEscape({metaData: metaData}))
+        } else {
+          aux(tail, Typ.Func(t, returnType), metaData)
+        }
       | None => fail(InsufficientTypeAnnotation({metaData: metaData}))
       }
     }
@@ -216,19 +228,28 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
     }
 
   | Let({param, expr, body}) =>
-    typeCheck(expr, env)->Result.flatMap(exprType => {
+    typeCheck(expr, env)
+    ->Result.flatMap(exprType => {
       switch param.typ {
       | Some(t) =>
         if t != exprType {
           fail(TypeMismatch({metaData: expr.metaData, expected: t, actual: exprType}))
         } else {
-          ok()
+          ok(exprType)
         }
-      | None => ok()
-      }->Result.flatMap(_ => {
-        let env1 = env->GlobalEnv.extend(param.var, exprType, param.cls)
-        typeCheck(body, env1)
-      })
+      | None => ok(exprType)
+      }
+    })
+    ->Result.flatMap(exprType => {
+      let env1 = env->GlobalEnv.extend(param.var, exprType, param.cls)
+      typeCheck(body, env1)
+    })
+    ->Result.flatMap(bodyType => {
+      if doesEscapeScope(param, bodyType) {
+        fail(ClassifierEscape({metaData: body.metaData}))
+      } else {
+        ok(bodyType)
+      }
     })
 
   | LetRec({param, expr, body}) =>
@@ -243,13 +264,28 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
       ->Belt.Option.map(ok)
       ->Belt.Option.getWithDefault(funcTypeR)
       ->Belt.Result.flatMap(funcType => {
+        if doesEscapeScope(param, funcType) {
+          fail(ClassifierEscape({metaData: expr.metaData}))
+        } else {
+          ok(funcType)
+        }
+      })
+      ->Belt.Result.flatMap(funcType => {
         let env1 = env->GlobalEnv.extend(param.var, funcType, param.cls)
 
-        typeCheck(expr, env1)->Belt.Result.flatMap(exprType => {
+        typeCheck(expr, env1)
+        ->Belt.Result.flatMap(exprType => {
           if exprType != funcType {
             fail(TypeMismatch({metaData: expr.metaData, expected: funcType, actual: exprType}))
           } else {
             typeCheck(body, env1)
+          }
+        })
+        ->Belt.Result.flatMap(typ => {
+          if doesEscapeScope(param, typ) {
+            fail(ClassifierEscape({metaData: body.metaData}))
+          } else {
+            ok(typ)
           }
         })
       })
@@ -291,7 +327,7 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
             ok()
           }
         | None => ok()
-        }->Result.flatMap(_ => extractFuncType(params, bodyType, expr.metaData))
+        }->Belt.Result.flatMap(_ => extractFuncType(params, bodyType, expr.metaData))
       })
     })
 
@@ -352,7 +388,7 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
             TypeMismatch({
               metaData: expr.metaData,
               expected: Typ.Code({cls: Classifier.Initial, typ: Typ.Int}),
-              actual: typSpliced
+              actual: typSpliced,
             }),
           )
         }

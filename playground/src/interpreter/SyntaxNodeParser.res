@@ -82,6 +82,26 @@ let extractMetadata = (node: syntaxNode): Expr.MetaData.t => {
   }
 }
 
+let parseVar = (node: syntaxNode): Var.t => {
+  if node.type_ != "identifier" {
+    raise(MalformedNode({msg: `Expected identifier node, got ${node.type_}`}))
+  }
+  let varname = node.text->Nullable.toOption->Option.getExn(~message="Identifier node has no text")
+  Var.Raw({name: varname})
+}
+
+let parseClassifier = (node: syntaxNode): Classifier.t => {
+  if node.type_ != "classifier" {
+    raise(MalformedNode({msg: `Expected classifier node, got ${node.type_}`}))
+  }
+  let varname = node.text->Nullable.toOption->Option.getExn(~message="Identifier node has no text")
+  if varname == "!" {
+    Classifier.Initial
+  } else {
+    Classifier.Named(varname)
+  }
+}
+
 @genType
 let rec parseTypeNode = (node: syntaxNode): result<Typ.t, ParseError.t> => {
   switch node.type_ {
@@ -100,27 +120,22 @@ let rec parseTypeNode = (node: syntaxNode): result<Typ.t, ParseError.t> => {
 
     paramType->Result.flatMap(p => returnType->Result.map(r => Typ.Func(p, r)))
 
+  | "code_type" =>
+    let typ =
+      node
+      ->getNamedChildForFieldNameUnsafe("type")
+      ->parseTypeNode
+
+    let cls =
+      node
+      ->getNamedChildForFieldNameUnsafe("classifier")
+      ->parseClassifier
+
+    typ->Result.map((t) => {
+      Typ.Code({cls, typ: t})
+    })
+
   | _ => raise(MalformedNode({msg: `Unknown node type for type node: ${node.type_}`}))
-  }
-}
-
-let parseVar = (node: syntaxNode): Var.t => {
-  if node.type_ != "identifier" {
-    raise(MalformedNode({msg: `Expected identifier node, got ${node.type_}`}))
-  }
-  let varname = node.text->Nullable.toOption->Option.getExn(~message="Identifier node has no text")
-  Var.Raw({name: varname})
-}
-
-let parseClassifier = (node: syntaxNode): Classifier.t => {
-  if node.type_ != "classifier" {
-    raise(MalformedNode({msg: `Expected classifier node, got ${node.type_}`}))
-  }
-  let varname = node.text->Nullable.toOption->Option.getExn(~message="Identifier node has no text")
-  if varname == "!" {
-    Classifier.Initial
-  } else {
-    Classifier.Named(varname)
   }
 }
 

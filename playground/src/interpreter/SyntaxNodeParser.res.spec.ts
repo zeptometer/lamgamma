@@ -1692,6 +1692,69 @@ describe('parseTypeNode', () => {
             `);
   })
 
+  it('parse code type', () => {
+    const input = '(x:<int@!>) => { x }';
+    expect(parseSourceFileNode((parser.parse(input)).rootNode))
+      .toMatchInlineSnapshot(`
+        {
+          "TAG": "Ok",
+          "_0": {
+            "metaData": {
+              "end": {
+                "col": 20,
+                "row": 0,
+              },
+              "start": {
+                "col": 0,
+                "row": 0,
+              },
+            },
+            "raw": {
+              "TAG": "Func",
+              "body": {
+                "metaData": {
+                  "end": {
+                    "col": 18,
+                    "row": 0,
+                  },
+                  "start": {
+                    "col": 17,
+                    "row": 0,
+                  },
+                },
+                "raw": {
+                  "TAG": "Var",
+                  "_0": {
+                    "TAG": "Raw",
+                    "name": "x",
+                  },
+                },
+              },
+              "params": {
+                "hd": {
+                  "cls": {
+                    "TAG": "Generated",
+                    "_0": 1,
+                  },
+                  "typ": {
+                    "TAG": "Code",
+                    "cls": "Initial",
+                    "typ": "Int",
+                  },
+                  "var": {
+                    "TAG": "Raw",
+                    "name": "x",
+                  },
+                },
+                "tl": 0,
+              },
+              "returnType": undefined,
+            },
+          },
+        }
+      `)
+  })
+
   it('parse type with paren', () => {
     const input = '(x:(int->int)->int) => { x }';
     expect(parseSourceFileNode((parser.parse(input)).rootNode))

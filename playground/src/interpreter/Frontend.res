@@ -61,6 +61,14 @@ module TypeError = {
 
       `${locstring} Type error: spliced classifier ${spliced->Classifier.toString} is inconsistent classifier with ${current->Classifier.toString}`
 
+    | ClassifierEscape({metaData}) =>
+      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
+      let locstring =
+        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
+        `(${(er + 1)->Int.toString},${ec->Int.toString})`
+
+      `${locstring} Type error: classifier escape detected`
+
     | UndefinedVariable({metaData, var: Var.Raw({name})}) =>
       let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
       let locstring =

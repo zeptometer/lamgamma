@@ -1,7 +1,7 @@
 import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
 import { parseSourceFileNode } from './SyntaxNodeParser.gen.ts';
-import { typeCheck, GlobalEnv_make, ClassifierMap_make } from './TypeChecker.gen.ts';
+import { typeCheck, GlobalEnv_make } from './TypeChecker.gen.ts';
 import { t as Expr_t } from './Expr.gen.ts'
 
 let parser;
@@ -427,19 +427,22 @@ describe('Typechecker', () => {
                 });
             });
 
-            it('infer type of (x: int, y:int) => { x + y } as (Int -> Int)', () => {
-                expect(typeCheck(parse('(x: int, y: int) => { x + y }'), env)).toEqual({
-                    TAG: "Ok",
-                    _0: {
-                        TAG: "Func",
-                        _0: "Int",
-                        _1: {
-                            TAG: "Func",
-                            _0: "Int",
-                            _1: "Int"
-                        }
-                    }
-                });
+            it('infer type of (x: int, y:bool) => { x + y } as (Int -> Int)', () => {
+                expect(typeCheck(parse('(x: int, y: bool) => { if y then x + 1 else x - 1 }'), env)).
+                    toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "TAG": "Func",
+                      "_0": "Int",
+                      "_1": {
+                        "TAG": "Func",
+                        "_0": "Bool",
+                        "_1": "Int",
+                      },
+                    },
+                  }
+                `)
             });
         });
 
@@ -543,10 +546,210 @@ describe('Typechecker', () => {
                   }
                 `)
             });
+
+            it('due to illegal use of variables', () => {
+                const input = `
+                let x:int = 1 in
+                \`{@! x }
+                `
+                expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Error",
+                    "_0": {
+                      "TAG": "UndefinedVariable",
+                      "metaData": {
+                        "end": {
+                          "col": 22,
+                          "row": 2,
+                        },
+                        "start": {
+                          "col": 21,
+                          "row": 2,
+                        },
+                      },
+                      "var": {
+                        "TAG": "Raw",
+                        "name": "x",
+                      },
+                    },
+                  }
+                `)
+            })
         })
     })
 
     describe('for splice', () => {
-        // FIXME!
+        describe('successfully', () => {
+            it('infer type of splice with initial classifier', () => {
+                const input = "`{@! ~{ `{@! 1 + 1 } } }"
+                expect(typeCheck(parse(input), env)).toEqual({
+                    TAG: "Ok",
+                    _0: {
+                        TAG: "Code",
+                        cls: "Initial",
+                        typ: "Int"
+                    }
+                });
+            });
+
+            it('infer type of splice with non-initial classifier', () => {
+                const input = `
+                  let x:int@g = 1 in
+                  let double = (y:<int@g>) => {
+                    \`{@g ~{y} * 2 }
+                  } in
+                  let z = \`{@g x + ~{ double \`{@g x } }} in
+                  1
+                `
+                expect(typeCheck(parse(input), env)).toEqual({
+                    TAG: "Ok",
+                    _0: "Int"
+                });
+            });
+
+            it('infer type of run-time evaluation', () => {
+                const input = `
+                  let x:int@g = 1 in
+                  let y = \`{@g x + 1 } in
+                  ~0{ y }
+                `
+                expect(typeCheck(parse(input), env)).toEqual({
+                    TAG: "Ok",
+                    _0: "Int"
+                });
+            });
+
+        })
+
+        describe('fails', () => {
+            it('due to classifier inconsistency', () => {
+                const input = `
+                  let x:int@g = 1 in
+                  let y:<int@g> = \`{@g x } in
+                  \`{@! 1 + ~{ y } }
+                `
+                expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Error",
+                    "_0": {
+                      "TAG": "ClassifierMismatch",
+                      "current": "Initial",
+                      "metaData": {
+                        "end": {
+                          "col": 33,
+                          "row": 3,
+                        },
+                        "start": {
+                          "col": 27,
+                          "row": 3,
+                        },
+                      },
+                      "spliced": {
+                        "TAG": "Named",
+                        "_0": "g",
+                      },
+                    },
+                  }
+                `)
+            })
+        })
     })
+
+    describe('for scope extrusion detection', () => {
+        describe('success cases', () => {
+            it('let', () => {
+                const input = "let x:int@g = 1 in `{@g x }"
+                // FIXME: metadata wrong
+                expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Error",
+                    "_0": {
+                      "TAG": "ClassifierEscape",
+                      "metaData": {
+                        "end": {
+                          "col": 27,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 19,
+                          "row": 0,
+                        },
+                      },
+                    },
+                  }
+                `);
+            });
+
+            it('let rec value part', () => {
+                const input = "let rec x@g = (y:int):<int@g> => { `{@g x } } in 1"
+                // FIXME: metadata wrong
+                expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Error",
+                    "_0": {
+                      "TAG": "ClassifierEscape",
+                      "metaData": {
+                        "end": {
+                          "col": 45,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 14,
+                          "row": 0,
+                        },
+                      },
+                    },
+                  }
+                `);
+            });
+
+            it('let rec body part', () => {
+                const input = "let rec x@g = (y:int):int => { y } in `{@g x }"
+                // FIXME: metadata wrong
+                expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Error",
+                    "_0": {
+                      "TAG": "ClassifierEscape",
+                      "metaData": {
+                        "end": {
+                          "col": 46,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 38,
+                          "row": 0,
+                        },
+                      },
+                    },
+                  }
+                `);
+            });
+
+            it('function', () => {
+                const input = "(x:int@g) => { `{@g x } }"
+                // FIXME: metadata wrong
+                expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Error",
+                    "_0": {
+                      "TAG": "ClassifierEscape",
+                      "metaData": {
+                        "end": {
+                          "col": 25,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                    },
+                  }
+                `);
+            })
+
+        })
+    });
+
 });
