@@ -1,0 +1,15 @@
+==================
+Initial classifier
+==================
+
+(x@!) => {1}
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (classifier)))
+    (number)))
