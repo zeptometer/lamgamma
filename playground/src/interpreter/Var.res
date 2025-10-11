@@ -22,6 +22,13 @@ let color = var => {
   Colored({name, id: Source.counter.contents})
 }
 
+let toString = var => {
+  switch var {
+  | Raw({name}) => name
+  | Colored({name, id}) => `${name}#${id->Int.toString}`
+  }
+}
+
 module Cmp = Belt.Id.MakeComparableU({
   type t = t
   let cmp = (a: t, b: t) => {

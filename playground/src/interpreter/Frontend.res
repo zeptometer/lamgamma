@@ -20,18 +20,19 @@ type evalError =
 
 @genType
 let evaluate = (_input: string, _treeSitterParser: 'a): string => {
-  let doit = (): result<Interpreter.Val.t, evalError> => {
+  let doit = (): result<Interpreter.RuntimeVal.t, evalError> => {
     let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` _treeSitterParser.parse(_input).rootNode `)
-    let env = Interpreter.Env.make()
+    let venv = Interpreter.Env.make()
+    let nenv = Interpreter.Env.make()
 
     SyntaxNodeParser.parseSourceFileNode(syntaxNode)
     ->Result.mapError(x => ParseError(x))
     ->Result.map(Expr.stripTypeInfo)
-    ->Result.flatMap(expr => Interpreter.evaluate(expr, env)->Result.mapError(x => EvalError(x)))
+    ->Result.flatMap(expr => Interpreter.evaluateRuntime(expr, venv, nenv)->Result.mapError(x => EvalError(x)))
   }
 
   switch doit() {
-  | Ok(value) => value->Interpreter.Val.toString
+  | Ok(value) => value->Interpreter.RuntimeVal.prettyPrint
   | Error(_) => "error"
   | exception _ => "error"
   }
@@ -69,13 +70,14 @@ module TypeError = {
 
       `${locstring} Type error: classifier escape detected`
 
-    | UndefinedVariable({metaData, var: Var.Raw({name})}) =>
+    | UndefinedVariable({metaData, var}) =>
       let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
       let locstring =
         `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
         `(${(er + 1)->Int.toString},${ec->Int.toString})`
 
-      `${locstring} Undefined variable: ${name}`
+      `${locstring} Undefined variable: ${var->Var.toString}`
+
     | InsufficientTypeAnnotation({metaData}) =>
       let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
       let locstring =

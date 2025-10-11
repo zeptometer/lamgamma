@@ -22,5 +22,5 @@ type rec t =
 
 exception Fixme
 let prettyPrint = (expr:t): string => {
-  raise(Fixme)
+  "#<code fragment>"
 }

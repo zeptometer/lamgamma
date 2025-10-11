@@ -46,16 +46,19 @@ let x = 1 in
 `.trim();
 
 const spower = `
-let spower_ = (fix self -> fn n x ->
-  if n == 0 then 1
-  else if n == 1 then x
-  else \`{ ~{ x } * ~{ self (n-1) x } }) in
-let spower = fn n ->
-  \`{ fn x -> ~{ spower_ n \`{ x } } } in
-\`{
-  let power11 = ~{ spower 11 } in
-  power11 2
-}
+let rec pow1 = (n, xq) => {
+  if n == 0 then
+    \`{ 1 }
+  else if n == 1 then
+    xq
+  else
+    \`{ ~{ xq } * ~{ pow1 (n-1) xq } }
+} in
+let pow = (n) => {
+  \`{ (x) => { ~(pow1 n \`{ x }) } }
+} in
+let pow4 = ~0{ pow 4 } in
+pow4 2
 `.trim();
 
 const spower_sqr = `
@@ -145,5 +148,6 @@ export type Example = "fib" | "quasiquote" | "runtime_evaluation" | "runtime_eva
  "nested_quote" | "ill_staged_variable" |  "scope_extrusion" | "spower" | "spower_sqr" | "spower_cont" |
  "gibonacci";
 export const ExamplePrograms = {
-  fib
+  fib,
+  spower
 };

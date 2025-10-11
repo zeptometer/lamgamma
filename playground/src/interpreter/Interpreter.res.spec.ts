@@ -513,3 +513,114 @@ describe('Recursive Functions', () => {
         });
     });
 });
+
+describe('Recursive Functions', () => {
+    describe('successfully', () => {
+        it('quote', () => {
+            const code = `
+              \`{ 1 }
+            `
+            expect(evaluateRuntime(parse(code), venv, nenv)).toMatchInlineSnapshot(`
+              {
+                "TAG": "Ok",
+                "_0": {
+                  "TAG": "Code",
+                  "_0": {
+                    "TAG": "IntLit",
+                    "_0": 1,
+                  },
+                },
+              }
+            `)
+        });
+
+        it('quote and splice', () => {
+            const code = `
+              let x = \`{ 1 } in
+              \`{ ~{ x } + ~{ x } }
+            `
+            expect(evaluateRuntime(parse(code), venv, nenv)).toMatchInlineSnapshot(`
+              {
+                "TAG": "Ok",
+                "_0": {
+                  "TAG": "Code",
+                  "_0": {
+                    "TAG": "BinOp",
+                    "left": {
+                      "TAG": "IntLit",
+                      "_0": 1,
+                    },
+                    "op": "Add",
+                    "right": {
+                      "TAG": "IntLit",
+                      "_0": 1,
+                    },
+                  },
+                },
+              }
+            `)
+        });
+
+        it('runtime eval', () => {
+            const code = `
+              let x = 1 in
+              let y = \`{ x } in
+              ~0{ y }
+            `
+            expect(evaluateRuntime(parse(code), venv, nenv)).toMatchInlineSnapshot(`
+              {
+                "TAG": "Ok",
+                "_0": {
+                  "TAG": "IntVal",
+                  "_0": 1,
+                },
+              }
+            `)
+        });
+    });
+
+    describe('fail', () => {
+        it('due to splicing non-quote', () => {
+            const code = "`{ ~{ 1 }}"
+            expect(evaluateRuntime(parse(code), venv, nenv)).toEqual({
+                TAG: "Error",
+                _0: "TypeMismatch"
+            });
+        });
+
+        it('due to invalid splice', () => {
+            const code = "~{ `{ 1 } }"
+            expect(evaluateRuntime(parse(code), venv, nenv)).toEqual({
+                TAG: "Error",
+                _0: "MalformedSplice"
+            });
+        });
+    });
+});
+
+describe('big program', () => {
+    it('genpow', () => {
+        const input = `
+          let rec pow1 = (n, xq) => {
+            if n == 0 then
+              \`{ 1 }
+            else if n == 1 then
+              xq
+            else
+              \`{ ~{ xq } * ~{ pow1 (n-1) xq } }
+          } in
+          let pow = (n) => {
+            \`{ (x) => { ~{ pow1 n \`{ x } } } }
+          } in
+          let pow4 = ~0{ pow 4 } in
+          pow4 2
+        `
+        expect(evaluateRuntime(parse(input), venv, nenv)).toEqual({
+            TAG: "Ok",
+            _0: {
+                TAG: "IntVal",
+                _0: 16
+            }
+        });
+    })
+})

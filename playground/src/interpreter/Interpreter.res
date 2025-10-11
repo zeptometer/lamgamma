@@ -184,11 +184,10 @@ let rec evaluateRuntime = (e: RawExpr.t, venv: ValEnv.t, nenv: NameEnv.t): resul
     )
 
   | Var(v) =>
-    nenv
-    ->Belt.Map.get(v)
-    ->Belt.Option.flatMap(v1 => {
-      venv->Belt.Map.get(v1)
-    })
+    let renamed = nenv->Belt.Map.getWithDefault(v, v)
+
+    venv
+    ->Belt.Map.get(renamed)
     ->Option.map(ok)
     ->Option.getOr(fail(UndefinedVariable))
 
