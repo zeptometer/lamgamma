@@ -138,3 +138,23 @@ let typeCheck = (_input: string, _treeSitterParser: 'a): string => {
     "error"
   }
 }
+
+@genType
+let stripTypeInfo = (_input: string, _treeSitterParser: 'a): string => {
+  let doit = (): result<string, TypeError.t> => {
+    let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` _treeSitterParser.parse(_input).rootNode `)
+
+    SyntaxNodeParser.parseSourceFileNode(syntaxNode)
+    ->Result.mapError(x => TypeError.ParseError(x))
+    ->Result.map(Expr.stripTypeInfo)
+    ->Result.map(RawExpr.toString)
+  }
+
+  switch doit() {
+  | Ok(s) => s
+  | Error(e) => TypeError.toString(e)
+  | exception e =>
+    Console.log(e)
+    "error"
+  }
+}

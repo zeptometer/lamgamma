@@ -2,7 +2,7 @@ import { AppBar, Box, Button, Container, Toolbar } from "@mui/material"
 import React, { useState } from "react"
 import { Parser } from "web-tree-sitter";
 
-import { evaluate, typeCheck } from '../interpreter/Frontend.gen';
+import { evaluate, typeCheck, stripTypeInfo } from '../interpreter/Frontend.gen';
 
 interface Props {
     code: string,
@@ -11,8 +11,9 @@ interface Props {
 
 export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) => {
 
-    const [evalResult, setEvalResult] = useState<string | null>(null);
+    const [untypedCode, setUntypedCode] = useState<string | null>(null);
     const [typeCheckResult, setTypeCheckResult] = useState<string | null>(null);
+    const [evalResult, setEvalResult] = useState<string | null>(null);
 
     const launchEval = () => {
         const result = evaluate(code, treeSitterParser);
@@ -22,6 +23,7 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
     React.useEffect(() => {
         const result = typeCheck(code, treeSitterParser);
         setTypeCheckResult(result);
+        setUntypedCode(stripTypeInfo(code, treeSitterParser))
     }, [code, treeSitterParser])
 
     return <Box sx={{
@@ -34,6 +36,9 @@ export const EvaluatorContainer: React.FC<Props> = ({ code, treeSitterParser }) 
         }}>
             <h1>TypeCheck Result</h1>
             <code>{typeCheckResult}</code>
+
+            <h1>Program without Types</h1>
+            <code>{ untypedCode }</code>
 
             <h1>Eval Result</h1>
             <code>{evalResult}</code>

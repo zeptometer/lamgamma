@@ -24,8 +24,12 @@ let rec toString = (expr: t): string => {
   switch expr {
   | Var(v) => Var.toString(v)
   | Func({params, body}) =>
-    let paramsStr =
-      params->Belt.List.map(Var.toString)->Belt.List.reduce("", (a, b) => a ++ ", " ++ b)
+    let paramsStr = {
+      switch params->Belt.List.map(Var.toString) {
+      | list{} => ""
+      | list{head, ...tail} => tail->Belt.List.reduce(head, (acc, x) => acc ++ ", " ++ x)
+      }
+    }
     let bodyStr = toString(body)
     `(${paramsStr}) => { ${bodyStr} }`
   | App({func, arg}) => `( ${toString(func)} ${toString(arg)} )`
