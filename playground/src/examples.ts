@@ -55,7 +55,7 @@ let rec pow1 = (n, xq) => {
     \`{ ~{ xq } * ~{ pow1 (n-1) xq } }
 } in
 let pow = (n) => {
-  \`{ (x) => { ~(pow1 n \`{ x }) } }
+  \`{ (x) => { ~{ pow1 n \`{ x } } } }
 } in
 let pow4 = ~0{ pow 4 } in
 pow4 2
