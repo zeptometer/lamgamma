@@ -20,7 +20,7 @@ module RuntimeVal = {
     | Code(RawExpr.t)
 
   @genType
-  let prettyPrint = (v: t): string =>
+  let toString = (v: t): string =>
     switch v {
     | IntVal(i) => Int.toString(i)
     | BoolVal(b) =>
@@ -30,7 +30,7 @@ module RuntimeVal = {
         "false"
       }
     | Closure(_) => "#<closure>"
-    | Code(expr) => `\`{ ${RawExpr.prettyPrint(expr)} }`
+    | Code(expr) => `\`{ ${RawExpr.toString(expr)} }`
     }
 }
 

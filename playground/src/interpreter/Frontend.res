@@ -32,7 +32,7 @@ let evaluate = (_input: string, _treeSitterParser: 'a): string => {
   }
 
   switch doit() {
-  | Ok(value) => value->Interpreter.RuntimeVal.prettyPrint
+  | Ok(value) => value->Interpreter.RuntimeVal.toString
   | Error(_) => "error"
   | exception _ => "error"
   }
