@@ -2,7 +2,7 @@ import { expect, it, beforeAll, describe } from 'vitest';
 import { Parser, Language } from 'web-tree-sitter';
 import { parseSourceFileNode } from './SyntaxNodeParser.gen.ts';
 import { stripTypeInfo } from './Expr.gen.ts';
-import { evaluate, Env_make } from './Interpreter.gen.ts';
+import { evaluateRuntime, Env_make } from './Interpreter.gen.ts';
 import { t as Expr_t } from './Expr.gen.ts'
 
 let parser;
@@ -22,25 +22,26 @@ beforeAll(
     }
 )
 
-const env = Env_make();
+const venv = Env_make();
+const nenv = Env_make();
 
 describe('Literal evaluation', () => {
     it('evaluates integer literal 123', () => {
-        expect(evaluate(parse('123'), env)).toEqual({
+        expect(evaluateRuntime(parse('123'), venv, nenv)).toEqual({
             TAG: "Ok",
             _0: { TAG: "IntVal", _0: 123 }
         });
     });
 
     it('evaluates boolean literal true', () => {
-        expect(evaluate(parse('true'), env)).toEqual({
+        expect(evaluateRuntime(parse('true'), venv, nenv)).toEqual({
             TAG: "Ok",
             _0: { TAG: "BoolVal", _0: true }
         });
     });
 
     it('evaluates boolean literal false', () => {
-        expect(evaluate(parse('false'), env)).toEqual({
+        expect(evaluateRuntime(parse('false'), venv, nenv)).toEqual({
             TAG: "Ok",
             _0: { TAG: "BoolVal", _0: false }
         });
@@ -51,35 +52,35 @@ describe('Binary operations with', () => {
     describe('Arithmetic', () => {
         describe('successfully', () => {
             it('adds 1 + 2 to equal 3', () => {
-                expect(evaluate(parse('1 + 2'), env)).toEqual({
+                expect(evaluateRuntime(parse('1 + 2'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "IntVal", _0: 3 }
                 });
             });
 
             it('subtract 5 - 2 = 3', () => {
-                expect(evaluate(parse('5 - 2'), env)).toEqual({
+                expect(evaluateRuntime(parse('5 - 2'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "IntVal", _0: 3 }
                 });
             });
 
             it('multiply 3 * 4 = 12', () => {
-                expect(evaluate(parse('3 * 4'), env)).toEqual({
+                expect(evaluateRuntime(parse('3 * 4'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "IntVal", _0: 12 }
                 });
             });
 
             it('divide 8 / 2 = 4', () => {
-                expect(evaluate(parse('8 / 2'), env)).toEqual({
+                expect(evaluateRuntime(parse('8 / 2'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "IntVal", _0: 4 }
                 });
             });
 
             it('modulo 8 mod 3 = 2', () => {
-                expect(evaluate(parse('8 mod 3'), env)).toEqual({
+                expect(evaluateRuntime(parse('8 mod 3'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "IntVal", _0: 2 }
                 });
@@ -88,24 +89,24 @@ describe('Binary operations with', () => {
 
         describe('fail', () => {
             it('due to non-integer values', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "BinOp",
                     op: "Add",
                     left: { TAG: "BoolLit", _0: true },
                     right: { TAG: "IntLit", _0: 2 }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Error",
                     _0: "TypeMismatch"
                 });
             });
 
             it('due to zero division', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "BinOp",
                     op: "Div",
                     left: { TAG: "IntLit", _0: 1 },
                     right: { TAG: "IntLit", _0: 0 }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Error",
                     _0: "ZeroDivision"
                 });
@@ -116,36 +117,36 @@ describe('Binary operations with', () => {
     describe('Equality', () => {
         describe('successfully', () => {
             it('eq 3 == 3 => true', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "BinOp",
                     op: "Eq",
                     left: { TAG: "IntLit", _0: 3 },
                     right: { TAG: "IntLit", _0: 3 }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: true }
                 });
             });
 
             it('eq 3 == 4 => false', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "BinOp",
                     op: "Eq",
                     left: { TAG: "IntLit", _0: 3 },
                     right: { TAG: "IntLit", _0: 4 }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: false }
                 });
             });
 
             it('eq true == true => true', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "BinOp",
                     op: "Eq",
                     left: { TAG: "BoolLit", _0: true },
                     right: { TAG: "BoolLit", _0: true }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: true }
                 });
@@ -154,12 +155,12 @@ describe('Binary operations with', () => {
 
         describe('fail', () => {
             it('due to type mismatch', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "BinOp",
                     op: "Eq",
                     left: { TAG: "IntLit", _0: 1 },
                     right: { TAG: "BoolLit", _0: true }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Error",
                     _0: "TypeMismatch"
                 });
@@ -170,48 +171,48 @@ describe('Binary operations with', () => {
     describe('Ordering', () => {
         describe('successfully', () => {
             it('lt 2 < 3 => true', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "BinOp",
                     op: "Lt",
                     left: { TAG: "IntLit", _0: 2 },
                     right: { TAG: "IntLit", _0: 3 }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: true }
                 });
             });
 
             it('lt 3 < 2 => false', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "BinOp",
                     op: "Lt",
                     left: { TAG: "IntLit", _0: 3 },
                     right: { TAG: "IntLit", _0: 2 }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: false }
                 });
             });
 
             it('gt 5 > 2 => true', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "BinOp",
                     op: "Gt",
                     left: { TAG: "IntLit", _0: 5 },
                     right: { TAG: "IntLit", _0: 2 }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: true }
                 });
             });
 
             it('gt 2 > 5 => false', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "BinOp",
                     op: "Gt",
                     left: { TAG: "IntLit", _0: 2 },
                     right: { TAG: "IntLit", _0: 5 }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: false }
                 });
@@ -220,12 +221,12 @@ describe('Binary operations with', () => {
 
         describe('fail', () => {
             it('due to type mismatch', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "BinOp",
                     op: "Gt",
                     left: { TAG: "IntLit", _0: 1 },
                     right: { TAG: "BoolLit", _0: true }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Error",
                     _0: "TypeMismatch"
                 });
@@ -238,35 +239,35 @@ describe('Logical operations with', () => {
     describe('And', () => {
         describe('successfully', () => {
             it('true && true => true', () => {
-                expect(evaluate(parse('true && true'), env)).toEqual({
+                expect(evaluateRuntime(parse('true && true'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: true }
                 });
             });
 
             it('true && false => false', () => {
-                expect(evaluate(parse('true && false'), env)).toEqual({
+                expect(evaluateRuntime(parse('true && false'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: false }
                 });
             });
 
             it('false && true => false', () => {
-                expect(evaluate(parse('false && true'), env)).toEqual({
+                expect(evaluateRuntime(parse('false && true'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: false }
                 });
             });
 
             it('false && false => false', () => {
-                expect(evaluate(parse('false && false'), env)).toEqual({
+                expect(evaluateRuntime(parse('false && false'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: false }
                 });
             });
 
             it('short-circuits evaluation when left is false', () => {
-                expect(evaluate(parse('false && (1 / 0)'), env)).toEqual({
+                expect(evaluateRuntime(parse('false && (1 / 0)'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: false }
                 });
@@ -275,12 +276,12 @@ describe('Logical operations with', () => {
 
         describe('fail', () => {
             it('due to type mismatch', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "ShortCircuitOp",
                     op: "And",
                     left: { TAG: "IntLit", _0: 1 },
                     right: { TAG: "BoolLit", _0: true }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Error",
                     _0: "TypeMismatch"
                 });
@@ -291,35 +292,35 @@ describe('Logical operations with', () => {
     describe('Or', () => {
         describe('successfully', () => {
             it('true || true => true', () => {
-                expect(evaluate(parse('true || true'), env)).toEqual({
+                expect(evaluateRuntime(parse('true || true'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: true }
                 });
             });
 
             it('true || false => true', () => {
-                expect(evaluate(parse('true || false'), env)).toEqual({
+                expect(evaluateRuntime(parse('true || false'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: true }
                 });
             });
 
             it('false || true => true', () => {
-                expect(evaluate(parse('false || true'), env)).toEqual({
+                expect(evaluateRuntime(parse('false || true'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: true }
                 });
             });
 
             it('false || false => false', () => {
-                expect(evaluate(parse('false || false'), env)).toEqual({
+                expect(evaluateRuntime(parse('false || false'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: false }
                 });
             });
 
             it('short-circuits evaluation when left is true', () => {
-                expect(evaluate(parse('true || (1 / 0)'), env)).toEqual({
+                expect(evaluateRuntime(parse('true || (1 / 0)'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: true }
                 });
@@ -328,12 +329,12 @@ describe('Logical operations with', () => {
 
         describe('fail', () => {
             it('due to type mismatch', () => {
-                expect(evaluate({
+                expect(evaluateRuntime({
                     TAG: "ShortCircuitOp",
                     op: "Or",
                     left: { TAG: "IntLit", _0: 1 },
                     right: { TAG: "BoolLit", _0: true }
-                }, env)).toEqual({
+                }, venv, nenv)).toEqual({
                     TAG: "Error",
                     _0: "TypeMismatch"
                 });
@@ -344,14 +345,14 @@ describe('Logical operations with', () => {
     describe('Logical Negation', () => {
         describe('successfully', () => {
             it('!true => false', () => {
-                expect(evaluate(parse('!true'), env)).toEqual({
+                expect(evaluateRuntime(parse('!true'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: false }
                 });
             });
 
             it('!false => true', () => {
-                expect(evaluate(parse('!false'), env)).toEqual({
+                expect(evaluateRuntime(parse('!false'), venv, nenv)).toEqual({
                     TAG: "Ok",
                     _0: { TAG: "BoolVal", _0: true }
                 });
@@ -360,7 +361,7 @@ describe('Logical operations with', () => {
 
         describe('fail', () => {
             it('due to type mismatch', () => {
-                expect(evaluate(parse('!1'), env)).toEqual({
+                expect(evaluateRuntime(parse('!1'), venv, nenv)).toEqual({
                     TAG: "Error",
                     _0: "TypeMismatch"
                 });
@@ -372,14 +373,14 @@ describe('Logical operations with', () => {
 describe('If expressions', () => {
     describe('successfully', () => {
         it('if true then 1 else 1/0 => 1', () => {
-            expect(evaluate(parse('if true then 1 else 1/0'), env)).toEqual({
+            expect(evaluateRuntime(parse('if true then 1 else 1/0'), venv, nenv)).toEqual({
                 TAG: "Ok",
                 _0: { TAG: "IntVal", _0: 1 }
             });
         });
 
         it('if false then 1/0 else 2 => 2', () => {
-            expect(evaluate(parse('if false then 1/0 else 2'), env)).toEqual({
+            expect(evaluateRuntime(parse('if false then 1/0 else 2'), venv, nenv)).toEqual({
                 TAG: "Ok",
                 _0: { TAG: "IntVal", _0: 2 }
             });
@@ -388,7 +389,7 @@ describe('If expressions', () => {
 
     describe('fail', () => {
         it('due to non-boolean condition', () => {
-            expect(evaluate(parse('if 1 then 2 else 3'), env)).toEqual({
+            expect(evaluateRuntime(parse('if 1 then 2 else 3'), venv, nenv)).toEqual({
                 TAG: "Error",
                 _0: "TypeMismatch"
             });
@@ -399,21 +400,21 @@ describe('If expressions', () => {
 describe('Variables and Let bindings', () => {
     describe('successfully', () => {
         it('let x = 3 in x + 2 => 5', () => {
-            expect(evaluate(parse('let x = 3 in x + 2'), env)).toEqual({
+            expect(evaluateRuntime(parse('let x = 3 in x + 2'), venv, nenv)).toEqual({
                 TAG: "Ok",
                 _0: { TAG: "IntVal", _0: 5 }
             });
         });
 
         it('let x = 3 in let y = 4 in x * y => 12', () => {
-            expect(evaluate(parse('let x = 3 in let y = 4 in x * y'), env)).toEqual({
+            expect(evaluateRuntime(parse('let x = 3 in let y = 4 in x * y'), venv, nenv)).toEqual({
                 TAG: "Ok",
                 _0: { TAG: "IntVal", _0: 12 }
             });
         });
 
         it('let x = 3 in let x = 4 in x * 2 => 8 (inner binding shadows outer)', () => {
-            expect(evaluate(parse('let x = 3 in let x = 4 in x * 2'), env)).toEqual({
+            expect(evaluateRuntime(parse('let x = 3 in let x = 4 in x * 2'), venv, nenv)).toEqual({
                 TAG: "Ok",
                 _0: { TAG: "IntVal", _0: 8 }
             });
@@ -422,7 +423,7 @@ describe('Variables and Let bindings', () => {
 
     describe('fail', () => {
         it('due to undefined variable', () => {
-            expect(evaluate(parse('x + 2'), env)).toEqual({
+            expect(evaluateRuntime(parse('x + 2'), venv, nenv)).toEqual({
                 TAG: "Error",
                 _0: "UndefinedVariable"
             });
@@ -433,21 +434,21 @@ describe('Variables and Let bindings', () => {
 describe('Functions and Applications', () => {
     describe('successfully', () => {
         it('apply function', () => {
-            expect(evaluate(parse('let x = (y) => { 0 } in x 10'), env)).toEqual({
+            expect(evaluateRuntime(parse('let x = (y) => { 0 } in x 10'), venv, nenv)).toEqual({
                 TAG: "Ok",
                 _0: { TAG: "IntVal", _0: 0 }
             });
         });
 
         it('assign value to new env', () => {
-            expect(evaluate(parse('let x = (y) => { y * 2 } in x 10'), env)).toEqual({
+            expect(evaluateRuntime(parse('let x = (y) => { y * 2 } in x 10'), venv, nenv)).toEqual({
                 TAG: "Ok",
                 _0: { TAG: "IntVal", _0: 20 }
             });
         });
 
         it('curry', () => {
-            expect(evaluate(parse('let x = (y, z) => { y + z } in x 10 5'), env)).toEqual({
+            expect(evaluateRuntime(parse('let x = (y, z) => { y + z } in x 10 5'), venv, nenv)).toEqual({
                 TAG: "Ok",
                 _0: { TAG: "IntVal", _0: 15 }
             });
@@ -457,14 +458,14 @@ describe('Functions and Applications', () => {
 
     describe('fail', () => {
         it('due to application to integer', () => {
-            expect(evaluate(parse('10 20'), env)).toEqual({
+            expect(evaluateRuntime(parse('10 20'), venv, nenv)).toEqual({
                 TAG: "Error",
                 _0: "TypeMismatch"
             });
         });
 
         it('due to application to boolean', () => {
-            expect(evaluate(parse('true false'), env)).toEqual({
+            expect(evaluateRuntime(parse('true false'), venv, nenv)).toEqual({
                 TAG: "Error",
                 _0: "TypeMismatch"
             });
@@ -481,7 +482,7 @@ describe('Recursive Functions', () => {
               } in
               sum 5
             `
-            expect(evaluate(parse(code), env)).toEqual({
+            expect(evaluateRuntime(parse(code), venv, nenv)).toEqual({
                 TAG: "Ok",
                 _0: { TAG: "IntVal", _0: 15 }
             });
@@ -494,7 +495,7 @@ describe('Recursive Functions', () => {
               let rec x = x in
               x
             `
-            expect(evaluate(parse(code), env)).toEqual({
+            expect(evaluateRuntime(parse(code), venv, nenv)).toEqual({
                 TAG: "Error",
                 _0: "UnsupportedForm"
             });
@@ -505,7 +506,7 @@ describe('Recursive Functions', () => {
               let rec x = 1 in
               x
             `
-            expect(evaluate(parse(code), env)).toEqual({
+            expect(evaluateRuntime(parse(code), venv, nenv)).toEqual({
                 TAG: "Error",
                 _0: "UnsupportedForm"
             });

@@ -19,3 +19,8 @@ type rec t =
 // | LetCs({ var: Var.t, expr: t, body: t})
 // | LetRecCs({ var: Var.t, expr: t, body: t})
 // | Serialize(t)
+
+exception Fixme
+let prettyPrint = (expr:t): string => {
+  raise(Fixme)
+}

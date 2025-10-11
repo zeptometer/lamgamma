@@ -5,15 +5,22 @@ module Env = {
   let make = (): t<'a> => Belt.Map.make(~id=module(Var.Cmp))
 }
 
-module Val = {
+module RuntimeVal = {
   @genType
   type rec t =
     | IntVal(int)
     | BoolVal(bool)
-    | Closure({self: option<Var.t>, env: Env.t<t>, params: list<Var.t>, body: RawExpr.t})
+    | Closure({
+        self: option<Var.t>,
+        venv: Env.t<t>,
+        nenv: Env.t<Var.t>,
+        params: list<Var.t>,
+        body: RawExpr.t,
+      })
+    | Code(RawExpr.t)
 
   @genType
-  let toString = (v: t): string =>
+  let prettyPrint = (v: t): string =>
     switch v {
     | IntVal(i) => Int.toString(i)
     | BoolVal(b) =>
@@ -23,7 +30,23 @@ module Val = {
         "false"
       }
     | Closure(_) => "#<closure>"
+    | Code(expr) => `\`{ ${RawExpr.prettyPrint(expr)} }`
     }
+}
+
+module FutureVal = {
+  @genType
+  type rec t = RawExpr.t
+}
+
+module ValEnv = {
+  @genType
+  type t = Env.t<RuntimeVal.t>
+}
+
+module NameEnv = {
+  @genType
+  type t = Env.t<Var.t>
 }
 
 type evalError =
@@ -31,23 +54,38 @@ type evalError =
   | ZeroDivision
   | UndefinedVariable
   | UnsupportedForm
+  | MalformedSplice
 
 exception MalformedValue({msg: string})
 
-let ok = (x: Val.t) => Belt.Result.Ok(x)
+let ok = (x: 'a) => Belt.Result.Ok(x)
 let fail = (x: evalError) => Belt.Result.Error(x)
 
+let rec colorParams = (params: list<Var.t>, nenv: NameEnv.t): (list<Var.t>, NameEnv.t) => {
+  switch params {
+  | list{} => (list{}, nenv)
+  | list{head, ...tail} =>
+    let head1 = Var.color(head)
+    let nenv1 = nenv->Belt.Map.set(head, head1)
+    let (params1, nenv2) = colorParams(tail, nenv1)
+    (params1->Belt.List.add(head1), nenv2)
+  }
+}
+
 @genType
-let rec evaluate = (e: RawExpr.t, env: Env.t<Val.t>): result<Val.t, evalError> => {
-  open Val
+let rec evaluateRuntime = (e: RawExpr.t, venv: ValEnv.t, nenv: NameEnv.t): result<
+  RuntimeVal.t,
+  evalError,
+> => {
+  open RuntimeVal
   open RawExpr
 
   switch e {
   | IntLit(i) => ok(IntVal(i))
   | BoolLit(b) => ok(BoolVal(b))
   | BinOp({op, left, right}) =>
-    evaluate(left, env)->Result.flatMap(leftVal =>
-      evaluate(right, env)->Result.flatMap(rightVal =>
+    evaluateRuntime(left, venv, nenv)->Result.flatMap(leftVal =>
+      evaluateRuntime(right, venv, nenv)->Result.flatMap(rightVal =>
         switch op {
         // Arithmetic
         | Operator.BinOp.Add =>
@@ -114,13 +152,13 @@ let rec evaluate = (e: RawExpr.t, env: Env.t<Val.t>): result<Val.t, evalError> =
       )
     )
   | ShortCircuitOp({op, left, right}) =>
-    evaluate(left, env)->Result.flatMap(leftVal =>
+    evaluateRuntime(left, venv, nenv)->Result.flatMap(leftVal =>
       switch (op, leftVal) {
       | (Operator.ShortCircuitOp.And, BoolVal(false)) => ok(BoolVal(false)) // short-circuit
       | (Operator.ShortCircuitOp.Or, BoolVal(true)) => ok(BoolVal(true)) // short-circuit
       | (Operator.ShortCircuitOp.And, BoolVal(true))
       | (Operator.ShortCircuitOp.Or, BoolVal(false)) =>
-        evaluate(right, env)->Result.flatMap(rightVal =>
+        evaluateRuntime(right, venv, nenv)->Result.flatMap(rightVal =>
           switch rightVal {
           | BoolVal(b) => ok(BoolVal(b))
           | _ => fail(TypeMismatch)
@@ -130,67 +168,220 @@ let rec evaluate = (e: RawExpr.t, env: Env.t<Val.t>): result<Val.t, evalError> =
       }
     )
   | UniOp({op, expr}) =>
-    evaluate(expr, env)->Result.flatMap(exprVal =>
+    evaluateRuntime(expr, venv, nenv)->Result.flatMap(exprVal =>
       switch (op, exprVal) {
       | (Operator.UniOp.Not, BoolVal(b)) => ok(BoolVal(!b))
       | _ => fail(TypeMismatch)
       }
     )
   | If({cond, thenBranch, elseBranch}) =>
-    evaluate(cond, env)->Result.flatMap(condVal =>
+    evaluateRuntime(cond, venv, nenv)->Result.flatMap(condVal =>
       switch condVal {
-      | BoolVal(true) => evaluate(thenBranch, env)
-      | BoolVal(false) => evaluate(elseBranch, env)
+      | BoolVal(true) => evaluateRuntime(thenBranch, venv, nenv)
+      | BoolVal(false) => evaluateRuntime(elseBranch, venv, nenv)
       | _ => fail(TypeMismatch)
       }
     )
 
   | Var(v) =>
-    Belt.Map.get(env, v)
+    nenv
+    ->Belt.Map.get(v)
+    ->Belt.Option.flatMap(v1 => {
+      venv->Belt.Map.get(v1)
+    })
     ->Option.map(ok)
     ->Option.getOr(fail(UndefinedVariable))
 
   | Let({param, expr, body}) =>
-    evaluate(expr, env)->Result.flatMap(exprVal => {
-      let newEnv = Belt.Map.set(env, param, exprVal)
-      evaluate(body, newEnv)
+    evaluateRuntime(expr, venv, nenv)->Result.flatMap(exprVal => {
+      let param1 = Var.color(param)
+      let nenv1 = nenv->Belt.Map.set(param, param1)
+      let venv1 = Belt.Map.set(venv, param1, exprVal)
+      evaluateRuntime(body, venv1, nenv1)
     })
 
-  | Func({params, body}) => ok(Closure({self: None, env, params, body}))
+  | Func({params, body}) => ok(Closure({self: None, venv, nenv, params, body}))
 
   | App({func, arg}) =>
-    evaluate(func, env)->Result.flatMap(funcVal =>
-      evaluate(arg, env)->Result.flatMap(argVal =>
+    evaluateRuntime(func, venv, nenv)->Result.flatMap(funcVal =>
+      evaluateRuntime(arg, venv, nenv)->Result.flatMap(argVal =>
         switch funcVal {
-        | Closure({self: None, env: closureEnv, params: list{param}, body}) =>
-          let newEnv = Belt.Map.set(closureEnv, param, argVal)
-          evaluate(body, newEnv)
-        | Closure({self: None, env: closureEnv, params: list{param, ...rest}, body}) =>
-          let newEnv = Belt.Map.set(closureEnv, param, argVal)
-          ok(Closure({self: None, env: newEnv, params: rest, body}))
-        | Closure({self: Some(self), env: closureEnv, params: list{param}, body}) =>
-          let newEnv = closureEnv->Belt.Map.set(param, argVal)->Belt.Map.set(self, funcVal)
-          evaluate(body, newEnv)
-        | Closure({self: Some(self), env: closureEnv, params: list{param, ...rest}, body}) =>
-          let newEnv = closureEnv->Belt.Map.set(param, argVal)->Belt.Map.set(self, funcVal)
-          ok(Closure({self: None, env: newEnv, params: rest, body}))
+        | Closure({self: None, venv: closVenv, nenv: closNenv, params: list{param}, body}) =>
+          let param1 = Var.color(param)
+          let closNenv1 = closNenv->Belt.Map.set(param, param1)
+          let closVenv1 = closVenv->Belt.Map.set(param1, argVal)
+          evaluateRuntime(body, closVenv1, closNenv1)
+
+        | Closure({
+            self: None,
+            venv: closVenv,
+            nenv: closNenv,
+            params: list{param, ...rest},
+            body,
+          }) =>
+          let param1 = Var.color(param)
+          let closNenv1 = closNenv->Belt.Map.set(param, param1)
+          let closVenv1 = closVenv->Belt.Map.set(param1, argVal)
+          ok(Closure({self: None, venv: closVenv1, nenv: closNenv1, params: rest, body}))
+
+        | Closure({self: Some(self), venv: closVenv, nenv: closNenv, params: list{param}, body}) =>
+          let param1 = Var.color(param)
+          let closNenv1 = closNenv->Belt.Map.set(param, param1)
+          let closVenv1 = closVenv->Belt.Map.set(param1, argVal)->Belt.Map.set(self, funcVal)
+          evaluateRuntime(body, closVenv1, closNenv1)
+
+        | Closure({
+            self: Some(self),
+            venv: closVenv,
+            nenv: closNenv,
+            params: list{param, ...rest},
+            body,
+          }) =>
+          let param1 = Var.color(param)
+          let closNenv1 = closNenv->Belt.Map.set(param, param1)
+          let closVenv1 = closVenv->Belt.Map.set(param1, argVal)->Belt.Map.set(self, funcVal)
+          ok(Closure({self: None, venv: closVenv1, nenv: closNenv1, params: rest, body}))
+
         | Closure(_) =>
           raise(MalformedValue({msg: "Closure with empty params should be impossible"}))
+
         | _ => fail(TypeMismatch)
         }
       )
     )
 
   | LetRec({param, expr: Func({params: fparams, body: fbody}), body}) =>
-    let recFunc = Val.Closure({
-      self: Some(param),
-      env,
+    let param1 = Var.color(param)
+    let nenv1 = nenv->Belt.Map.set(param, param1)
+    let recFunc = RuntimeVal.Closure({
+      self: Some(param1),
+      venv,
+      nenv: nenv1,
       params: fparams,
       body: fbody,
     })
 
-    evaluate(body, Belt.Map.set(env, param, recFunc))
+    let venv1 = Belt.Map.set(venv, param1, recFunc)
+    evaluateRuntime(body, venv1, nenv1)
 
   | LetRec(_) => fail(UnsupportedForm)
+
+  | Quote({expr}) => evaluateFuture(1, expr, venv, nenv)->Belt.Result.map(v => {Code(v)})
+
+  | Splice({shift, expr}) =>
+    if shift >= 1 {
+      fail(MalformedSplice)
+    } else {
+      evaluateRuntime(expr, venv, nenv)->Belt.Result.flatMap(v => {
+        switch v {
+        | Code(expr1) => evaluateRuntime(expr1, venv, nenv)
+        | _ => fail(TypeMismatch)
+        }
+      })
+    }
+  }
+}
+/* corresponds to eval(lv, e, venv, nenv) where lv >= 1 */
+and evaluateFuture = (lv: int, e: RawExpr.t, venv: ValEnv.t, nenv: NameEnv.t): result<
+  FutureVal.t,
+  evalError,
+> => {
+  open RawExpr
+
+  switch e {
+  | IntLit(i) => ok(IntLit(i))
+  | BoolLit(b) => ok(BoolLit(b))
+  | BinOp({op, left, right}) =>
+    evaluateFuture(lv, left, venv, nenv)->Belt.Result.flatMap(lval =>
+      evaluateFuture(lv, right, venv, nenv)->Belt.Result.map(rval => RawExpr.BinOp({
+        op,
+        left: lval,
+        right: rval,
+      }))
+    )
+  | ShortCircuitOp({op, left, right}) =>
+    evaluateFuture(lv, left, venv, nenv)->Belt.Result.flatMap(lval =>
+      evaluateFuture(lv, right, venv, nenv)->Belt.Result.map(rval => RawExpr.ShortCircuitOp({
+        op,
+        left: lval,
+        right: rval,
+      }))
+    )
+  | UniOp({op, expr}) =>
+    evaluateFuture(lv, expr, venv, nenv)->Result.map(val => RawExpr.UniOp({op, expr: val}))
+  | If({cond, thenBranch, elseBranch}) =>
+    evaluateFuture(lv, cond, venv, nenv)->Belt.Result.flatMap(condVal =>
+      evaluateFuture(lv, thenBranch, venv, nenv)->Belt.Result.flatMap(thenVal =>
+        evaluateFuture(lv, elseBranch, venv, nenv)->Belt.Result.map(
+          elseVal => RawExpr.If({cond: condVal, thenBranch: thenVal, elseBranch: elseVal}),
+        )
+      )
+    )
+
+  | Var(v) =>
+    Belt.Map.get(nenv, v)
+    ->Option.map(v => ok(RawExpr.Var(v)))
+    ->Option.getOr(fail(UndefinedVariable))
+
+  | Let({param, expr, body}) =>
+    evaluateFuture(lv, expr, venv, nenv)->Belt.Result.flatMap(exprVal => {
+      let param1 = Var.color(param)
+      let nenv1 = nenv->Belt.Map.set(param, param1)
+      evaluateFuture(lv, body, venv, nenv1)->Belt.Result.map(bodyVal => {
+        RawExpr.Let({param: param1, expr: exprVal, body: bodyVal})
+      })
+    })
+
+  | Func({params, body}) =>
+    let (params1, nenv1) = colorParams(params, nenv)
+    evaluateFuture(lv, body, venv, nenv1)->Belt.Result.map(bodyVal => {
+      Func({params: params1, body: bodyVal})
+    })
+
+  | App({func, arg}) =>
+    evaluateFuture(lv, func, venv, nenv)->Result.flatMap(funcVal =>
+      evaluateFuture(lv, arg, venv, nenv)->Result.map(argVal => RawExpr.App({
+        func: funcVal,
+        arg: argVal,
+      }))
+    )
+
+  | LetRec({param, expr: Func({params: fparams, body: fbody}), body}) =>
+    let param1 = Var.color(param)
+    let nenv1 = nenv->Belt.Map.set(param, param1)
+    let (fparams1, fnenv) = colorParams(fparams, nenv1)
+
+    evaluateFuture(lv, fbody, venv, fnenv)->Belt.Result.flatMap(fbodyVal => {
+      evaluateFuture(lv, body, venv, nenv1)->Belt.Result.map(bodyVal => {
+        RawExpr.LetRec({
+          param: param1,
+          expr: RawExpr.Func({params: fparams1, body: fbodyVal}),
+          body: bodyVal,
+        })
+      })
+    })
+
+  | LetRec(_) => fail(UnsupportedForm)
+
+  | Quote({expr}) =>
+    evaluateFuture(lv + 1, expr, venv, nenv)->Belt.Result.map(exprVal => {
+      RawExpr.Quote({expr: exprVal})
+    })
+
+  | Splice({shift, expr}) =>
+    if shift > lv {
+      fail(MalformedSplice)
+    } else if shift == lv {
+      evaluateRuntime(expr, venv, nenv)->Belt.Result.flatMap(val => {
+        switch val {
+        | Code(expr1) => ok(expr1)
+        | _ => fail(TypeMismatch)
+        }
+      })
+    } else {
+      evaluateFuture(lv, expr, venv, nenv)->Belt.Result.map(val => {
+        RawExpr.Splice({shift, expr: val})
+      })
+    }
   }
 }
