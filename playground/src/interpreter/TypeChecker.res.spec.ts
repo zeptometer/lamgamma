@@ -489,6 +489,83 @@ describe('Typechecker', () => {
         });
     });
 
+    describe('for let rec expressions', () => {
+        describe('successfully', () => {
+            it('infer let rec with clsabs', () => {
+                const input = `
+                let rec f = [g1:>!](x: <int@g1>):<int@g1> =>
+                              { \`{@g1 ~{ x } + 1 } } in
+                \`{@! (y:int@g2) => { ~{ f^g2 \`{@g2 y } } } }
+                `
+                expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "TAG": "Code",
+                      "cls": "Initial",
+                      "typ": {
+                        "TAG": "Func",
+                        "_0": "Int",
+                        "_1": "Int",
+                      },
+                    },
+                  }
+                `);
+            });
+
+            it('infer let rec with different type annotation', () => {
+                const input = `
+                let rec f:[g:>!](<int@g>-><int@g>) = [g1:>!](x: <int@g1>) =>
+                              { \`{@g1 ~{ x } + 1 } } in
+                \`{@! (y:int@g2) => { ~{ f^g2 \`{@g2 y } } } }
+                `
+                expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "TAG": "Code",
+                      "cls": "Initial",
+                      "typ": {
+                        "TAG": "Func",
+                        "_0": "Int",
+                        "_1": "Int",
+                      },
+                    },
+                  }
+                `);
+            });
+        });
+
+        describe('fails', () => {
+            it('due to insufficient type annotation', () => {
+                const input = `
+                let rec f = [g1:>!](x: <int@g1>) =>
+                              { \`{@g1 ~{ x } + 1 } } in
+                \`{@! (y:int@g2) => { ~{ f^g2 \`{@g2 y } } } }
+                `
+                expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Error",
+                    "_0": {
+                      "TAG": "InsufficientTypeAnnotation",
+                      "metaData": {
+                        "end": {
+                          "col": 52,
+                          "row": 2,
+                        },
+                        "start": {
+                          "col": 35,
+                          "row": 1,
+                        },
+                      },
+                    },
+                  }
+                `);
+            });
+        });
+
+    });
+
     describe('for quottation', () => {
         describe('successfully', () => {
             it('infer type of quotation', () => {
@@ -654,6 +731,93 @@ describe('Typechecker', () => {
             })
         })
     })
+
+    describe('for clsabs and clsapp', () => {
+        describe('successfully', () => {
+            it('infer type of classifier abstraction', () => {
+                const input = "[g1:>!](x:<int@g1>)=>{ `{@g1 ~{ x } + 1 } }"
+                expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "TAG": "ClsAbs",
+                      "base": "Initial",
+                      "body": {
+                        "TAG": "Func",
+                        "_0": {
+                          "TAG": "Code",
+                          "cls": {
+                            "TAG": "Named",
+                            "_0": "g1",
+                          },
+                          "typ": "Int",
+                        },
+                        "_1": {
+                          "TAG": "Code",
+                          "cls": {
+                            "TAG": "Named",
+                            "_0": "g1",
+                          },
+                          "typ": "Int",
+                        },
+                      },
+                      "cls": {
+                        "TAG": "Named",
+                        "_0": "g1",
+                      },
+                    },
+                  }
+                `)
+            });
+
+            it('infer type of classifier abstraction', () => {
+                const input = `
+                (f:[g1:>!](<int@g1>-><int@g1>))=>{
+                  let y:int@g2 = 10 in
+                  ~0{ f^g2 \`{@g2 y } }
+                }
+                `
+                expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
+                  {
+                    "TAG": "Ok",
+                    "_0": {
+                      "TAG": "Func",
+                      "_0": {
+                        "TAG": "ClsAbs",
+                        "base": "Initial",
+                        "body": {
+                          "TAG": "Func",
+                          "_0": {
+                            "TAG": "Code",
+                            "cls": {
+                              "TAG": "Named",
+                              "_0": "g1",
+                            },
+                            "typ": "Int",
+                          },
+                          "_1": {
+                            "TAG": "Code",
+                            "cls": {
+                              "TAG": "Named",
+                              "_0": "g1",
+                            },
+                            "typ": "Int",
+                          },
+                        },
+                        "cls": {
+                          "TAG": "Named",
+                          "_0": "g1",
+                        },
+                      },
+                      "_1": "Int",
+                    },
+                  }
+                `)
+            });
+
+
+        });
+    });
 
     describe('for scope extrusion detection', () => {
         describe('success cases', () => {

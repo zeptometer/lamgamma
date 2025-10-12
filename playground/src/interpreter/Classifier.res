@@ -28,6 +28,10 @@ module Cmp = Belt.Id.MakeComparableU({
     }
 })
 
+let eq = (a: t, b: t): bool => {
+  Belt.Id.getCmpInternal(Cmp.cmp)(a, b) == 0
+}
+
 let toString = (cls: t): string => {
   switch cls {
   | Initial => "!"

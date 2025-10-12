@@ -72,13 +72,16 @@ module GlobalEnv = {
     }
   }
 
-  let currentSubCls = (env: t): list<Classifier.t> => {
-    let current = env.stack->Belt.List.headExn
-    let {subcls} = env.clsmap->Belt.Map.getExn(current)
-    subcls
+  let currentCls = (env: t): Classifier.t => {
+    env.stack->Belt.List.headExn
   }
 
-  let extend = (env: t, param: Var.t, typ: Typ.t, cls: Classifier.t): t => {
+  let isConsistent = (env: t, cls: Classifier.t, base: Classifier.t): bool => {
+    let {subcls} = env.clsmap->Belt.Map.getExn(cls)
+    subcls->Belt.List.has(base, (x, y) => {x == y})
+  }
+
+  let extendVar = (env: t, param: Var.t, typ: Typ.t, cls: Classifier.t): t => {
     switch env.stack {
     | list{current, ...rest} => {
         let {lenv, subcls} = env.clsmap->Belt.Map.getExn(current)
@@ -91,12 +94,13 @@ module GlobalEnv = {
     | list{} => raise(MalformedGlobalEnv)
     }
   }
-}
 
-let doesEscapeScope = (param: Expr.Param.t, exprType: Typ.t): bool => {
-  let occuringCls = exprType->Typ.freeClassifiers
-
-  occuringCls->Belt.List.has(param.cls, (a, b) => a == b)
+  let extendPolyCls = (env: t, cls: Classifier.t, base: Classifier.t): t => {
+    let {lenv, subcls} = env.clsmap->Belt.Map.getExn(base)
+    let subcls1 = list{cls, ...subcls}
+    let clsmap1 = env.clsmap->Belt.Map.set(cls, {lenv, subcls: subcls1})
+    {stack: env.stack, clsmap: clsmap1}
+  }
 }
 
 let extractFuncType = (
@@ -113,7 +117,7 @@ let extractFuncType = (
     | list{head, ...tail} =>
       switch head.typ {
       | Some(t) =>
-        if doesEscapeScope(head, returnType) {
+        if Typ.freeClassifiers(returnType)->Belt.Set.has(head.cls) {
           fail(ClassifierEscape({metaData: metaData}))
         } else {
           aux(tail, Typ.Func(t, returnType), metaData)
@@ -139,9 +143,9 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
         switch op {
         // Arithmetic operations require both operands to be integers and return an integer.
         | Add | Sub | Mul | Div | Mod =>
-          if leftType != Typ.Int {
+          if !(leftType->Typ.eq(Typ.Int)) {
             fail(TypeMismatch({metaData: left.metaData, expected: Typ.Int, actual: leftType}))
-          } else if rightType != Typ.Int {
+          } else if !(rightType->Typ.eq(Typ.Int)) {
             fail(TypeMismatch({metaData: right.metaData, expected: Typ.Int, actual: rightType}))
           } else {
             ok(Typ.Int)
@@ -149,7 +153,7 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
 
         // Comparison operations return a boolean. For equality and inequality, both operands must be of the same type.
         | Eq | Ne =>
-          if leftType == rightType {
+          if leftType->Typ.eq(rightType) {
             ok(Typ.Bool)
           } else {
             fail(TypeMismatch({metaData: right.metaData, expected: leftType, actual: rightType}))
@@ -157,9 +161,9 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
 
         // Relational comparisons require both operands to be integers and return a boolean.
         | Lt | Le | Gt | Ge =>
-          if leftType != Int {
-            fail(TypeMismatch({metaData: left.metaData, expected: Int, actual: leftType}))
-          } else if rightType != Int {
+          if !(leftType->Typ.eq(Typ.Int)) {
+            fail(TypeMismatch({metaData: left.metaData, expected: Typ.Int, actual: leftType}))
+          } else if !(rightType->Typ.eq(Typ.Int)) {
             fail(TypeMismatch({metaData: right.metaData, expected: Int, actual: rightType}))
           } else {
             ok(Typ.Bool)
@@ -173,10 +177,10 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
         open Operator.ShortCircuitOp
         switch op {
         | And | Or =>
-          if leftType != Bool {
-            fail(TypeMismatch({metaData: left.metaData, expected: Bool, actual: leftType}))
-          } else if rightType != Bool {
-            fail(TypeMismatch({metaData: right.metaData, expected: Bool, actual: rightType}))
+          if !(leftType->Typ.eq(Typ.Bool)) {
+            fail(TypeMismatch({metaData: left.metaData, expected: Typ.Bool, actual: leftType}))
+          } else if !(rightType->Typ.eq(Typ.Bool)) {
+            fail(TypeMismatch({metaData: right.metaData, expected: Typ.Bool, actual: rightType}))
           } else {
             ok(Typ.Bool)
           }
@@ -188,7 +192,7 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
       open Operator.UniOp
       switch op {
       | Not =>
-        if exprType != Bool {
+        if !(exprType->Typ.eq(Typ.Bool)) {
           fail(TypeMismatch({metaData: expr.metaData, expected: Bool, actual: exprType}))
         } else {
           ok(Typ.Bool)
@@ -197,13 +201,13 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
     })
   | If({cond, thenBranch, elseBranch}) =>
     typeCheck(cond, env)->Result.flatMap(condType => {
-      if condType != Bool {
-        fail(TypeMismatch({metaData: cond.metaData, expected: Bool, actual: condType}))
+      if !(condType->Typ.eq(Typ.Bool)) {
+        fail(TypeMismatch({metaData: cond.metaData, expected: Typ.Bool, actual: condType}))
       } else {
         typeCheck(thenBranch, env)->Result.flatMap(thenType => {
           typeCheck(elseBranch, env)->Result.flatMap(
             elseType => {
-              if thenType != elseType {
+              if !(thenType->Typ.eq(elseType)) {
                 fail(
                   TypeMismatch({
                     metaData: elseBranch.metaData,
@@ -232,7 +236,7 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
     ->Result.flatMap(exprType => {
       switch param.typ {
       | Some(t) =>
-        if t != exprType {
+        if !(t->Typ.eq(exprType)) {
           fail(TypeMismatch({metaData: expr.metaData, expected: t, actual: exprType}))
         } else {
           ok(exprType)
@@ -241,11 +245,11 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
       }
     })
     ->Result.flatMap(exprType => {
-      let env1 = env->GlobalEnv.extend(param.var, exprType, param.cls)
+      let env1 = env->GlobalEnv.extendVar(param.var, exprType, param.cls)
       typeCheck(body, env1)
     })
     ->Result.flatMap(bodyType => {
-      if doesEscapeScope(param, bodyType) {
+      if Typ.freeClassifiers(bodyType)->Belt.Set.has(param.cls) {
         fail(ClassifierEscape({metaData: body.metaData}))
       } else {
         ok(bodyType)
@@ -253,51 +257,59 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
     })
 
   | LetRec({param, expr, body}) =>
-    switch expr.raw {
-    | Func({params: args, returnType: returnTypeO, body: _}) =>
-      let funcTypeR = switch returnTypeO {
-      | Some(r) => extractFuncType(args, r, expr.metaData)
-      | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
+    let rec guessFuncType = (expr: Expr.t): result<Typ.t, TypeError.t> => {
+      switch expr.raw {
+      | ClsAbs({cls, base, body}) =>
+        guessFuncType(body)->Belt.Result.map(bodyType => {
+          Typ.ClsAbs({cls, base, body: bodyType})
+        })
+      | Func({params, returnType}) =>
+        switch returnType {
+        | Some(typ) =>
+          extractFuncType(params, typ, expr.metaData)
+        | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
+        }
+      | _ =>
+        fail(
+          UnsupportedFormat({
+            metaData: expr.metaData,
+            message: "Let rec can only be used with function values",
+          }),
+        )
       }
-
+    }
+    let paramTypeR =
       param.typ
       ->Belt.Option.map(ok)
-      ->Belt.Option.getWithDefault(funcTypeR)
+      ->Belt.Option.getWithDefault(guessFuncType(expr))
+      // Check if the param type escapes the scope of the param
       ->Belt.Result.flatMap(funcType => {
-        if doesEscapeScope(param, funcType) {
+        if Typ.freeClassifiers(funcType)->Belt.Set.has(param.cls) {
           fail(ClassifierEscape({metaData: expr.metaData}))
         } else {
           ok(funcType)
         }
       })
-      ->Belt.Result.flatMap(funcType => {
-        let env1 = env->GlobalEnv.extend(param.var, funcType, param.cls)
 
-        typeCheck(expr, env1)
-        ->Belt.Result.flatMap(exprType => {
-          if exprType != funcType {
-            fail(TypeMismatch({metaData: expr.metaData, expected: funcType, actual: exprType}))
-          } else {
-            typeCheck(body, env1)
-          }
-        })
-        ->Belt.Result.flatMap(typ => {
-          if doesEscapeScope(param, typ) {
-            fail(ClassifierEscape({metaData: body.metaData}))
-          } else {
-            ok(typ)
-          }
-        })
+    paramTypeR->Belt.Result.flatMap(paramType => {
+      let env1 = env->GlobalEnv.extendVar(param.var, paramType, param.cls)
+
+      typeCheck(expr, env1)
+      ->Belt.Result.flatMap(exprType => {
+        if !(exprType->Typ.eq(paramType)) {
+          fail(TypeMismatch({metaData: expr.metaData, expected: paramType, actual: exprType}))
+        } else {
+          typeCheck(body, env1)
+        }
       })
-
-    | _ =>
-      fail(
-        UnsupportedFormat({
-          metaData: expr.metaData,
-          message: "Let rec can only be used with function values",
-        }),
-      )
-    }
+      ->Belt.Result.flatMap(typ => {
+        if Typ.freeClassifiers(typ)->Belt.Set.has(param.cls) {
+          fail(ClassifierEscape({metaData: body.metaData}))
+        } else {
+          ok(typ)
+        }
+      })
+    })
 
   | Func({params, returnType, body}) =>
     let rec extendEnv = (params: list<Param.t>, env: GlobalEnv.t): result<
@@ -311,7 +323,7 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
         | Some(typ) => ok(typ)
         | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
         }->Result.flatMap(paramType => {
-          let env1 = env->GlobalEnv.extend(param.var, paramType, param.cls)
+          let env1 = env->GlobalEnv.extendVar(param.var, paramType, param.cls)
 
           extendEnv(rest, env1)
         })
@@ -321,7 +333,7 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
       typeCheck(body, env1)->Result.flatMap(bodyType => {
         switch returnType {
         | Some(typ) =>
-          if typ != bodyType {
+          if !(typ->Typ.eq(bodyType)) {
             fail(TypeMismatch({metaData: body.metaData, expected: typ, actual: bodyType}))
           } else {
             ok()
@@ -336,7 +348,7 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
       typeCheck(arg, env)->Belt.Result.flatMap(argType => {
         switch funcType {
         | Func(paramType, returnType) =>
-          if paramType != argType {
+          if !(paramType->Typ.eq(argType)) {
             fail(TypeMismatch({metaData: arg.metaData, expected: paramType, actual: argType}))
           } else {
             ok(returnType)
@@ -372,10 +384,7 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
       typeCheck(spliced, env1)->Result.flatMap(typSpliced => {
         switch typSpliced {
         | Code({cls, typ: typExpr}) =>
-          let isClsConsistent =
-            env
-            ->GlobalEnv.currentSubCls
-            ->Belt.List.has(cls, (x, y) => {x == y})
+          let isClsConsistent = env->GlobalEnv.isConsistent(env->GlobalEnv.currentCls, cls)
 
           if isClsConsistent {
             ok(typExpr)
@@ -394,5 +403,65 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
         }
       })
     }
+  | ClsAbs({cls, base, body}) =>
+    let env1 = env->GlobalEnv.extendPolyCls(cls, base)
+    typeCheck(body, env1)->Result.map(bodyType => {
+      Typ.ClsAbs({cls, base, body: bodyType})
+    })
+
+  | ClsApp({func, arg: argCls}) =>
+    typeCheck(func, env)->Result.flatMap(funcType => {
+      switch funcType {
+      | ClsAbs({cls: funcCls, base, body}) =>
+        if !(env->GlobalEnv.isConsistent(argCls, base)) {
+          fail(
+            ClassifierMismatch({
+              metaData: func.metaData,
+              current: argCls,
+              spliced: base,
+            }),
+          )
+        } else {
+          let rec substitute = (typ: Typ.t): Typ.t => {
+            switch typ {
+            | Int => Int
+            | Bool => Bool
+            | Func(paramType, returnType) => Func(substitute(paramType), substitute(returnType))
+            | Code({cls, typ}) =>
+              if cls->Classifier.eq(funcCls) {
+                Code({cls: argCls, typ: substitute(typ)})
+              } else {
+                Code({cls, typ: substitute(typ)})
+              }
+            | ClsAbs({cls, base, body}) =>
+              let base1 = if base->Classifier.eq(funcCls) {
+                argCls
+              } else {
+                base
+              }
+
+              if cls->Classifier.eq(funcCls) {
+                ClsAbs({cls, base: base1, body})
+              } else {
+                ClsAbs({cls, base: base1, body: substitute(body)})
+              }
+            }
+          }
+          ok(substitute(body))
+        }
+      | _ =>
+        fail(
+          TypeMismatch({
+            metaData: func.metaData,
+            expected: Typ.ClsAbs({
+              cls: Classifier.Initial,
+              base: Classifier.Initial,
+              body: Typ.Int,
+            }),
+            actual: funcType,
+          }),
+        )
+      }
+    })
   }
 }

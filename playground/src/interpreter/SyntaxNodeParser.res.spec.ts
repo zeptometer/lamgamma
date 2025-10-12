@@ -1157,21 +1157,21 @@ describe('parseSourceFileNode', () => {
     it('unneccesarry fun', () => {
       const input = 'fun (x: int) -> { x + 1 }';
       expect(parseSourceFileNode((parser.parse(input)).rootNode)).toMatchInlineSnapshot(`
-              {
-                "TAG": "Error",
-                "_0": {
-                  "TAG": "SyntaxError",
-                  "end": {
-                    "column": 11,
-                    "row": 0,
-                  },
-                  "start": {
-                    "column": 6,
-                    "row": 0,
-                  },
-                },
-              }
-            `);
+        {
+          "TAG": "Error",
+          "_0": {
+            "TAG": "SyntaxError",
+            "end": {
+              "column": 25,
+              "row": 0,
+            },
+            "start": {
+              "column": 4,
+              "row": 0,
+            },
+          },
+        }
+      `);
     })
   })
 

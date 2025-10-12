@@ -135,6 +135,28 @@ let rec parseTypeNode = (node: syntaxNode): result<Typ.t, ParseError.t> => {
       Typ.Code({cls, typ: t})
     })
 
+  | "clsabs_type" =>
+    let param = node->getNamedChildForFieldNameUnsafe("param")
+
+    let cls =
+      param
+      ->getNamedChildForFieldNameUnsafe("cls")
+      ->parseClassifier
+
+    let base =
+      param
+      ->getNamedChildForFieldNameUnsafe("base")
+      ->parseClassifier
+
+    let body =
+      node
+      ->getNamedChildForFieldNameUnsafe("type")
+      ->parseTypeNode
+
+    body->Result.map(b => {
+      Typ.ClsAbs({cls, base, body: b})
+    })
+
   | _ => raise(MalformedNode({msg: `Unknown node type for type node: ${node.type_}`}))
   }
 }

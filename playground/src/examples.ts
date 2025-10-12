@@ -46,66 +46,77 @@ let x = 1 in
 `.trim();
 
 const spower = `
-let rec pow1 = (n, xq) => {
+let rec pow1 = [g1:>!](n:int, xq:<int@g1>):<int@g1> => {
   if n == 0 then
-    \`{ 1 }
+    \`{@g1 1 }
   else if n == 1 then
     xq
   else
-    \`{ ~{ xq } * ~{ pow1 (n-1) xq } }
+    \`{@g1 ~{ xq } * ~{ pow1^g1 (n-1) xq } }
 } in
-let pow = (n) => {
-  \`{ (x) => { ~{ pow1 n \`{ x } } } }
+let pow = (n:int):<int->int@!> => {
+  \`{@! (x:int@g2) => { ~{ pow1^g2 n \`{@g2 x } } } }
 } in
-let pow4 = ~0{ pow 4 } in
-pow4 2
+pow 4
 `.trim();
 
-const spower_sqr = `
-\`{
-  let sqr = (fn y -> y * y) in ~{
-    let spower_ = (fix self -> fn n x ->
-    if n == 0 then \`{ 1 }
-    else if (n mod 2) == 0 then
-        \`{sqr ~{self (n / 2)  x}}
-    else
-        \`{~{x} * ~{self (n-1) x}}
-    ) in
-    let spower = (fn n -> \`{fn x -> ~{ spower_ n \`{ x } }}) in
-    \`{
-      let power11 = ~{ spower 11 } in
-      power11 2
-    }
+const spower_sqr_run = `
+let sqr@g1 = (y:int) => { y * y } in
+let rec spower_ = [h1:>g1](n:int, xq:<int@h1>):<int@h1> => {
+  if n == 0 then \`{@h1 1 }
+  else if (n mod 2) == 0 then
+    \`{@h1 sqr ~{ spower_^h1 (n / 2) xq } }
+  else
+    \`{@h1 ~{xq} * ~{ spower_^h1 (n - 1) xq } }
+} in
+let spower = (n:int) => {
+  \`{@g1 (x:int@g2) => {
+           ~{ spower_^g2 n \`{@g2 x } }
+         }
   }
-}
-
+} in
+let spower11:<int->int@g1> = spower 11 in
+~0{spower11} 2
 `.trim();
 
 const spower_cont = `
-let spower_ = fix self -> fn n xq cont ->
+let rec spower_ = [g1:>!](
+    n:int,
+    xq:<int@g1>,
+    cont:[g2:>g1](<int@g2>-><int@g2>)
+  ): <int@g1> => {
   if n == 0 then
-    cont \`{ 1 }
+    cont^g1 \`{@g1 1 }
   else if n == 1 then
-    cont xq
+    cont^g1 xq
   else if n mod 2 == 1 then
-    self (n - 1) xq
-      (fn yq -> cont \`{ ~{ xq } * ~{ yq } })
-  else
-    \`{
-      let x2 = ~{ xq } * ~{ xq } in
-      ~{
-        self (n / 2) \`{ x2 }
-          (fn yq -> cont yq)
+    spower_^g1
+      (n - 1)
+      xq
+      [h:>g1](yq:<int@h>) => {
+        cont^h \`{@h ~{ xq } * ~{ yq } }
       }
-    } in
+  else
+    \`{@g1
+      let x2@g3 = ~{ xq } * ~{ xq } in
+      ~{
+        spower_^g3
+          (n / 2)
+          \`{@g3 x2 }
+          [h:>g3](yq:<int@h>) => {cont^h yq}
+      }
+    }
+} in
 
-let spower = fn n ->
-  \`{
-     fn x ->
-       ~{ spower_ n \`{ x } (fn y -> y) }
-   } in
+let spower = (n:int) => {
+  \`{@!
+     (x:int@g4) => {
+       ~{ spower_^g4 n \`{@g4 x } [h:>g4](y:<int@h>)=>{y} }
+     }
+   }
+} in
 
-\`{
+\`{@!
   let power11 = ~{spower 11} in
   power11 2
 }
@@ -148,6 +159,7 @@ export type Example = "fib" | "quasiquote" | "runtime_evaluation" | "runtime_eva
  "nested_quote" | "ill_staged_variable" |  "scope_extrusion" | "spower" | "spower_sqr" | "spower_cont" |
  "gibonacci";
 export const ExamplePrograms = {
-  fib,
-  spower
+  spower,
+  spower_sqr_run,
+  spower_cont
 };
