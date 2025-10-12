@@ -28,7 +28,9 @@ let evaluate = (_input: string, _treeSitterParser: 'a): string => {
     SyntaxNodeParser.parseSourceFileNode(syntaxNode)
     ->Result.mapError(x => ParseError(x))
     ->Result.map(Expr.stripTypeInfo)
-    ->Result.flatMap(expr => Interpreter.evaluateRuntime(expr, venv, nenv)->Result.mapError(x => EvalError(x)))
+    ->Result.flatMap(expr =>
+      Interpreter.evaluateRuntime(expr, venv, nenv)->Result.mapError(x => EvalError(x))
+    )
   }
 
   switch doit() {
@@ -44,69 +46,39 @@ module TypeError = {
     | TypeError(TypeChecker.TypeError.t)
 
   let typeError2string = (e: TypeChecker.TypeError.t): string => {
+    let locString = (metaData: Expr.MetaData.t): string => {
+      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
+      `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
+      `(${(er + 1)->Int.toString},${ec->Int.toString})`
+    }
+
     open TypeChecker.TypeError
     switch e {
     | TypeMismatch({metaData, expected, actual}) =>
-      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
-      let locstring =
-        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
-        `(${(er + 1)->Int.toString},${ec->Int.toString})`
-
-      `${locstring} Type error: expected ${Typ.toString(expected)}, but got ${Typ.toString(actual)}`
+      `${locString(metaData)} Type error: expected ${Typ.toString(
+          expected,
+        )}, but got ${Typ.toString(actual)}`
 
     | ClassifierMismatch({metaData, current, spliced}) =>
-      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
-      let locstring =
-        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
-        `(${(er + 1)->Int.toString},${ec->Int.toString})`
-
-      `${locstring} Type error: spliced classifier ${spliced->Classifier.toString} is inconsistent classifier with ${current->Classifier.toString}`
+      `${locString(
+          metaData,
+        )} Type error: spliced classifier ${spliced->Classifier.toString} is inconsistent classifier with ${current->Classifier.toString}`
 
     | ClassifierEscape({metaData}) =>
-      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
-      let locstring =
-        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
-        `(${(er + 1)->Int.toString},${ec->Int.toString})`
-
-      `${locstring} Type error: classifier escape detected`
+      `${locString(metaData)} Type error: classifier escape detected`
 
     | UndefinedVariable({metaData, var}) =>
-      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
-      let locstring =
-        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
-        `(${(er + 1)->Int.toString},${ec->Int.toString})`
-
-      `${locstring} Undefined variable: ${var->Var.toString}`
+      `${locString(metaData)} Undefined variable: ${var->Var.toString}`
 
     | InsufficientTypeAnnotation({metaData}) =>
-      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
-      let locstring =
-        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
-        `(${(er + 1)->Int.toString},${ec->Int.toString})`
-
-      `${locstring} Insufficient type annotation`
+      `${locString(metaData)} Insufficient type annotation`
 
     | UnsupportedFormat({metaData, message}) =>
-      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
-      let locstring =
-        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
-        `(${(er + 1)->Int.toString},${ec->Int.toString})`
-
-      `${locstring} Unsupported format: ${message}`
+      `${locString(metaData)} Unsupported format: ${message}`
     | UndefinedClassifier({metaData, cls}) =>
-      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
-      let locstring =
-        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
-        `(${(er + 1)->Int.toString},${ec->Int.toString})`
-
-      `${locstring} Undefined classifier: ${cls->Classifier.toString}`
+      `${locString(metaData)} Undefined classifier: ${cls->Classifier.toString}`
     | MalformedSplice({metaData, shift}) =>
-      let {start: {row: sr, col: sc}, end: {row: er, col: ec}} = metaData
-      let locstring =
-        `(${(sr + 1)->Int.toString},${sc->Int.toString})-` ++
-        `(${(er + 1)->Int.toString},${ec->Int.toString})`
-
-      `${locstring} Shift in splice is too large: ${shift->Int.toString}`
+      `${locString(metaData)} Shift in splice is too large: ${shift->Int.toString}`
     }
   }
 
@@ -115,6 +87,15 @@ module TypeError = {
     | ParseError(e) => parseError2string(e)
     | TypeError(e) => typeError2string(e)
     }
+}
+
+let parse = (_input: string, _treeSitterParser: 'a): result<
+  Expr.t,
+  SyntaxNodeParser.ParseError.t,
+> => {
+  let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` _treeSitterParser.parse(_input).rootNode `)
+
+  SyntaxNodeParser.parseSourceFileNode(syntaxNode)
 }
 
 @genType

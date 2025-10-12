@@ -25,7 +25,7 @@ let color = var => {
 let toString = var => {
   switch var {
   | Raw({name}) => name
-  | Colored({name, id}) => `${name}#${id->Int.toString}`
+  | Colored({name, id}) => `${name}_${id->Int.toString}`
   }
 }
 

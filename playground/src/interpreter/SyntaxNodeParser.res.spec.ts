@@ -1508,6 +1508,174 @@ describe('parseSourceFileNode', () => {
                 `)
     });
   });
+
+  describe('for classifier abstraction and application', () => {
+    it('parse classifier abstraction', () => {
+      const input = '[g1:>!][g2:>g1](x:int@g2) => { x }';
+      expect(parseSourceFileNode((parser.parse(input)).rootNode))
+        .toMatchInlineSnapshot(`
+          {
+            "TAG": "Ok",
+            "_0": {
+              "metaData": {
+                "end": {
+                  "col": 34,
+                  "row": 0,
+                },
+                "start": {
+                  "col": 0,
+                  "row": 0,
+                },
+              },
+              "raw": {
+                "TAG": "ClsAbs",
+                "base": "Initial",
+                "body": {
+                  "metaData": {
+                    "end": {
+                      "col": 34,
+                      "row": 0,
+                    },
+                    "start": {
+                      "col": 7,
+                      "row": 0,
+                    },
+                  },
+                  "raw": {
+                    "TAG": "ClsAbs",
+                    "base": {
+                      "TAG": "Named",
+                      "_0": "g1",
+                    },
+                    "body": {
+                      "metaData": {
+                        "end": {
+                          "col": 34,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 15,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Func",
+                        "body": {
+                          "metaData": {
+                            "end": {
+                              "col": 32,
+                              "row": 0,
+                            },
+                            "start": {
+                              "col": 31,
+                              "row": 0,
+                            },
+                          },
+                          "raw": {
+                            "TAG": "Var",
+                            "_0": {
+                              "TAG": "Raw",
+                              "name": "x",
+                            },
+                          },
+                        },
+                        "params": {
+                          "hd": {
+                            "cls": {
+                              "TAG": "Named",
+                              "_0": "g2",
+                            },
+                            "typ": "Int",
+                            "var": {
+                              "TAG": "Raw",
+                              "name": "x",
+                            },
+                          },
+                          "tl": 0,
+                        },
+                        "returnType": undefined,
+                      },
+                    },
+                    "cls": {
+                      "TAG": "Named",
+                      "_0": "g2",
+                    },
+                  },
+                },
+                "cls": {
+                  "TAG": "Named",
+                  "_0": "g1",
+                },
+              },
+            },
+          }
+        `)
+    });
+
+    it('parse classifier application', () => {
+      const input = 'x^g1^!';
+      expect(parseSourceFileNode((parser.parse(input)).rootNode))
+        .toMatchInlineSnapshot(`
+          {
+            "TAG": "Ok",
+            "_0": {
+              "metaData": {
+                "end": {
+                  "col": 6,
+                  "row": 0,
+                },
+                "start": {
+                  "col": 0,
+                  "row": 0,
+                },
+              },
+              "raw": {
+                "TAG": "ClsApp",
+                "arg": "Initial",
+                "func": {
+                  "metaData": {
+                    "end": {
+                      "col": 4,
+                      "row": 0,
+                    },
+                    "start": {
+                      "col": 0,
+                      "row": 0,
+                    },
+                  },
+                  "raw": {
+                    "TAG": "ClsApp",
+                    "arg": {
+                      "TAG": "Named",
+                      "_0": "g1",
+                    },
+                    "func": {
+                      "metaData": {
+                        "end": {
+                          "col": 1,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 0,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "Var",
+                        "_0": {
+                          "TAG": "Raw",
+                          "name": "x",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }
+        `)
+    });
+  });
 });
 
 describe('parseTypeNode', () => {

@@ -40,6 +40,8 @@ and raw_t =
 // | LetCs({ param: Param.t, expr: t, body: t })
 // | LetRecCs({ param: Param.t, expr: t, body: t })
 // | Serialize(t)
+   | ClsAbs({ cls: Classifier.t, base: Classifier.t, body: t })
+   | ClsApp({ func: t, arg: Classifier.t })
 
 @genType
 let rec stripTypeInfo = (expr: t): RawExpr.t => {
@@ -82,5 +84,7 @@ let rec stripTypeInfo = (expr: t): RawExpr.t => {
     })
   | Quote({cls: _, expr}) => RawExpr.Quote({expr: stripTypeInfo(expr)})
   | Splice({shift, expr}) => RawExpr.Splice({shift, expr: stripTypeInfo(expr)})
+  | ClsAbs({cls: _, base: _, body}) => stripTypeInfo(body)
+  | ClsApp({func, arg: _}) => stripTypeInfo(func)
   }
 }

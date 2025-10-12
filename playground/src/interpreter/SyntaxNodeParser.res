@@ -131,7 +131,7 @@ let rec parseTypeNode = (node: syntaxNode): result<Typ.t, ParseError.t> => {
       ->getNamedChildForFieldNameUnsafe("classifier")
       ->parseClassifier
 
-    typ->Result.map((t) => {
+    typ->Result.map(t => {
       Typ.Code({cls, typ: t})
     })
 
@@ -507,6 +507,49 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       {
         Expr.metaData: extractMetadata(node),
         raw: Expr.Splice({shift, expr: e}),
+      }
+    })
+
+  | "clsabs" =>
+    let param = node->getNamedChildForFieldNameUnsafe("param")
+
+    let cls =
+      param
+      ->getNamedChildForFieldNameUnsafe("cls")
+      ->parseClassifier
+
+    let base =
+      param
+      ->getNamedChildForFieldNameUnsafe("base")
+      ->parseClassifier
+
+    let body =
+      node
+      ->getNamedChildForFieldNameUnsafe("body")
+      ->parseExprNode
+
+    body->Belt.Result.map(b => {
+      {
+        Expr.metaData: extractMetadata(node),
+        raw: Expr.ClsAbs({cls, base, body: b}),
+      }
+    })
+
+  | "clsapp" =>
+    let func =
+      node
+      ->getNamedChildForFieldNameUnsafe("func")
+      ->parseExprNode
+
+    let arg =
+      node
+      ->getNamedChildForFieldNameUnsafe("arg")
+      ->parseClassifier
+
+    func->Belt.Result.map(f => {
+      {
+        Expr.metaData: extractMetadata(node),
+        raw: Expr.ClsApp({func: f, arg}),
       }
     })
 
