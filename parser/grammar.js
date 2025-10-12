@@ -256,10 +256,15 @@ module.exports = grammar({
     ),
 
     _type: $ => choice(
+      $._simple_type,
+      $.func_type,
+    ),
+
+    _simple_type: $ => choice(
       $.int_type,
       $.bool_type,
-      $.func_type,
       $.code_type,
+      $.clsabs_type,
       seq('(', $._type, ')')
     ),
 
@@ -269,7 +274,7 @@ module.exports = grammar({
 
     func_type: $ => prec.right(PREC.typefunc,
       seq(
-        field('param', $._type),
+        field('param', $._simple_type),
         '->',
         field('return', $._type)
       )
@@ -280,5 +285,11 @@ module.exports = grammar({
       '@',
       field('classifier', $.classifier),
       '>'),
+
+    clsabs_type: $ => seq('[',
+      field('param', $.clsparam),
+      ']',
+      field('type', $._simple_type)
+    ),
   }
 });

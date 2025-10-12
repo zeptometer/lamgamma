@@ -880,6 +880,56 @@
     }
   },
   {
+    "type": "clsabs_type",
+    "named": true,
+    "fields": {
+      "param": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "clsparam",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "clsabs_type",
+            "named": true
+          },
+          {
+            "type": "code_type",
+            "named": true
+          },
+          {
+            "type": "func_type",
+            "named": true
+          },
+          {
+            "type": "int_type",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "clsapp",
     "named": true,
     "fields": {
@@ -1067,6 +1117,10 @@
           },
           {
             "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "clsabs_type",
             "named": true
           },
           {
@@ -1950,6 +2004,10 @@
             "named": true
           },
           {
+            "type": "clsabs_type",
+            "named": true
+          },
+          {
             "type": "code_type",
             "named": true
           },
@@ -1977,6 +2035,10 @@
           },
           {
             "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "clsabs_type",
             "named": true
           },
           {
@@ -2625,6 +2687,10 @@
           },
           {
             "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "clsabs_type",
             "named": true
           },
           {
@@ -4742,6 +4808,10 @@
           },
           {
             "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "clsabs_type",
             "named": true
           },
           {

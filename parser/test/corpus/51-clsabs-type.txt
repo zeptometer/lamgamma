@@ -1,0 +1,22 @@
+==================
+Int
+==================
+
+(x:[g:>!](int->int)) => { x }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (clsabs_type
+          (clsparam
+            (classifier
+              (identifier))
+            (classifier))
+          (func_type
+            (int_type)
+            (int_type)))))
+    (identifier)))

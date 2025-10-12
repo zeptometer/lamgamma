@@ -85,10 +85,6 @@
         {
           "type": "SYMBOL",
           "name": "letrec"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "clsabs"
         }
       ]
     },
@@ -148,6 +144,10 @@
         {
           "type": "SYMBOL",
           "name": "splice"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "clsabs"
         }
       ]
     },
@@ -1060,7 +1060,7 @@
       }
     },
     "clsapp": {
-      "type": "PREC_RIGHT",
+      "type": "PREC_LEFT",
       "value": 14,
       "content": {
         "type": "SEQ",
@@ -1093,6 +1093,19 @@
       "members": [
         {
           "type": "SYMBOL",
+          "name": "_simple_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "func_type"
+        }
+      ]
+    },
+    "_simple_type": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
           "name": "int_type"
         },
         {
@@ -1101,11 +1114,11 @@
         },
         {
           "type": "SYMBOL",
-          "name": "func_type"
+          "name": "code_type"
         },
         {
           "type": "SYMBOL",
-          "name": "code_type"
+          "name": "clsabs_type"
         },
         {
           "type": "SEQ",
@@ -1145,7 +1158,7 @@
             "name": "param",
             "content": {
               "type": "SYMBOL",
-              "name": "_type"
+              "name": "_simple_type"
             }
           },
           {
@@ -1193,6 +1206,35 @@
         {
           "type": "STRING",
           "value": ">"
+        }
+      ]
+    },
+    "clsabs_type": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "["
+        },
+        {
+          "type": "FIELD",
+          "name": "param",
+          "content": {
+            "type": "SYMBOL",
+            "name": "clsparam"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "]"
+        },
+        {
+          "type": "FIELD",
+          "name": "type",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_simple_type"
+          }
         }
       ]
     }
