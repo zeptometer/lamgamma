@@ -12,11 +12,7 @@
       "members": [
         {
           "type": "SYMBOL",
-          "name": "_simple_expression"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "lambda"
+          "name": "_expression_with_clsapp"
         },
         {
           "type": "SYMBOL",
@@ -89,6 +85,23 @@
         {
           "type": "SYMBOL",
           "name": "letrec"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "clsabs"
+        }
+      ]
+    },
+    "_expression_with_clsapp": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_simple_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "clsapp"
         }
       ]
     },
@@ -123,6 +136,10 @@
         {
           "type": "SYMBOL",
           "name": "boolean"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "lambda"
         },
         {
           "type": "SYMBOL",
@@ -318,6 +335,31 @@
                 "name": "param"
               }
             ]
+          }
+        }
+      ]
+    },
+    "clsparam": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "cls",
+          "content": {
+            "type": "SYMBOL",
+            "name": "classifier"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ":>"
+        },
+        {
+          "type": "FIELD",
+          "name": "base",
+          "content": {
+            "type": "SYMBOL",
+            "name": "classifier"
           }
         }
       ]
@@ -984,6 +1026,68 @@
         ]
       }
     },
+    "clsabs": {
+      "type": "PREC_RIGHT",
+      "value": 13,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "["
+          },
+          {
+            "type": "FIELD",
+            "name": "param",
+            "content": {
+              "type": "SYMBOL",
+              "name": "clsparam"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "]"
+          },
+          {
+            "type": "FIELD",
+            "name": "body",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_simple_expression"
+            }
+          }
+        ]
+      }
+    },
+    "clsapp": {
+      "type": "PREC_RIGHT",
+      "value": 14,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "func",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_expression_with_clsapp"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "^"
+          },
+          {
+            "type": "FIELD",
+            "name": "arg",
+            "content": {
+              "type": "SYMBOL",
+              "name": "classifier"
+            }
+          }
+        ]
+      }
+    },
     "_type": {
       "type": "CHOICE",
       "members": [
@@ -1067,16 +1171,24 @@
           "value": "<"
         },
         {
-          "type": "SYMBOL",
-          "name": "_type"
+          "type": "FIELD",
+          "name": "type",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_type"
+          }
         },
         {
           "type": "STRING",
           "value": "@"
         },
         {
-          "type": "SYMBOL",
-          "name": "identifier"
+          "type": "FIELD",
+          "name": "classifier",
+          "content": {
+            "type": "SYMBOL",
+            "name": "classifier"
+          }
         },
         {
           "type": "STRING",

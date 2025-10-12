@@ -9,7 +9,9 @@
 
 // borrow from tree-sitter-satysfi
 const PREC = {
-  recordmember: 13,
+  recordmember: 15,
+  clsapp: 14,
+  clsabs: 13,
   stage: 12,
   application: 11,
   constructor: 10,
@@ -45,8 +47,7 @@ module.exports = grammar({
     source_file: $ => $._expression,
 
     _expression: $ => choice(
-      $._simple_expression,
-      $.lambda,
+      $._expression_with_clsapp,
       $.application,
       // arithmetic
       $.add,
@@ -67,7 +68,12 @@ module.exports = grammar({
       $.not,
       // let
       $.let,
-      $.letrec
+      $.letrec,
+    ),
+
+    _expression_with_clsapp: $ => choice(
+      $._simple_expression,
+      $.clsapp
     ),
 
     // Expressions that can be used as an argument as-is
@@ -76,9 +82,11 @@ module.exports = grammar({
       $.identifier,
       $.number,
       $.boolean,
+      $.lambda,
       // staging
       $.quote,
       $.splice,
+      $.clsabs,
     ),
 
     lambda: $ => prec.right(PREC.lambda,
@@ -100,6 +108,12 @@ module.exports = grammar({
       optional(seq('@', field('classifier', $.classifier)))),
 
     params: $ => seq($.param, repeat(seq(',', $.param))),
+
+    clsparam: $ => seq(
+      field('cls', $.classifier),
+      ':>',
+      field('base', $.classifier)
+    ),
 
     identifier: $ => /[a-z_][a-zA-Z0-9_]*/,
 
@@ -228,6 +242,19 @@ module.exports = grammar({
         field('body', $._expression))
     ),
 
+    clsabs: $ => prec.right(PREC.clsabs,
+      seq('[', field('param', $.clsparam), ']',
+        field('body', $._simple_expression),
+      )),
+
+    clsapp: $ => prec.left(PREC.clsapp,
+      seq(
+        field('func', $._expression_with_clsapp),
+        '^',
+        field('arg', $.classifier)
+      )
+    ),
+
     _type: $ => choice(
       $.int_type,
       $.bool_type,
@@ -248,6 +275,10 @@ module.exports = grammar({
       )
     ),
 
-    code_type: $ => seq('<', $._type, '@', $.identifier, '>'),
+    code_type: $ => seq('<',
+      field('type', $._type),
+      '@',
+      field('classifier', $.classifier),
+      '>'),
   }
 });

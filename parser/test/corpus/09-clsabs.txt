@@ -1,0 +1,77 @@
+==================
+Abstract classifier
+==================
+
+[g1:>!](x:<int@g1>)=>{ x }
+---
+
+(source_file
+  (clsabs
+    (clsparam
+      (classifier
+        (identifier))
+      (classifier))
+    (lambda
+      (params
+        (param
+          (identifier)
+          (code_type
+            (int_type)
+            (classifier
+              (identifier)))))
+      (identifier))))
+
+==================
+Classifier application
+==================
+
+x^g
+---
+
+(source_file
+  (clsapp
+    (identifier)
+    (classifier
+      (identifier))))
+
+==================
+Multiple classifier application
+==================
+
+x^g1^g2
+---
+
+(source_file
+  (clsapp
+    (clsapp
+      (identifier)
+      (classifier
+        (identifier)))
+    (classifier
+      (identifier))))
+
+==================
+Redex
+==================
+
+[g1:>!]((x:<int@g1>)=>{x}^g2)
+---
+
+(source_file
+  (clsabs
+    (clsparam
+      (classifier
+        (identifier))
+      (classifier))
+    (clsapp
+      (lambda
+        (params
+          (param
+            (identifier)
+            (code_type
+              (int_type)
+              (classifier
+                (identifier)))))
+        (identifier))
+      (classifier
+        (identifier)))))

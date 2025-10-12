@@ -103,5 +103,6 @@ Code
         (identifier)
         (code_type
           (int_type)
-          (identifier))))
+          (classifier
+            (identifier)))))
     (identifier)))

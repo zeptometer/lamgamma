@@ -32,6 +32,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -139,6 +147,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -258,6 +274,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -365,6 +389,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -484,6 +516,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -594,6 +634,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -698,34 +746,343 @@
     }
   },
   {
+    "type": "clsabs",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "and",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
+            "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "eq",
+            "named": true
+          },
+          {
+            "type": "ge",
+            "named": true
+          },
+          {
+            "type": "gt",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "le",
+            "named": true
+          },
+          {
+            "type": "let",
+            "named": true
+          },
+          {
+            "type": "letrec",
+            "named": true
+          },
+          {
+            "type": "lt",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "ne",
+            "named": true
+          },
+          {
+            "type": "not",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "or",
+            "named": true
+          },
+          {
+            "type": "quote",
+            "named": true
+          },
+          {
+            "type": "splice",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      },
+      "param": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "clsparam",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "clsapp",
+    "named": true,
+    "fields": {
+      "arg": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "classifier",
+            "named": true
+          }
+        ]
+      },
+      "func": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "and",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
+            "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "eq",
+            "named": true
+          },
+          {
+            "type": "ge",
+            "named": true
+          },
+          {
+            "type": "gt",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "le",
+            "named": true
+          },
+          {
+            "type": "let",
+            "named": true
+          },
+          {
+            "type": "letrec",
+            "named": true
+          },
+          {
+            "type": "lt",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "ne",
+            "named": true
+          },
+          {
+            "type": "not",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "or",
+            "named": true
+          },
+          {
+            "type": "quote",
+            "named": true
+          },
+          {
+            "type": "splice",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "clsparam",
+    "named": true,
+    "fields": {
+      "base": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "classifier",
+            "named": true
+          }
+        ]
+      },
+      "cls": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "classifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "code_type",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "bool_type",
-          "named": true
-        },
-        {
-          "type": "code_type",
-          "named": true
-        },
-        {
-          "type": "func_type",
-          "named": true
-        },
-        {
-          "type": "identifier",
-          "named": true
-        },
-        {
-          "type": "int_type",
-          "named": true
-        }
-      ]
+    "fields": {
+      "classifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "classifier",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "code_type",
+            "named": true
+          },
+          {
+            "type": "func_type",
+            "named": true
+          },
+          {
+            "type": "int_type",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -758,6 +1115,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -871,6 +1236,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -978,6 +1351,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -1097,6 +1478,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -1204,6 +1593,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -1323,6 +1720,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -1430,6 +1835,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -1615,6 +2028,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -1722,6 +2143,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -1841,6 +2270,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -1948,6 +2385,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -2064,6 +2509,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -2223,6 +2676,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -2330,6 +2791,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -2449,6 +2918,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -2566,6 +3043,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -2685,6 +3170,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -2805,6 +3298,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -2921,6 +3422,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -3028,6 +3537,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -3147,6 +3664,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -3254,6 +3779,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -3373,6 +3906,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -3480,6 +4021,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -3599,6 +4148,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -3709,6 +4266,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -3814,6 +4379,14 @@
         },
         {
           "type": "boolean",
+          "named": true
+        },
+        {
+          "type": "clsabs",
+          "named": true
+        },
+        {
+          "type": "clsapp",
           "named": true
         },
         {
@@ -3932,6 +4505,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -4039,6 +4620,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -4239,6 +4828,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -4345,6 +4942,14 @@
         },
         {
           "type": "boolean",
+          "named": true
+        },
+        {
+          "type": "clsabs",
+          "named": true
+        },
+        {
+          "type": "clsapp",
           "named": true
         },
         {
@@ -4460,6 +5065,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -4589,6 +5202,14 @@
             "named": true
           },
           {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
             "type": "ctrl_if",
             "named": true
           },
@@ -4696,6 +5317,14 @@
           },
           {
             "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
             "named": true
           },
           {
@@ -4831,6 +5460,10 @@
     "named": false
   },
   {
+    "type": ":>",
+    "named": false
+  },
+  {
     "type": "<",
     "named": false
   },
@@ -4860,6 +5493,18 @@
   },
   {
     "type": "@",
+    "named": false
+  },
+  {
+    "type": "[",
+    "named": false
+  },
+  {
+    "type": "]",
+    "named": false
+  },
+  {
+    "type": "^",
     "named": false
   },
   {
