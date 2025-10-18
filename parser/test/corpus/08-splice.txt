@@ -2,7 +2,7 @@
 Splice
 ==================
 
-~{ x }
+~x
 ---
 
 (source_file
@@ -13,7 +13,7 @@ Splice
 Splice with explicit shift
 ==================
 
-~0{ x }
+~0x
 ---
 
 (source_file

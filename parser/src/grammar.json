@@ -85,6 +85,18 @@
         {
           "type": "SYMBOL",
           "name": "letrec"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "ref"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "deref"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "assign"
         }
       ]
     },
@@ -914,20 +926,12 @@
             ]
           },
           {
-            "type": "STRING",
-            "value": "{"
-          },
-          {
             "type": "FIELD",
             "name": "expr",
             "content": {
               "type": "SYMBOL",
-              "name": "_expression"
+              "name": "_simple_expression"
             }
-          },
-          {
-            "type": "STRING",
-            "value": "}"
           }
         ]
       }
@@ -1060,7 +1064,7 @@
       }
     },
     "clsapp": {
-      "type": "PREC_LEFT",
+      "type": "PREC_RIGHT",
       "value": 14,
       "content": {
         "type": "SEQ",
@@ -1083,6 +1087,77 @@
             "content": {
               "type": "SYMBOL",
               "name": "classifier"
+            }
+          }
+        ]
+      }
+    },
+    "ref": {
+      "type": "PREC_LEFT",
+      "value": 10,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "ref"
+          },
+          {
+            "type": "FIELD",
+            "name": "init",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_simple_expression"
+            }
+          }
+        ]
+      }
+    },
+    "deref": {
+      "type": "PREC_LEFT",
+      "value": 10,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "deref"
+          },
+          {
+            "type": "FIELD",
+            "name": "ref",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_simple_expression"
+            }
+          }
+        ]
+      }
+    },
+    "assign": {
+      "type": "PREC_RIGHT",
+      "value": 3,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "ref",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_simple_expression"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": ":="
+          },
+          {
+            "type": "FIELD",
+            "name": "val",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_simple_expression"
             }
           }
         ]

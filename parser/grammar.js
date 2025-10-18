@@ -69,6 +69,10 @@ module.exports = grammar({
       // let
       $.let,
       $.letrec,
+      // ref
+      $.ref,
+      $.deref,
+      $.assign
     ),
 
     _expression_with_clsapp: $ => choice(
@@ -221,7 +225,7 @@ module.exports = grammar({
         field('expr', $._expression), '}')),
 
     splice: $ => prec(PREC.stage,
-      seq('~', optional(field('shift', $.number)), '{', field('expr', $._expression), '}')
+      seq('~', optional(field('shift', $.number)), field('expr', $._simple_expression))
     ),
 
     let: $ => prec.right(PREC.assign,
@@ -247,13 +251,38 @@ module.exports = grammar({
         field('body', $._simple_expression),
       )),
 
-    clsapp: $ => prec.left(PREC.clsapp,
+    clsapp: $ => prec.right(PREC.clsapp,
       seq(
         field('func', $._expression_with_clsapp),
         '^',
         field('arg', $.classifier)
       )
     ),
+
+    // Mutable State
+    ref: $ => prec.left(PREC.constructor,
+      seq(
+        'ref',
+        field('init', $._simple_expression)
+      )
+    ),
+
+    deref: $ => prec.left(PREC.unary,
+      seq(
+        'deref',
+        field('ref', $._simple_expression)
+      )
+    ),
+
+    assign: $ => prec.right(PREC.assign,
+      seq(
+        field('ref', $._simple_expression),
+        ':=',
+        field('val', $._simple_expression)
+      )
+    ),
+
+    // Types
 
     _type: $ => choice(
       $._simple_type,

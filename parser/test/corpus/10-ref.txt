@@ -1,0 +1,36 @@
+==================
+Make ref
+==================
+
+ref 0
+
+---
+
+(source_file
+  (ref
+    (number)))
+
+==================
+Deref
+==================
+
+deref x
+
+---
+
+(source_file
+  (deref
+    (identifier)))
+
+==================
+Assign
+==================
+
+x := 20
+
+---
+
+(source_file
+  (assign
+    (identifier)
+    (number)))

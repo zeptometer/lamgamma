@@ -28,6 +28,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -41,6 +45,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -109,6 +117,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -146,6 +158,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -159,6 +175,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -227,6 +247,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -270,6 +294,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -283,6 +311,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -351,6 +383,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -388,6 +424,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -401,6 +441,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -469,6 +513,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -512,6 +560,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -525,6 +577,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -593,6 +649,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -630,6 +690,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -643,6 +707,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -711,6 +779,276 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
+            "named": true
+          },
+          {
+            "type": "splice",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "assign",
+    "named": true,
+    "fields": {
+      "ref": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "and",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "assign",
+            "named": true
+          },
+          {
+            "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
+            "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "eq",
+            "named": true
+          },
+          {
+            "type": "ge",
+            "named": true
+          },
+          {
+            "type": "gt",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "le",
+            "named": true
+          },
+          {
+            "type": "let",
+            "named": true
+          },
+          {
+            "type": "letrec",
+            "named": true
+          },
+          {
+            "type": "lt",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "ne",
+            "named": true
+          },
+          {
+            "type": "not",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "or",
+            "named": true
+          },
+          {
+            "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
+            "named": true
+          },
+          {
+            "type": "splice",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      },
+      "val": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "and",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "assign",
+            "named": true
+          },
+          {
+            "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
+            "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "eq",
+            "named": true
+          },
+          {
+            "type": "ge",
+            "named": true
+          },
+          {
+            "type": "gt",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "le",
+            "named": true
+          },
+          {
+            "type": "let",
+            "named": true
+          },
+          {
+            "type": "letrec",
+            "named": true
+          },
+          {
+            "type": "lt",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "ne",
+            "named": true
+          },
+          {
+            "type": "not",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "or",
+            "named": true
+          },
+          {
+            "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -774,6 +1112,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -787,6 +1129,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -855,6 +1201,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -968,6 +1318,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -981,6 +1335,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -1049,6 +1407,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -1168,6 +1530,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -1181,6 +1547,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -1249,6 +1619,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -1286,6 +1660,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -1299,6 +1677,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -1367,6 +1749,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -1404,6 +1790,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -1417,6 +1807,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -1485,6 +1879,146 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
+            "named": true
+          },
+          {
+            "type": "splice",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "deref",
+    "named": true,
+    "fields": {
+      "ref": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "and",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "assign",
+            "named": true
+          },
+          {
+            "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
+            "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "eq",
+            "named": true
+          },
+          {
+            "type": "ge",
+            "named": true
+          },
+          {
+            "type": "gt",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "le",
+            "named": true
+          },
+          {
+            "type": "let",
+            "named": true
+          },
+          {
+            "type": "letrec",
+            "named": true
+          },
+          {
+            "type": "lt",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "ne",
+            "named": true
+          },
+          {
+            "type": "not",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "or",
+            "named": true
+          },
+          {
+            "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -1528,6 +2062,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -1541,6 +2079,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -1609,6 +2151,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -1646,6 +2192,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -1659,6 +2209,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -1727,6 +2281,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -1770,6 +2328,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -1783,6 +2345,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -1851,6 +2417,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -1888,6 +2458,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -1901,6 +2475,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -1969,6 +2547,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -2086,6 +2668,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -2099,6 +2685,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -2167,6 +2757,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -2204,6 +2798,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -2217,6 +2815,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -2285,6 +2887,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -2328,6 +2934,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -2341,6 +2951,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -2409,6 +3023,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -2446,6 +3064,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -2459,6 +3081,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -2527,6 +3153,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -2570,6 +3200,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -2583,6 +3217,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -2651,6 +3289,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -2738,6 +3380,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -2751,6 +3397,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -2819,6 +3469,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -2856,6 +3510,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -2869,6 +3527,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -2937,6 +3599,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -2980,6 +3646,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -2993,6 +3663,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -3061,6 +3735,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -3108,6 +3786,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -3121,6 +3803,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -3189,6 +3875,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -3232,6 +3922,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -3245,6 +3939,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -3313,6 +4011,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -3360,6 +4062,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -3373,6 +4079,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -3441,6 +4151,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -3484,6 +4198,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -3497,6 +4215,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -3565,6 +4287,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -3602,6 +4328,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -3615,6 +4345,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -3683,6 +4417,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -3726,6 +4464,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -3739,6 +4481,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -3807,6 +4553,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -3844,6 +4594,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -3857,6 +4611,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -3925,6 +4683,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -3968,6 +4730,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -3981,6 +4747,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -4049,6 +4819,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -4086,6 +4860,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -4099,6 +4877,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -4167,6 +4949,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -4210,6 +4996,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -4223,6 +5013,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -4291,6 +5085,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -4328,6 +5126,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -4341,6 +5143,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -4412,6 +5218,10 @@
             "named": true
           },
           {
+            "type": "ref",
+            "named": true
+          },
+          {
             "type": "splice",
             "named": true
           },
@@ -4444,6 +5254,10 @@
           "named": true
         },
         {
+          "type": "assign",
+          "named": true
+        },
+        {
           "type": "boolean",
           "named": true
         },
@@ -4457,6 +5271,10 @@
         },
         {
           "type": "ctrl_if",
+          "named": true
+        },
+        {
+          "type": "deref",
           "named": true
         },
         {
@@ -4528,6 +5346,10 @@
           "named": true
         },
         {
+          "type": "ref",
+          "named": true
+        },
+        {
           "type": "splice",
           "named": true
         },
@@ -4567,6 +5389,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -4580,6 +5406,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -4648,6 +5478,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -4685,6 +5519,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -4698,6 +5536,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -4766,6 +5608,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -4894,6 +5740,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -4907,6 +5757,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -4978,6 +5832,146 @@
             "named": true
           },
           {
+            "type": "ref",
+            "named": true
+          },
+          {
+            "type": "splice",
+            "named": true
+          },
+          {
+            "type": "sub",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "ref",
+    "named": true,
+    "fields": {
+      "init": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "and",
+            "named": true
+          },
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "assign",
+            "named": true
+          },
+          {
+            "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "clsabs",
+            "named": true
+          },
+          {
+            "type": "clsapp",
+            "named": true
+          },
+          {
+            "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
+            "named": true
+          },
+          {
+            "type": "div",
+            "named": true
+          },
+          {
+            "type": "eq",
+            "named": true
+          },
+          {
+            "type": "ge",
+            "named": true
+          },
+          {
+            "type": "gt",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "le",
+            "named": true
+          },
+          {
+            "type": "let",
+            "named": true
+          },
+          {
+            "type": "letrec",
+            "named": true
+          },
+          {
+            "type": "lt",
+            "named": true
+          },
+          {
+            "type": "mod",
+            "named": true
+          },
+          {
+            "type": "mult",
+            "named": true
+          },
+          {
+            "type": "ne",
+            "named": true
+          },
+          {
+            "type": "not",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "or",
+            "named": true
+          },
+          {
+            "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
+            "named": true
+          },
+          {
             "type": "splice",
             "named": true
           },
@@ -5011,6 +6005,10 @@
           "named": true
         },
         {
+          "type": "assign",
+          "named": true
+        },
+        {
           "type": "boolean",
           "named": true
         },
@@ -5024,6 +6022,10 @@
         },
         {
           "type": "ctrl_if",
+          "named": true
+        },
+        {
+          "type": "deref",
           "named": true
         },
         {
@@ -5095,6 +6097,10 @@
           "named": true
         },
         {
+          "type": "ref",
+          "named": true
+        },
+        {
           "type": "splice",
           "named": true
         },
@@ -5134,6 +6140,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -5147,6 +6157,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -5215,6 +6229,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -5268,6 +6286,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -5281,6 +6303,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -5349,6 +6375,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -5386,6 +6416,10 @@
             "named": true
           },
           {
+            "type": "assign",
+            "named": true
+          },
+          {
             "type": "boolean",
             "named": true
           },
@@ -5399,6 +6433,10 @@
           },
           {
             "type": "ctrl_if",
+            "named": true
+          },
+          {
+            "type": "deref",
             "named": true
           },
           {
@@ -5467,6 +6505,10 @@
           },
           {
             "type": "quote",
+            "named": true
+          },
+          {
+            "type": "ref",
             "named": true
           },
           {
@@ -5530,6 +6572,10 @@
     "named": false
   },
   {
+    "type": ":=",
+    "named": false
+  },
+  {
     "type": ":>",
     "named": false
   },
@@ -5586,6 +6632,10 @@
     "named": true
   },
   {
+    "type": "deref",
+    "named": false
+  },
+  {
     "type": "else",
     "named": false
   },
@@ -5623,6 +6673,10 @@
   },
   {
     "type": "rec",
+    "named": false
+  },
+  {
+    "type": "ref",
     "named": false
   },
   {
