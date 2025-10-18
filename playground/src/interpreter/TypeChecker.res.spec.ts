@@ -494,8 +494,8 @@ describe('Typechecker', () => {
             it('infer let rec with clsabs', () => {
                 const input = `
                 let rec f = [g1:>!](x: <int@g1>):<int@g1> =>
-                              { \`{@g1 ~{ x } + 1 } } in
-                \`{@! (y:int@g2) => { ~{ f^g2 \`{@g2 y } } } }
+                              { \`{@g1 ~x + 1 } } in
+                \`{@! (y:int@g2) => { ~(f^g2 \`{@g2 y }) } }
                 `
                 expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
                   {
@@ -516,8 +516,8 @@ describe('Typechecker', () => {
             it('infer let rec with different type annotation', () => {
                 const input = `
                 let rec f:[g:>!](<int@g>-><int@g>) = [g1:>!](x: <int@g1>) =>
-                              { \`{@g1 ~{ x } + 1 } } in
-                \`{@! (y:int@g2) => { ~{ f^g2 \`{@g2 y } } } }
+                              { \`{@g1 ~ x + 1 } } in
+                \`{@! (y:int@g2) => { ~(f^g2 \`{@g2 y } ) } }
                 `
                 expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
                   {
@@ -540,8 +540,8 @@ describe('Typechecker', () => {
             it('due to insufficient type annotation', () => {
                 const input = `
                 let rec f = [g1:>!](x: <int@g1>) =>
-                              { \`{@g1 ~{ x } + 1 } } in
-                \`{@! (y:int@g2) => { ~{ f^g2 \`{@g2 y } } } }
+                              { \`{@g1 ~ x + 1 } } in
+                \`{@! (y:int@g2) => { ~(f^g2 \`{@g2 y }) } }
                 `
                 expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
                   {
@@ -550,7 +550,7 @@ describe('Typechecker', () => {
                       "TAG": "InsufficientTypeAnnotation",
                       "metaData": {
                         "end": {
-                          "col": 52,
+                          "col": 49,
                           "row": 2,
                         },
                         "start": {
@@ -658,7 +658,7 @@ describe('Typechecker', () => {
     describe('for splice', () => {
         describe('successfully', () => {
             it('infer type of splice with initial classifier', () => {
-                const input = "`{@! ~{ `{@! 1 + 1 } } }"
+                const input = "`{@! ~`{@! 1 + 1 } }"
                 expect(typeCheck(parse(input), env)).toEqual({
                     TAG: "Ok",
                     _0: {
@@ -673,9 +673,9 @@ describe('Typechecker', () => {
                 const input = `
                   let x:int@g = 1 in
                   let double = (y:<int@g>) => {
-                    \`{@g ~{y} * 2 }
+                    \`{@g ~y * 2 }
                   } in
-                  let z = \`{@g x + ~{ double \`{@g x } }} in
+                  let z = \`{@g x + ~(double \`{@g x }) } in
                   1
                 `
                 expect(typeCheck(parse(input), env)).toEqual({
@@ -688,7 +688,7 @@ describe('Typechecker', () => {
                 const input = `
                   let x:int@g = 1 in
                   let y = \`{@g x + 1 } in
-                  ~0{ y }
+                  ~0 y
                 `
                 expect(typeCheck(parse(input), env)).toEqual({
                     TAG: "Ok",
@@ -703,7 +703,7 @@ describe('Typechecker', () => {
                 const input = `
                   let x:int@g = 1 in
                   let y:<int@g> = \`{@g x } in
-                  \`{@! 1 + ~{ y } }
+                  \`{@! 1 + ~y }
                 `
                 expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
                   {
@@ -713,7 +713,7 @@ describe('Typechecker', () => {
                       "current": "Initial",
                       "metaData": {
                         "end": {
-                          "col": 33,
+                          "col": 29,
                           "row": 3,
                         },
                         "start": {
@@ -735,7 +735,7 @@ describe('Typechecker', () => {
     describe('for clsabs and clsapp', () => {
         describe('successfully', () => {
             it('infer type of classifier abstraction', () => {
-                const input = "[g1:>!](x:<int@g1>)=>{ `{@g1 ~{ x } + 1 } }"
+                const input = "[g1:>!](x:<int@g1>)=>{ `{@g1 ~x + 1 } }"
                 expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`
                   {
                     "TAG": "Ok",
@@ -774,7 +774,7 @@ describe('Typechecker', () => {
                 const input = `
                 (f:[g1:>!](<int@g1>-><int@g1>))=>{
                   let y:int@g2 = 10 in
-                  ~0{ f^g2 \`{@g2 y } }
+                  ~0(f^g2 \`{@g2 y })
                 }
                 `
                 expect(typeCheck(parse(input), env)).toMatchInlineSnapshot(`

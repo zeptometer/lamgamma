@@ -1355,84 +1355,84 @@ describe('parseSourceFileNode', () => {
 
   describe('for splices', () => {
     it('parse splice', () => {
-      const input = '~1{ x + 1 }';
+      const input = '~1(x + 1)';
       expect(parseSourceFileNode((parser.parse(input)).rootNode))
         .toMatchInlineSnapshot(`
-                  {
-                    "TAG": "Ok",
-                    "_0": {
+          {
+            "TAG": "Ok",
+            "_0": {
+              "metaData": {
+                "end": {
+                  "col": 9,
+                  "row": 0,
+                },
+                "start": {
+                  "col": 0,
+                  "row": 0,
+                },
+              },
+              "raw": {
+                "TAG": "Splice",
+                "expr": {
+                  "metaData": {
+                    "end": {
+                      "col": 8,
+                      "row": 0,
+                    },
+                    "start": {
+                      "col": 3,
+                      "row": 0,
+                    },
+                  },
+                  "raw": {
+                    "TAG": "BinOp",
+                    "left": {
                       "metaData": {
                         "end": {
-                          "col": 11,
+                          "col": 4,
                           "row": 0,
                         },
                         "start": {
-                          "col": 0,
+                          "col": 3,
                           "row": 0,
                         },
                       },
                       "raw": {
-                        "TAG": "Splice",
-                        "expr": {
-                          "metaData": {
-                            "end": {
-                              "col": 9,
-                              "row": 0,
-                            },
-                            "start": {
-                              "col": 4,
-                              "row": 0,
-                            },
-                          },
-                          "raw": {
-                            "TAG": "BinOp",
-                            "left": {
-                              "metaData": {
-                                "end": {
-                                  "col": 5,
-                                  "row": 0,
-                                },
-                                "start": {
-                                  "col": 4,
-                                  "row": 0,
-                                },
-                              },
-                              "raw": {
-                                "TAG": "Var",
-                                "_0": {
-                                  "TAG": "Raw",
-                                  "name": "x",
-                                },
-                              },
-                            },
-                            "op": "Add",
-                            "right": {
-                              "metaData": {
-                                "end": {
-                                  "col": 9,
-                                  "row": 0,
-                                },
-                                "start": {
-                                  "col": 8,
-                                  "row": 0,
-                                },
-                              },
-                              "raw": {
-                                "TAG": "IntLit",
-                                "_0": 1,
-                              },
-                            },
-                          },
+                        "TAG": "Var",
+                        "_0": {
+                          "TAG": "Raw",
+                          "name": "x",
                         },
-                        "shift": 1,
                       },
                     },
-                  }
-                `)
+                    "op": "Add",
+                    "right": {
+                      "metaData": {
+                        "end": {
+                          "col": 8,
+                          "row": 0,
+                        },
+                        "start": {
+                          "col": 7,
+                          "row": 0,
+                        },
+                      },
+                      "raw": {
+                        "TAG": "IntLit",
+                        "_0": 1,
+                      },
+                    },
+                  },
+                },
+                "shift": 1,
+              },
+            },
+          }
+        `)
     });
 
     it('parse splice without shift', () => {
-      const input = '~{ x + 1 }';
+      const input = '~( x + 1 )';
       expect(parseSourceFileNode((parser.parse(input)).rootNode))
         .toMatchInlineSnapshot(`
                   {

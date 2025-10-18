@@ -1,13 +1,13 @@
 const quasiquote =
   `
-let x = \`{ 1 + 2 } in
-\`{ 2 * ~{ x } }
+let x = \`{@! 1 + 2 } in
+\`{@! 2 * ~x }
 `.trim();
 
-const runtime_evaluation =
+const eval_ =
   `
-let x = \`{ 1 + 2 } in
-~0{ x }
+let x = \`{@! 1 + 2 } in
+~0 x
 `.trim();
 
 const fib = `
@@ -19,11 +19,11 @@ let rec fib = (n:int):int => {
 fib 20
 `.trim();
 
-const runtime_evaluation_csp =
+const well_scoped_eval =
   `
-let x = 3 in
-let y = \`{ 1 + x } in
-~0{ y }
+let x@g = 3 in
+let y = \`{@g 1 + x } in
+~0 y
 `.trim();
 
 const nested_quote =
@@ -52,10 +52,10 @@ let rec pow1 = [g1:>!](n:int, xq:<int@g1>):<int@g1> => {
   else if n == 1 then
     xq
   else
-    \`{@g1 ~{ xq } * ~{ pow1^g1 (n-1) xq } }
+    \`{@g1 ~xq * ~(pow1^g1 (n-1) xq) }
 } in
 let pow = (n:int):<int->int@!> => {
-  \`{@! (x:int@g2) => { ~{ pow1^g2 n \`{@g2 x } } } }
+  \`{@! (x:int@g2) => { ~(pow1^g2 n \`{@g2 x }) } }
 } in
 pow 4
 `.trim();
@@ -65,18 +65,18 @@ let sqr@g1 = (y:int) => { y * y } in
 let rec spower_ = [h1:>g1](n:int, xq:<int@h1>):<int@h1> => {
   if n == 0 then \`{@h1 1 }
   else if (n mod 2) == 0 then
-    \`{@h1 sqr ~{ spower_^h1 (n / 2) xq } }
+    \`{@h1 sqr ~(spower_^h1 (n / 2) xq) }
   else
-    \`{@h1 ~{xq} * ~{ spower_^h1 (n - 1) xq } }
+    \`{@h1 ~xq * ~(spower_^h1 (n - 1) xq) }
 } in
 let spower = (n:int) => {
   \`{@g1 (x:int@g2) => {
-           ~{ spower_^g2 n \`{@g2 x } }
+           ~(spower_^g2 n \`{@g2 x })
          }
   }
 } in
 let spower11:<int->int@g1> = spower 11 in
-~0{spower11} 2
+~0(spower11) 2
 `.trim();
 
 const spower_cont = `
@@ -94,30 +94,28 @@ let rec spower_ = [g1:>!](
       (n - 1)
       xq
       [h:>g1](yq:<int@h>) => {
-        cont^h \`{@h ~{ xq } * ~{ yq } }
+        cont^h \`{@h ~xq * ~yq }
       }
   else
     \`{@g1
-      let x2@g3 = ~{ xq } * ~{ xq } in
-      ~{
-        spower_^g3
+      let x2@g3 = ~xq * ~xq in
+      ~(spower_^g3
           (n / 2)
           \`{@g3 x2 }
-          [h:>g3](yq:<int@h>) => {cont^h yq}
-      }
+          [h:>g3](yq:<int@h>) => {cont^h yq})
     }
 } in
 
 let spower = (n:int) => {
   \`{@!
      (x:int@g4) => {
-       ~{ spower_^g4 n \`{@g4 x } [h:>g4](y:<int@h>)=>{y} }
+       ~(spower_^g4 n \`{@g4 x } [h:>g4](y:<int@h>)=>{y})
      }
    }
 } in
 
 \`{@!
-  let power11 = ~{spower 11} in
+  let power11 = ~(spower 11) in
   power11 2
 }
 `.trim()
@@ -159,6 +157,9 @@ export type Example = "fib" | "quasiquote" | "runtime_evaluation" | "runtime_eva
  "nested_quote" | "ill_staged_variable" |  "scope_extrusion" | "spower" | "spower_sqr" | "spower_cont" |
  "gibonacci";
 export const ExamplePrograms = {
+  quasiquote,
+  eval_,
+  well_scoped_eval,
   spower,
   spower_sqr_run,
   spower_cont

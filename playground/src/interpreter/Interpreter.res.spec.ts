@@ -537,7 +537,7 @@ describe('Recursive Functions', () => {
         it('quote and splice', () => {
             const code = `
               let x = \`{ 1 } in
-              \`{ ~{ x } + ~{ x } }
+              \`{ ~x + ~x }
             `
             expect(evaluateRuntime(parse(code), venv, nenv)).toMatchInlineSnapshot(`
               {
@@ -565,7 +565,7 @@ describe('Recursive Functions', () => {
             const code = `
               let x = 1 in
               let y = \`{ x } in
-              ~0{ y }
+              ~0 y
             `
             expect(evaluateRuntime(parse(code), venv, nenv)).toMatchInlineSnapshot(`
               {
@@ -581,7 +581,7 @@ describe('Recursive Functions', () => {
 
     describe('fail', () => {
         it('due to splicing non-quote', () => {
-            const code = "`{ ~{ 1 }}"
+            const code = "`{ ~1 }"
             expect(evaluateRuntime(parse(code), venv, nenv)).toEqual({
                 TAG: "Error",
                 _0: "TypeMismatch"
@@ -589,7 +589,7 @@ describe('Recursive Functions', () => {
         });
 
         it('due to invalid splice', () => {
-            const code = "~{ `{ 1 } }"
+            const code = "~`{ 1 }"
             expect(evaluateRuntime(parse(code), venv, nenv)).toEqual({
                 TAG: "Error",
                 _0: "MalformedSplice"
@@ -607,12 +607,12 @@ describe('big program', () => {
             else if n == 1 then
               xq
             else
-              \`{ ~{ xq } * ~{ pow1 (n-1) xq } }
+              \`{ ~xq * ~(pow1 (n-1) xq) }
           } in
           let pow = (n) => {
-            \`{ (x) => { ~{ pow1 n \`{ x } } } }
+            \`{ (x) => { ~(pow1 n \`{ x }) } }
           } in
-          let pow4 = ~0{ pow 4 } in
+          let pow4 = ~0(pow 4) in
           pow4 2
         `
         expect(evaluateRuntime(parse(input), venv, nenv)).toEqual({

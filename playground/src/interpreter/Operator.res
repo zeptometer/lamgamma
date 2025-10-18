@@ -33,6 +33,7 @@ module BinOp = {
 }
 
 module ShortCircuitOp = {
+  @genType
   type t =
     | And
     | Or
@@ -46,6 +47,7 @@ module ShortCircuitOp = {
 }
 
 module UniOp = {
+  @genType
   type t =
     | Not  // boolean negation
 

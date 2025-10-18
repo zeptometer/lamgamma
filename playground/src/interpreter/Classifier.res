@@ -1,3 +1,4 @@
+@genType
 type t =
   | Initial
   | Named(string)
@@ -14,6 +15,7 @@ module Source = {
     Generated(counter.contents)
   }
 }
+@genType
 module Cmp = Belt.Id.MakeComparableU({
   type t = t
   let cmp = (a, b) =>
