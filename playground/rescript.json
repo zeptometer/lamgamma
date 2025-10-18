@@ -31,7 +31,8 @@
             "basic": false
         },
         "shims": {
-            "Belt": "Belt"
+            "Belt": "Belt",
+            "RescriptPervasives": "RescriptPervasives"
         }
     }
 }

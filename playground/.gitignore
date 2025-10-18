@@ -28,3 +28,4 @@ lib/bs/*
 *.res.mjs
 *.gen.tsx
 *.gen.ts
+*.js
