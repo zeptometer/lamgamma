@@ -1196,6 +1196,10 @@
           "name": "clsabs_type"
         },
         {
+          "type": "SYMBOL",
+          "name": "ref_type"
+        },
+        {
           "type": "SEQ",
           "members": [
             {
@@ -1312,6 +1316,27 @@
           }
         }
       ]
+    },
+    "ref_type": {
+      "type": "PREC_RIGHT",
+      "value": 2,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "type",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_simple_type"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "ref"
+          }
+        ]
+      }
     }
   },
   "extras": [

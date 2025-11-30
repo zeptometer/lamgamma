@@ -1,0 +1,35 @@
+==================
+Int
+==================
+
+(x:int ref) => { x }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (ref_type
+          (int_type))))
+    (identifier)))
+
+==================
+Int
+==================
+
+(x:int -> int ref) => { x }
+
+---
+
+(source_file
+  (lambda
+    (params
+      (param
+        (identifier)
+        (func_type
+          (int_type)
+          (ref_type
+            (int_type)))))
+    (identifier)))

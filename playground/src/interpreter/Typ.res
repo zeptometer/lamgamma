@@ -6,6 +6,7 @@ type rec t =
   | Func(t, t)
   | Code({cls: Classifier.t, typ: t})
   | ClsAbs({cls: Classifier.t, base: Classifier.t, body: t})
+  | Ref(t)
 
 let rec toString = (typ: t): string => {
   switch typ {
@@ -15,6 +16,7 @@ let rec toString = (typ: t): string => {
   | Code({cls, typ}) => `<${typ->toString}@${cls->Classifier.toString}>`
   | ClsAbs({cls, base, body}) =>
     `[${cls->Classifier.toString}:>${base->Classifier.toString}](${body->toString})`
+  | Ref(t) => `${toString(t)} ref`
   }
 }
 
@@ -29,6 +31,7 @@ let rec freeClassifiers = (typ: t): Belt.Set.t<Classifier.t, Classifier.Cmp.iden
     freeClassifiers(body)
     ->Belt.Set.remove(cls)
     ->Belt.Set.add(base)
+  | Ref(t) => freeClassifiers(t)
   }
 }
 
@@ -64,7 +67,7 @@ let eq = (a: t, b: t): bool => {
         let bm21 = Belt.Map.set(bm2, bCls, g)
         aux(aBody, bBody, ~bm1=bm11, ~bm2=bm21)
       }
-
+    | (Ref(aInner), Ref(bInner)) => aux(aInner, bInner, ~bm1, ~bm2)
     | _ => false
     }
   }

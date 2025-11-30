@@ -1681,7 +1681,7 @@ describe('parseSourceFileNode', () => {
     it('parse ref', () => {
       const input = 'ref 10';
       expect(parseSourceFileNode((parser.parse(input)).rootNode))
-      .toMatchInlineSnapshot(`
+        .toMatchInlineSnapshot(`
         {
           "TAG": "Ok",
           "_0": {
@@ -1722,7 +1722,7 @@ describe('parseSourceFileNode', () => {
     it('parse assign', () => {
       const input = 'r := 10';
       expect(parseSourceFileNode((parser.parse(input)).rootNode))
-      .toMatchInlineSnapshot(`
+        .toMatchInlineSnapshot(`
         {
           "TAG": "Ok",
           "_0": {
@@ -1782,7 +1782,7 @@ describe('parseSourceFileNode', () => {
     it('parse deref', () => {
       const input = 'deref r';
       expect(parseSourceFileNode((parser.parse(input)).rootNode))
-      .toMatchInlineSnapshot(`
+        .toMatchInlineSnapshot(`
         {
           "TAG": "Ok",
           "_0": {
@@ -2069,6 +2069,69 @@ describe('parseTypeNode', () => {
         }
       `)
   })
+
+  it('parse ref type', () => {
+    const input = '(x:int ref) => { x }';
+    expect(parseSourceFileNode((parser.parse(input)).rootNode))
+      .toMatchInlineSnapshot(`
+        {
+          "TAG": "Ok",
+          "_0": {
+            "metaData": {
+              "end": {
+                "col": 20,
+                "row": 0,
+              },
+              "start": {
+                "col": 0,
+                "row": 0,
+              },
+            },
+            "raw": {
+              "TAG": "Func",
+              "body": {
+                "metaData": {
+                  "end": {
+                    "col": 18,
+                    "row": 0,
+                  },
+                  "start": {
+                    "col": 17,
+                    "row": 0,
+                  },
+                },
+                "raw": {
+                  "TAG": "Var",
+                  "_0": {
+                    "TAG": "Raw",
+                    "name": "x",
+                  },
+                },
+              },
+              "params": {
+                "hd": {
+                  "cls": {
+                    "TAG": "Generated",
+                    "_0": 1,
+                  },
+                  "typ": {
+                    "TAG": "Ref",
+                    "_0": "Int",
+                  },
+                  "var": {
+                    "TAG": "Raw",
+                    "name": "x",
+                  },
+                },
+                "tl": 0,
+              },
+              "returnType": undefined,
+            },
+          },
+        }
+      `);
+  })
+
 
   it('parse type with paren', () => {
     const input = '(x:(int->int)->int) => { x }';

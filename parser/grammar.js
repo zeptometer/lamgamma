@@ -294,6 +294,7 @@ module.exports = grammar({
       $.bool_type,
       $.code_type,
       $.clsabs_type,
+      $.ref_type,
       seq('(', $._type, ')')
     ),
 
@@ -320,5 +321,12 @@ module.exports = grammar({
       ']',
       field('type', $._simple_type)
     ),
+
+    ref_type: $ => prec.right(PREC.typeapplication,
+      seq(
+        field('type', $._simple_type),
+        'ref'
+      )
+    )
   }
 });

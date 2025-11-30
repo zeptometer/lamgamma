@@ -1274,6 +1274,10 @@
           {
             "type": "int_type",
             "named": true
+          },
+          {
+            "type": "ref_type",
+            "named": true
           }
         ]
       }
@@ -1495,6 +1499,10 @@
           },
           {
             "type": "int_type",
+            "named": true
+          },
+          {
+            "type": "ref_type",
             "named": true
           }
         ]
@@ -2600,6 +2608,10 @@
           {
             "type": "int_type",
             "named": true
+          },
+          {
+            "type": "ref_type",
+            "named": true
           }
         ]
       },
@@ -2633,6 +2645,10 @@
           },
           {
             "type": "int_type",
+            "named": true
+          },
+          {
+            "type": "ref_type",
             "named": true
           }
         ]
@@ -3345,6 +3361,10 @@
           },
           {
             "type": "int_type",
+            "named": true
+          },
+          {
+            "type": "ref_type",
             "named": true
           }
         ]
@@ -5671,6 +5691,10 @@
           {
             "type": "int_type",
             "named": true
+          },
+          {
+            "type": "ref_type",
+            "named": true
           }
         ]
       },
@@ -5977,6 +6001,50 @@
           },
           {
             "type": "sub",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "ref_type",
+    "named": true,
+    "fields": {
+      "type": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "bool_type",
+            "named": true
+          },
+          {
+            "type": "clsabs_type",
+            "named": true
+          },
+          {
+            "type": "code_type",
+            "named": true
+          },
+          {
+            "type": "func_type",
+            "named": true
+          },
+          {
+            "type": "int_type",
+            "named": true
+          },
+          {
+            "type": "ref_type",
             "named": true
           }
         ]
