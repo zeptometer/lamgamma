@@ -575,6 +575,52 @@ let rec parseExprNode = (node: syntaxNode): result<Expr.t, ParseError.t> => {
       }
     })
 
+  | "ref" =>
+    let initExpr =
+      node
+      ->getNamedChildForFieldNameUnsafe("init")
+      ->parseExprNode
+
+    initExpr->Result.map(v => {
+      {
+        Expr.metaData: extractMetadata(node),
+        raw: Expr.Ref({init: v}),
+      }
+    })
+
+  | "assign" =>
+    let refExpr =
+      node
+      ->getNamedChildForFieldNameUnsafe("ref")
+      ->parseExprNode
+
+    let valueExpr =
+      node
+      ->getNamedChildForFieldNameUnsafe("val")
+      ->parseExprNode
+
+    refExpr->Result.flatMap(r =>
+      valueExpr->Result.map(v => {
+        {
+          Expr.metaData: extractMetadata(node),
+          raw: Expr.Assign({ref: r, value: v}),
+        }
+      })
+    )
+
+  | "deref" =>
+    let refExpr =
+      node
+      ->getNamedChildForFieldNameUnsafe("ref")
+      ->parseExprNode
+
+    refExpr->Result.map(r => {
+      {
+        Expr.metaData: extractMetadata(node),
+        raw: Expr.Deref({ref: r}),
+      }
+    })
+
   | _ => raise(NotImplemented)
   }
 }

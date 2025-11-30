@@ -43,3 +43,6 @@ jspm_packages/
 
 # Monaco Editor configuration
 .monaco/
+
+# vscode
+*.code-workspace

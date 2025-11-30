@@ -1676,6 +1676,153 @@ describe('parseSourceFileNode', () => {
         `)
     });
   });
+
+  describe('for mutable states', () => {
+    it('parse ref', () => {
+      const input = 'ref 10';
+      expect(parseSourceFileNode((parser.parse(input)).rootNode))
+      .toMatchInlineSnapshot(`
+        {
+          "TAG": "Ok",
+          "_0": {
+            "metaData": {
+              "end": {
+                "col": 6,
+                "row": 0,
+              },
+              "start": {
+                "col": 0,
+                "row": 0,
+              },
+            },
+            "raw": {
+              "TAG": "Ref",
+              "init": {
+                "metaData": {
+                  "end": {
+                    "col": 6,
+                    "row": 0,
+                  },
+                  "start": {
+                    "col": 4,
+                    "row": 0,
+                  },
+                },
+                "raw": {
+                  "TAG": "IntLit",
+                  "_0": 10,
+                },
+              },
+            },
+          },
+        }
+      `)
+    });
+
+    it('parse assign', () => {
+      const input = 'r := 10';
+      expect(parseSourceFileNode((parser.parse(input)).rootNode))
+      .toMatchInlineSnapshot(`
+        {
+          "TAG": "Ok",
+          "_0": {
+            "metaData": {
+              "end": {
+                "col": 7,
+                "row": 0,
+              },
+              "start": {
+                "col": 0,
+                "row": 0,
+              },
+            },
+            "raw": {
+              "TAG": "Assign",
+              "ref": {
+                "metaData": {
+                  "end": {
+                    "col": 1,
+                    "row": 0,
+                  },
+                  "start": {
+                    "col": 0,
+                    "row": 0,
+                  },
+                },
+                "raw": {
+                  "TAG": "Var",
+                  "_0": {
+                    "TAG": "Raw",
+                    "name": "r",
+                  },
+                },
+              },
+              "value": {
+                "metaData": {
+                  "end": {
+                    "col": 7,
+                    "row": 0,
+                  },
+                  "start": {
+                    "col": 5,
+                    "row": 0,
+                  },
+                },
+                "raw": {
+                  "TAG": "IntLit",
+                  "_0": 10,
+                },
+              },
+            },
+          },
+        }
+      `)
+    });
+
+    it('parse deref', () => {
+      const input = 'deref r';
+      expect(parseSourceFileNode((parser.parse(input)).rootNode))
+      .toMatchInlineSnapshot(`
+        {
+          "TAG": "Ok",
+          "_0": {
+            "metaData": {
+              "end": {
+                "col": 7,
+                "row": 0,
+              },
+              "start": {
+                "col": 0,
+                "row": 0,
+              },
+            },
+            "raw": {
+              "TAG": "Deref",
+              "ref": {
+                "metaData": {
+                  "end": {
+                    "col": 7,
+                    "row": 0,
+                  },
+                  "start": {
+                    "col": 6,
+                    "row": 0,
+                  },
+                },
+                "raw": {
+                  "TAG": "Var",
+                  "_0": {
+                    "TAG": "Raw",
+                    "name": "r",
+                  },
+                },
+              },
+            },
+          },
+        }
+      `)
+    });
+  })
 });
 
 describe('parseTypeNode', () => {

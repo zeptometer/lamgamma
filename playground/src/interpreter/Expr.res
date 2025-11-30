@@ -40,8 +40,12 @@ and raw_t =
 // | LetCs({ param: Param.t, expr: t, body: t })
 // | LetRecCs({ param: Param.t, expr: t, body: t })
 // | Serialize(t)
-   | ClsAbs({ cls: Classifier.t, base: Classifier.t, body: t })
-   | ClsApp({ func: t, arg: Classifier.t })
+  | ClsAbs({ cls: Classifier.t, base: Classifier.t, body: t })
+  | ClsApp({ func: t, arg: Classifier.t })
+  // mutable state
+  | Ref({ init: t })
+  | Assign({ ref: t, value: t })
+  | Deref({ ref: t })
 
 @genType
 let rec stripTypeInfo = (expr: t): RawExpr.t => {
@@ -86,5 +90,9 @@ let rec stripTypeInfo = (expr: t): RawExpr.t => {
   | Splice({shift, expr}) => RawExpr.Splice({shift, expr: stripTypeInfo(expr)})
   | ClsAbs({cls: _, base: _, body}) => stripTypeInfo(body)
   | ClsApp({func, arg: _}) => stripTypeInfo(func)
+  | Ref({init}) => RawExpr.Ref({init: stripTypeInfo(init)})
+  | Assign({ref, value}) =>
+    RawExpr.Assign({ref: stripTypeInfo(ref), value: stripTypeInfo(value)})
+  | Deref({ref}) => RawExpr.Deref({ref: stripTypeInfo(ref)})
   }
 }

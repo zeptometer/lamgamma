@@ -19,6 +19,11 @@ type rec t =
 // | LetCs({ var: Var.t, expr: t, body: t})
 // | LetRecCs({ var: Var.t, expr: t, body: t})
 // | Serialize(t)
+  // mutable states
+  | Ref({ init: t })
+  | Assign({ ref: t, value: t })
+  | Deref({ ref: t })
+
 
 let rec toString = (expr: t): string => {
   switch expr {
@@ -53,5 +58,8 @@ let rec toString = (expr: t): string => {
     `(if ${toString(cond)} then ${toString(thenBranch)} else ${toString(elseBranch)})`
   | Quote({expr}) => `\`{ ${toString(expr)} }`
   | Splice({shift, expr}) => `~${shift->Int.toString}{ ${toString(expr)} }`
+  | Ref({init}) => `ref ${toString(init)}`
+  | Assign({ref, value}) => `${toString(ref)} := ${toString(value)}`
+  | Deref({ref}) => `!${toString(ref)}`
   }
 }
