@@ -819,6 +819,22 @@ describe('Typechecker', () => {
         });
     });
 
+    describe('for mutable states', () => {
+        describe('successfully', () => {
+            it('infer type of reference creation and dereference', () => {
+                const input = `
+                  let r:int ref = ref 0 in
+                  let _ = r := 42 in
+                  deref r + 1
+                `
+                expect(typeCheck(parse(input), env)).toEqual({
+                    TAG: "Ok",
+                    _0: "Int"
+                });
+            });
+        })
+    });
+
     describe('for scope extrusion detection', () => {
         describe('success cases', () => {
             it('let', () => {

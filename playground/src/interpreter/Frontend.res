@@ -20,21 +20,22 @@ type evalError =
 
 @genType
 let evaluate = (_input: string, _treeSitterParser: 'a): string => {
-  let doit = (): result<Interpreter.RuntimeVal.t, evalError> => {
+  let doit = (): result<(Interpreter.RuntimeVal.t, Interpreter.Store.t), evalError> => {
     let syntaxNode: SyntaxNodeParser.syntaxNode = %raw(` _treeSitterParser.parse(_input).rootNode `)
     let venv = Interpreter.Env.make()
     let nenv = Interpreter.Env.make()
+    let store = Interpreter.Store.make()
 
     SyntaxNodeParser.parseSourceFileNode(syntaxNode)
     ->Result.mapError(x => ParseError(x))
     ->Result.map(Expr.stripTypeInfo)
     ->Result.flatMap(expr =>
-      Interpreter.evaluateRuntime(expr, venv, nenv)->Result.mapError(x => EvalError(x))
+      Interpreter.evaluateRuntime(expr, venv, nenv, store)->Result.mapError(x => EvalError(x))
     )
   }
 
   switch doit() {
-  | Ok(value) => value->Interpreter.RuntimeVal.toString
+  | Ok((value, _)) => value->Interpreter.RuntimeVal.toString
   | Error(_) => "error"
   | exception _ => "error"
   }

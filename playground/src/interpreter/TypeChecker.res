@@ -265,8 +265,7 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
         })
       | Func({params, returnType}) =>
         switch returnType {
-        | Some(typ) =>
-          extractFuncType(params, typ, expr.metaData)
+        | Some(typ) => extractFuncType(params, typ, expr.metaData)
         | None => fail(InsufficientTypeAnnotation({metaData: expr.metaData}))
         }
       | _ =>
@@ -445,6 +444,7 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
               } else {
                 ClsAbs({cls, base: base1, body: substitute(body)})
               }
+            | Ref(t) => Ref(substitute(t))
             }
           }
           ok(substitute(body))
@@ -459,6 +459,53 @@ let rec typeCheck = (expr: Expr.t, env: GlobalEnv.t): result<Typ.t, TypeError.t>
               body: Typ.Int,
             }),
             actual: funcType,
+          }),
+        )
+      }
+    })
+  | Ref({init}) =>
+    typeCheck(init, env)->Result.map(initType => {
+      Typ.Ref(initType)
+    })
+
+  | Assign({ref, value}) =>
+    typeCheck(ref, env)->Result.flatMap(refType => {
+      typeCheck(value, env)->Result.flatMap(valueType => {
+        switch refType {
+        | Typ.Ref(innerType) =>
+          if !(innerType->Typ.eq(valueType)) {
+            fail(
+              TypeMismatch({
+                metaData: value.metaData,
+                expected: innerType,
+                actual: valueType,
+              }),
+            )
+          } else {
+            ok(Typ.Bool) // assuming assignment returns a boolean indicating success
+          }
+        | _ =>
+          fail(
+            TypeMismatch({
+              metaData: ref.metaData,
+              expected: Typ.Ref(Typ.Int), // or some other expected type
+              actual: refType,
+            }),
+          )
+        }
+      })
+    })
+
+  | Deref({ref}) =>
+    typeCheck(ref, env)->Result.flatMap(refType => {
+      switch refType {
+      | Typ.Ref(innerType) => ok(innerType)
+      | _ =>
+        fail(
+          TypeMismatch({
+            metaData: ref.metaData,
+            expected: Typ.Ref(Typ.Int), // or some other expected type
+            actual: refType,
           }),
         )
       }
