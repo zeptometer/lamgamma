@@ -27,7 +27,7 @@ let y = \`{@g 1 + x } in
 `.trim();
 
 const nested_quote =
-`
+  `
 let x = \`{1} in
 \`{\`{~2{x}}}
 `.trim();
@@ -153,14 +153,32 @@ let gibonacci_st = fn n -> \`{ fn x y ->
 }
 `.trim();
 
+const dangerous_scope_extrusion_with_mutable_states = `
+  let r = ref \`{@! 1 } in
+  let _ = \`{@!
+    (x:int@g1) => { ~( r := \`{@g1 x } ) }
+  } in
+  deref r
+`.trim();
+
+const safe_scope_extrusion_with_mutable_states = `
+  \`{@! (x:int@g1) => {
+    ~( let r = ref \`{@g1 1 } in
+       let _ = r := \`{@g1 x } in
+       deref r ) }
+  }
+`.trim();
+
 export type Example = "fib" | "quasiquote" | "runtime_evaluation" | "runtime_evaluation_csp" |
- "nested_quote" | "ill_staged_variable" |  "scope_extrusion" | "spower" | "spower_sqr" | "spower_cont" |
- "gibonacci";
+  "nested_quote" | "ill_staged_variable" | "scope_extrusion" | "spower" | "spower_sqr" | "spower_cont" |
+  "gibonacci" | "dangerous_scope_extrusion_with_mutable_states" | "safe_scope_extrusion_with_mutable_states";
 export const ExamplePrograms = {
   quasiquote,
   eval_,
   well_scoped_eval,
   spower,
   spower_sqr_run,
-  spower_cont
+  spower_cont,
+  dangerous_scope_extrusion_with_mutable_states,
+  safe_scope_extrusion_with_mutable_states
 };

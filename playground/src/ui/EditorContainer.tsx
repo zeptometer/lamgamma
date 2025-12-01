@@ -25,10 +25,11 @@ export const EditorContainer: React.FC<Props> = ({ code, example, onExampleUpdat
                     label="Example"
                     onChange={onExampleUpdate}
                 >
-                    <MenuItem value={"quasiquote"}>quasiquote</MenuItem>
-                    <MenuItem value={"eval_"}>Eval</MenuItem>
-                    <MenuItem value={"well_scoped_eval"}>Well-Scoped Eval</MenuItem>
-                    <MenuItem value={"spower"}>Specialized power</MenuItem>
+                    <MenuItem value={"quasiquote"}>Quasiquote</MenuItem>
+                    <MenuItem value={"eval"}>Eval</MenuItem>
+                    <MenuItem value={"well_scoped_eval"}>Well-scoped eval</MenuItem>
+                    <MenuItem value={"dangerous_scope_extrusion_with_mutable_states"}>Ill-typed scope extrusion</MenuItem>
+                    <MenuItem value={"safe_scope_extrusion_with_mutable_states"}>Well-typed safe scope extrusion</MenuItem>
                     <MenuItem value={"spower_sqr_run"}>Specialized power with external function and eval</MenuItem>
                     <MenuItem value={"spower_cont"}>Specialized power with let-insertion</MenuItem>
                 </Select>
